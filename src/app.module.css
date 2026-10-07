@@ -1,0 +1,18 @@
+.corner {
+  position: fixed;
+  top: max(0.9rem, env(safe-area-inset-top));
+  left: max(0.9rem, env(safe-area-inset-left));
+  z-index: 50;
+}
+
+.page {
+  width: min(100% - 2 * var(--page-gutter), var(--page-column));
+  margin-inline: auto;
+  padding-block: max(5.5rem, calc(env(safe-area-inset-top) + 4.5rem)) 9rem;
+}
+
+@media (min-width: 48rem) {
+  .page {
+    padding-top: max(12vh, 6rem);
+  }
+}

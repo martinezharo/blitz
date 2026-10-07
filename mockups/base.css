@@ -1,0 +1,195 @@
+/* Static mockups only. Tokens borrowed straight from Akin. */
+:root {
+	--background: #fefefd;
+	--foreground: #121311;
+	--muted: #74776f;
+	--line: #e7e8e3;
+	--button-background: #161714;
+	--button-foreground: #fff;
+	--accent: #e84b1b;
+	--accent-ink: #2f1107;
+	--selection: #ffd382;
+	--icon-background: #f3f3ef;
+	--radius-md: 1rem;
+	--radius-lg: 1.35rem;
+	--radius-xl: 1.75rem;
+	--radius-tail-md: 1rem 1rem 1rem 0.32rem;
+	--radius-tail-lg: 1.35rem 1.35rem 1.35rem 0.45rem;
+	--radius-tail-xl: 1.75rem 1.75rem 1.75rem 0.65rem;
+	--radius-tail-pill: 999px 999px 999px 0.28rem;
+	--shadow-raised: 0 0.55rem 1.25rem rgb(38 27 15 / 14%);
+	--shadow-floating: 0 1rem 2.8rem rgb(25 26 21 / 17%);
+	--der: #2f6fdb;
+	--die: #d8344f;
+	--das: #2e9a5a;
+}
+
+* { box-sizing: border-box; }
+body {
+	margin: 0;
+	min-height: 100dvh;
+	background: var(--background);
+	color: var(--foreground);
+	font-family: "Nunito", sans-serif;
+	font-weight: 700;
+}
+button, input, textarea { font: inherit; }
+svg { display: block; }
+
+.page {
+	width: min(100% - 2rem, 40rem);
+	margin-inline: auto;
+	padding-block: 6.5rem 9rem;
+}
+
+/* Top corners, like Akin's Back button and coin chips. */
+.corner {
+	position: fixed;
+	top: 2.1rem;
+	z-index: 50;
+	display: flex;
+	gap: 0.45rem;
+}
+.corner.left { left: 0.9rem; }
+.corner.right { right: 0.9rem; }
+
+.language {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+	padding: 0.55rem 0.8rem 0.55rem 0.6rem;
+	border: 0;
+	border-radius: var(--radius-md);
+	background: var(--background);
+	box-shadow: var(--shadow-raised);
+	font-weight: 900;
+	cursor: pointer;
+}
+.language .flag { font-size: 1.25rem; line-height: 1; }
+.language svg { width: 1rem; height: 1rem; color: var(--muted); }
+
+.chip {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.4rem 0.7rem;
+	border-radius: 999px;
+	font-weight: 900;
+}
+.chip svg { width: 1rem; height: 1rem; }
+.chip.due { background: #ffe7dc; color: #8c2a0b; }
+.chip.fire { background: #fff3c4; color: #6d4a00; }
+
+/* The Akin composer: a huge input sitting on a line. */
+.composer {
+	display: flex;
+	align-items: center;
+	gap: 0.85rem;
+	padding-block: 0.6rem;
+	border-bottom: 2px solid var(--line);
+}
+.composer > svg { width: 1.7rem; height: 1.7rem; color: var(--muted); flex: none; }
+.composer input {
+	flex: 1;
+	min-width: 0;
+	border: 0;
+	outline: 0;
+	background: transparent;
+	color: var(--foreground);
+	font-size: clamp(1.45rem, 5vw, 1.95rem);
+	font-weight: 800;
+}
+.composer input::placeholder { color: var(--muted); }
+.magic {
+	display: grid;
+	width: 3rem;
+	height: 3rem;
+	flex: none;
+	place-items: center;
+	border: 0;
+	border-radius: 50%;
+	background: var(--accent);
+	color: #fff;
+	box-shadow: 0 0.4rem 1rem rgb(232 75 27 / 32%);
+	cursor: pointer;
+}
+.magic svg { width: 1.3rem; height: 1.3rem; }
+.composer-hint { margin: 0.55rem 0 0; color: var(--muted); font-size: 0.72rem; }
+
+.section-label {
+	margin: 2.2rem 0 0.6rem;
+	color: var(--muted);
+	font-size: 0.63rem;
+	font-weight: 950;
+	letter-spacing: 0.085em;
+	text-transform: uppercase;
+}
+
+/* Word rows, Akin-streak style. */
+.words { margin: 0; padding: 0; list-style: none; }
+.word {
+	display: flex;
+	align-items: center;
+	gap: 0.95rem;
+	min-height: 4.6rem;
+}
+.thumb {
+	display: grid;
+	width: 2.9rem;
+	height: 2.9rem;
+	flex: none;
+	place-items: center;
+	overflow: hidden;
+	border-radius: var(--radius-tail-md);
+	background: var(--icon-background);
+	font-size: 1.55rem;
+}
+.word-text { flex: 1; min-width: 0; }
+.word-term { display: block; font-size: 1.25rem; font-weight: 850; letter-spacing: -0.01em; }
+.word-meaning { display: block; color: var(--muted); font-size: 0.82rem; }
+.article { font-weight: 950; }
+.article.der { color: var(--der); }
+.article.die { color: var(--die); }
+.article.das { color: var(--das); }
+.kind {
+	display: inline-block;
+	margin-left: 0.3rem;
+	padding: 0.05rem 0.4rem;
+	border-radius: 999px;
+	background: var(--icon-background);
+	color: var(--muted);
+	font-size: 0.6rem;
+	font-weight: 900;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	vertical-align: 0.15rem;
+}
+
+/* Five-step level meter, in place of Akin's streak badge. */
+.level { display: flex; gap: 0.18rem; }
+.level i {
+	width: 0.42rem;
+	height: 1.15rem;
+	border-radius: 999px;
+	background: var(--line);
+}
+.level i.on { background: var(--accent); }
+.more { color: var(--muted); padding: 0.3rem; }
+.more svg { width: 1.2rem; height: 1.2rem; }
+
+.mock-label {
+	position: fixed;
+	left: 50%;
+	top: 0.35rem;
+	z-index: 60;
+	transform: translateX(-50%);
+	padding: 0.3rem 0.7rem;
+	border-radius: 999px;
+	background: var(--button-background);
+	color: var(--button-foreground);
+	font-size: 0.63rem;
+	font-weight: 950;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	white-space: nowrap;
+}

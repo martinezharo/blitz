@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head>{{head}}<link rel="stylesheet" href="sheet.css" /><title>A · Add 1</title>
+{{a-style}}</head>
+<body>
+{{a-body}}<div class="scrim"></div>
+<span class="mock-label" style="z-index:120">Add · 1 · typed by hand</span>
+<section class="sheet" role="dialog">
+	<div class="grabber"></div>
+	<header class="sheet-head"><div><span class="eyebrow">🇩🇪 German</span><h2>New word</h2></div><span class="close"><i data-lucide="x"></i></span></header>
+	<div class="sheet-body">
+		<div class="term-row"><input class="term" value="Bank" /><button class="fill"><i data-lucide="sparkles"></i>Fill</button></div>
+		<p class="hint">Tap Fill to let AI suggest the rest, or write it yourself.</p>
+		<div class="field"><div class="label">Article</div><div class="seg"><span class="pick der">der</span><span class="pick die">die</span><span class="pick das">das</span><span class="pick">none</span></div></div>
+		<div class="field"><div class="label">Type</div><div class="seg"><span class="pick">noun</span><span class="pick">verb</span><span class="pick">adjective</span><span class="pick">adverb</span><span class="pick">other</span></div></div>
+		<div class="two">
+			<div class="field"><div class="label">English</div><input class="input" placeholder="bench" /></div>
+			<div class="field"><div class="label">Plural<span class="opt">optional</span></div><input class="input" placeholder="Bänke" /></div>
+		</div>
+		<div class="field"><div class="label">Definition<span class="opt">optional</span></div><textarea class="input" placeholder="Explain it in German, in your own words"></textarea></div>
+		<div class="field"><div class="label">Picture<span class="opt">optional</span></div><div class="photo"><span class="ico"><i data-lucide="image-plus"></i></span><span><strong>Add a picture</strong>Take a photo or choose one</span></div></div>
+	</div>
+	<footer class="sheet-foot"><button class="btn quiet">Cancel</button><button class="btn main" disabled>Save word</button></footer>
+</section>
+<script>lucide.createIcons()</script>
+</body></html>

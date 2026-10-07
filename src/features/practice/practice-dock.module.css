@@ -1,0 +1,63 @@
+.dock {
+  position: fixed;
+  left: 50%;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 50;
+  width: min(100% - 2rem, 24rem);
+  transform: translateX(-50%);
+}
+
+.cta {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.7rem 0.7rem 0.7rem 1.3rem;
+  border: 0;
+  border-radius: var(--radius-tail-xl);
+  background: var(--button-background);
+  color: var(--button-foreground);
+  box-shadow: var(--shadow-floating);
+  text-align: left;
+  cursor: pointer;
+}
+
+.cta[aria-disabled='true'] {
+  cursor: default;
+}
+
+.text {
+  flex: 1;
+}
+
+.text strong {
+  display: block;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-black);
+}
+
+.text small {
+  color: var(--button-muted);
+  font-size: 0.75rem;
+}
+
+.go {
+  display: grid;
+  width: 3.3rem;
+  height: 3.3rem;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+}
+
+.cta[aria-disabled='true'] .go {
+  background: #3a3b37;
+  color: var(--button-muted);
+}
+
+.go svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}

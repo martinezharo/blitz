@@ -1,0 +1,67 @@
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.8rem 0.55rem 0.6rem;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--background);
+  box-shadow: var(--shadow-raised);
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform var(--motion-spring);
+}
+
+.trigger:active {
+  transform: scale(0.96);
+}
+
+.flag {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.chevron {
+  width: 1rem;
+  height: 1rem;
+  color: var(--muted);
+}
+
+/* The trigger sits in the fixed top-left corner, so the menu is pinned under it. */
+.menu {
+  position: fixed;
+  inset: calc(max(0.9rem, env(safe-area-inset-top)) + 3rem) auto auto max(0.9rem, env(safe-area-inset-left));
+  min-width: 12rem;
+  margin: 0;
+  padding: 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-tail-lg);
+  background: color-mix(in srgb, var(--background) 94%, transparent);
+  box-shadow: var(--shadow-floating);
+  backdrop-filter: blur(18px);
+}
+
+.option {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.75rem;
+  border: 0;
+  border-radius: var(--radius-tail-md);
+  background: transparent;
+  font-weight: 900;
+  text-align: left;
+  cursor: pointer;
+}
+
+.option:hover {
+  background: var(--icon-background);
+}
+
+.check {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-left: auto;
+  color: var(--accent);
+}

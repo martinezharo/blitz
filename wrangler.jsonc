@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "blitz",
+  "compatibility_date": "2026-10-01",
+  // Static only for now: the whole app runs in the browser. A Worker script
+  // joins here once there is an API (AI fill, sync).
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}

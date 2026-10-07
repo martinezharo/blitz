@@ -1,0 +1,127 @@
+/** Each language is its own space: its own list, its own practice. */
+export type Language = 'de' | 'en';
+
+export type WordType = 'noun' | 'verb' | 'adjective' | 'adverb' | 'other';
+
+export interface LanguageSpec {
+  name: string;
+  flag: string;
+  /** Grammatical genders, as articles. Null when nouns carry none. */
+  articles: readonly string[] | null;
+  /** The app is in English, so an English word has no translation to ask for. */
+  translated: boolean;
+}
+
+export const LANGUAGES: Record<Language, LanguageSpec> = {
+  de: { name: 'German', flag: '🇩🇪', articles: ['der', 'die', 'das'], translated: true },
+  en: { name: 'English', flag: '🇬🇧', articles: null, translated: false },
+};
+
+export const LANGUAGE_ORDER: Language[] = ['de', 'en'];
+
+export const WORD_TYPES: { value: WordType; label: string }[] = [
+  { value: 'noun', label: 'noun' },
+  { value: 'verb', label: 'verb' },
+  { value: 'adjective', label: 'adjective' },
+  { value: 'adverb', label: 'adverb' },
+  { value: 'other', label: 'other' },
+];
+
+/** Highest practice level. Practice is not built yet, so every word sits at 0. */
+export const MAX_LEVEL = 5;
+
+export interface Word {
+  id: string;
+  language: Language;
+  type: WordType;
+  term: string;
+  /** Nouns in a language with genders only. */
+  article: string | null;
+  /** Nouns only. */
+  plural: string | null;
+  /** English meaning. Only for languages that are `translated`. */
+  translation: string | null;
+  /** English explanation. */
+  definition: string | null;
+  photo: Blob | null;
+  level: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** What the add and edit sheet works on: every field as the user typed it. */
+export interface Draft {
+  type: WordType | null;
+  term: string;
+  article: string | null;
+  plural: string;
+  translation: string;
+  definition: string;
+  photo: Blob | null;
+}
+
+export function emptyDraft(term = ''): Draft {
+  return { type: null, term, article: null, plural: '', translation: '', definition: '', photo: null };
+}
+
+export function draftFromWord(word: Word): Draft {
+  return {
+    type: word.type,
+    term: word.term,
+    article: word.article,
+    plural: word.plural ?? '',
+    translation: word.translation ?? '',
+    definition: word.definition ?? '',
+    photo: word.photo,
+  };
+}
+
+export function hasArticle(language: Language, type: WordType | null): boolean {
+  return type === 'noun' && LANGUAGES[language].articles !== null;
+}
+
+export function hasPlural(type: WordType | null): boolean {
+  return type === 'noun';
+}
+
+export type DraftProblem = 'term' | 'type' | 'article' | 'meaning';
+
+/** Why the draft cannot be saved yet, in form order. Empty when it can. */
+export function draftProblems(language: Language, draft: Draft): DraftProblem[] {
+  const problems: DraftProblem[] = [];
+  if (!draft.term.trim()) problems.push('term');
+  if (!draft.type) problems.push('type');
+  if (hasArticle(language, draft.type) && !draft.article) problems.push('article');
+  const translation = LANGUAGES[language].translated && draft.translation.trim();
+  if (!translation && !draft.definition.trim() && !draft.photo) problems.push('meaning');
+  return problems;
+}
+
+const clean = (value: string) => value.trim().replace(/\s+/g, ' ') || null;
+
+/**
+ * Turns a valid draft into the fields a word stores, dropping whatever the
+ * chosen type or language does not use, so switching a noun to a verb leaves
+ * no stray article behind.
+ */
+export function wordFields(language: Language, draft: Draft) {
+  if (draftProblems(language, draft).length > 0 || !draft.type) {
+    throw new Error('The draft is not complete');
+  }
+  return {
+    language,
+    type: draft.type,
+    term: clean(draft.term)!,
+    article: hasArticle(language, draft.type) ? draft.article : null,
+    plural: hasPlural(draft.type) ? clean(draft.plural) : null,
+    translation: LANGUAGES[language].translated ? clean(draft.translation) : null,
+    definition: clean(draft.definition),
+    photo: draft.photo,
+  };
+}
+
+/** A short line under the word in the list: meaning first, then the plural. */
+export function wordSummary(word: Word): string {
+  const meaning = word.translation ?? word.definition ?? '';
+  return [meaning, word.plural && `pl. ${word.plural}`].filter(Boolean).join(' · ');
+}
