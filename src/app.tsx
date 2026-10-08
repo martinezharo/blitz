@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useAccount } from './data/account.ts';
-import { useLanguage } from './data/preferences.ts';
+import { useLanguage, useTheme } from './data/preferences.ts';
 import { useWords } from './data/words.ts';
 import type { Word } from './domain/word.ts';
 import styles from './app.module.css';
 import { AccountBadge } from './features/account/account-badge.tsx';
 import { AuthModal } from './features/account/auth-modal.tsx';
 import { LanguageMenu } from './features/language/language-menu.tsx';
+import { PreferencesModal } from './features/preferences/preferences-modal.tsx';
 import { PracticeDock } from './features/practice/practice-dock.tsx';
 import { Composer } from './features/words/composer.tsx';
 import { WordList } from './features/words/word-list.tsx';
@@ -39,6 +40,8 @@ export function App() {
   const [editing, setEditing] = useState<Editing>(null);
   const { state: account, signIn, signOut } = useAccount();
   const [auth, setAuth] = useState(takeSignInOutcome);
+  const [theme, setTheme] = useTheme();
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
 
   return (
     <>
@@ -46,7 +49,12 @@ export function App() {
         <LanguageMenu language={language} onChange={setLanguage} />
       </div>
       <div className={styles.cornerEnd}>
-        <AccountBadge state={account} onSignIn={() => setAuth({ open: true, error: null })} onSignOut={signOut} />
+        <AccountBadge
+          state={account}
+          onSignIn={() => setAuth({ open: true, error: null })}
+          onSignOut={signOut}
+          onOpenPreferences={() => setPreferencesOpen(true)}
+        />
       </div>
 
       <main className={styles.page}>
@@ -65,6 +73,8 @@ export function App() {
           onClose={() => setEditing(null)}
         />
       )}
+
+      {preferencesOpen && <PreferencesModal theme={theme} onThemeChange={setTheme} onDismiss={() => setPreferencesOpen(false)} />}
 
       {auth.open && account.status !== 'signed-in' && (
         <AuthModal error={auth.error} onSignIn={signIn} onDismiss={() => setAuth({ open: false, error: null })} />

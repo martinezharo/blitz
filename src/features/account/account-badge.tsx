@@ -1,4 +1,4 @@
-import { Cloud, CloudOff, LoaderCircle, LogIn, LogOut, RefreshCw } from 'lucide-react';
+import { Cloud, CloudOff, LoaderCircle, LogIn, LogOut, RefreshCw, Settings2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import type { AccountState } from '../../data/account.ts';
 import { type SyncStatus, syncNow, useSyncState } from '../../data/sync.ts';
@@ -18,10 +18,12 @@ export function AccountBadge({
   state,
   onSignIn,
   onSignOut,
+  onOpenPreferences,
 }: {
   state: AccountState;
   onSignIn: () => void;
   onSignOut: () => Promise<boolean>;
+  onOpenPreferences: () => void;
 }) {
   if (state.status === 'loading') return null;
   if (state.status === 'guest') {
@@ -32,10 +34,18 @@ export function AccountBadge({
       </button>
     );
   }
-  return <AccountMenu account={state.account} onSignOut={onSignOut} />;
+  return <AccountMenu account={state.account} onSignOut={onSignOut} onOpenPreferences={onOpenPreferences} />;
 }
 
-function AccountMenu({ account, onSignOut }: { account: Account; onSignOut: () => Promise<boolean> }) {
+function AccountMenu({
+  account,
+  onSignOut,
+  onOpenPreferences,
+}: {
+  account: Account;
+  onSignOut: () => Promise<boolean>;
+  onOpenPreferences: () => void;
+}) {
   const menu = useRef<HTMLDivElement>(null);
   const { status } = useSyncState();
   const [leaving, setLeaving] = useState(false);
@@ -72,6 +82,17 @@ function AccountMenu({ account, onSignOut }: { account: Account; onSignOut: () =
             Sync now
           </button>
         )}
+        <button
+          type="button"
+          className={styles.menuOption}
+          onClick={() => {
+            menu.current?.hidePopover();
+            onOpenPreferences();
+          }}
+        >
+          <Settings2 aria-hidden="true" />
+          Preferences
+        </button>
         <button
           type="button"
           className={styles.menuOption}

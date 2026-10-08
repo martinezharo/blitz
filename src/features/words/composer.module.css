@@ -46,7 +46,7 @@
   border: 0;
   border-radius: 50%;
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
   box-shadow: 0 0.4rem 1rem var(--accent-shadow);
   cursor: pointer;
   transition: transform var(--motion-spring);

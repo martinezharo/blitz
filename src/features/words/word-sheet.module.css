@@ -116,7 +116,7 @@ textarea.input {
 .pick[data-article][aria-pressed='true'] {
   border-color: var(--gender);
   background: var(--gender);
-  color: #fff;
+  color: var(--background);
 }
 
 /* Article and plural share a row when there is room. */
@@ -279,7 +279,7 @@ textarea.input {
 
 .delete[data-confirming] {
   background: var(--danger);
-  color: #fff;
+  color: var(--background);
 }
 
 .main {

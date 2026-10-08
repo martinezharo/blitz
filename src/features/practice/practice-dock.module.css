@@ -49,11 +49,11 @@
   place-items: center;
   border-radius: 50%;
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
 }
 
 .cta[aria-disabled='true'] .go {
-  background: #3a3b37;
+  background: color-mix(in srgb, var(--button-foreground) 14%, var(--button-background));
   color: var(--button-muted);
 }
 

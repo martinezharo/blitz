@@ -1,0 +1,147 @@
+/* Akin's preferences card. */
+
+.dialog {
+  position: fixed;
+  z-index: 300;
+  inset: 0;
+  display: none;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  place-items: center;
+  margin: 0;
+  padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+}
+
+.dialog[open] { display: grid; }
+.dialog::backdrop { background: rgb(9 10 8 / 58%); backdrop-filter: blur(11px) saturate(80%); }
+
+.card {
+  position: relative;
+  width: min(100%, 25.5rem);
+  padding: 1.35rem 1.25rem 1.15rem;
+  border: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+  border-radius: var(--radius-tail-2xl);
+  background:
+    radial-gradient(circle at 100% 0, color-mix(in srgb, var(--selection) 28%, transparent), transparent 12rem),
+    var(--background);
+  box-shadow: 0 1.6rem 4rem rgb(0 0 0 / 28%);
+  isolation: isolate;
+  animation: arrive 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.close {
+  position: absolute;
+  z-index: 3;
+  top: 0.8rem;
+  right: 0.8rem;
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: var(--icon-background);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.close svg { width: 1rem; }
+
+.head { margin-bottom: 1.15rem; padding-right: 2rem; }
+
+.mark {
+  display: grid;
+  width: 2.85rem;
+  height: 2.85rem;
+  place-items: center;
+  margin-bottom: 0.85rem;
+  border-radius: var(--radius-tail-md);
+  background: var(--accent);
+  box-shadow: 0.24rem 0.25rem 0 var(--selection);
+  color: var(--accent-ink);
+  transform: rotate(-4deg);
+}
+
+.mark svg { width: 1.25rem; }
+.eyebrow { margin: 0 0 0.3rem; color: var(--accent); font-size: var(--text-sm); font-weight: var(--weight-black); letter-spacing: 0.12em; text-transform: uppercase; }
+.card h2 { margin: 0; font-size: clamp(1.85rem, 7vw, 2.25rem); letter-spacing: -0.06em; line-height: 0.95; }
+.intro { margin: 0.5rem 0 0; color: var(--muted); font-size: var(--text-md); font-weight: var(--weight-body); line-height: 1.4; }
+
+/* One setting per row; the three-way theme picker needs the full width below its label. */
+.setting {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem 0 0.15rem;
+  border-top: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+}
+
+.settingCopy strong,
+.settingCopy small { display: block; }
+.settingCopy strong { font-size: var(--text-lg); font-weight: var(--weight-strong); letter-spacing: -0.02em; }
+.settingCopy small { margin-top: 0.15rem; color: var(--muted); font-size: var(--text-sm); font-weight: var(--weight-body); line-height: 1.25; }
+
+.themePicker {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.2rem;
+  padding: 0.2rem;
+  border-radius: var(--radius-pill);
+  background: var(--icon-background);
+}
+
+/* The pill that slides under the chosen option. */
+.themePicker::before {
+  position: absolute;
+  top: 0.2rem;
+  bottom: 0.2rem;
+  left: 0.2rem;
+  width: calc((100% - 0.8rem) / 3);
+  border-radius: var(--radius-pill);
+  background: var(--background);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 12%);
+  content: '';
+  transition: transform 460ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.themePicker[data-theme='light']::before { transform: translateX(calc(100% + 0.2rem)); }
+.themePicker[data-theme='dark']::before { transform: translateX(calc(200% + 0.4rem)); }
+
+.themePicker button {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 2.35rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--text-md);
+  font-weight: var(--weight-strong);
+  cursor: pointer;
+  transition: color var(--motion-standard);
+}
+
+.themePicker button svg { width: 0.9rem; flex: none; }
+.themePicker button strong { font-weight: inherit; }
+.themePicker button[aria-pressed='true'] { color: var(--foreground); }
+
+.close:focus-visible,
+.themePicker button:focus-visible { outline: var(--focus-ring); outline-offset: 3px; }
+
+@keyframes arrive { from { opacity: 0; transform: translateY(1.4rem) scale(0.95) rotate(0.7deg); } }
+
+@media (max-width: 24rem) {
+  .card { padding: 1.2rem 1rem 1rem; border-radius: var(--radius-tail-xl); }
+}

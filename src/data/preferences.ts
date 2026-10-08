@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { LANGUAGES, type Language } from '../domain/word.ts';
 
 const KEY = 'blitz.language';
@@ -25,4 +26,77 @@ export function useLanguage(): [Language, (language: Language) => void] {
     }
   }, []);
   return [language, choose];
+}
+
+export type Theme = 'system' | 'light' | 'dark';
+
+export const THEMES: readonly Theme[] = ['system', 'light', 'dark'];
+
+const THEME_KEY = 'blitz.theme';
+// Kept in step with the <meta name="theme-color"> tags in index.html.
+const THEME_COLORS = { light: '#fefefd', dark: '#050505' } as const;
+
+function storedTheme(): Theme {
+  try {
+    const value = localStorage.getItem(THEME_KEY);
+    if (value === 'light' || value === 'dark') return value;
+  } catch {
+    // Storage can be blocked; follow the system.
+  }
+  return 'system';
+}
+
+/**
+ * Dresses the page in a theme. "system" removes the pin, so the stylesheet
+ * follows the device on its own; the inline script in index.html does the same
+ * before first paint.
+ */
+function applyTheme(theme: Theme) {
+  const root = document.documentElement;
+  if (theme === 'system') delete root.dataset.theme;
+  else root.dataset.theme = theme;
+
+  // Browser chrome colour: pinned for an explicit theme, back to following the system otherwise.
+  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((meta) => {
+    const scheme = meta.media.includes('dark') ? 'dark' : 'light';
+    meta.content = THEME_COLORS[theme === 'system' ? scheme : theme];
+  });
+}
+
+/**
+ * Wipes the new theme across the page from the control that was clicked, and
+ * just applies it when the browser cannot or the person asked for less motion.
+ */
+function transition(update: () => void) {
+  if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    update();
+    return;
+  }
+  const origin = document.activeElement?.getBoundingClientRect();
+  if (origin) {
+    document.documentElement.style.setProperty('--theme-transition-x', `${origin.left + origin.width / 2}px`);
+    document.documentElement.style.setProperty('--theme-transition-y', `${origin.top + origin.height / 2}px`);
+  }
+  document.startViewTransition(update).finished.catch(() => {});
+}
+
+/** The colour theme, remembered across visits. Follows the system until a choice is made. */
+export function useTheme(): [Theme, (theme: Theme) => void] {
+  const [theme, setTheme] = useState(storedTheme);
+  // index.html already pinned the theme; this catches the browser chrome colour up.
+  useEffect(() => applyTheme(theme), []);
+  const choose = useCallback((next: Theme) => {
+    transition(() => {
+      // Flushed so the view transition captures the finished frame.
+      flushSync(() => setTheme(next));
+      applyTheme(next);
+    });
+    try {
+      if (next === 'system') localStorage.removeItem(THEME_KEY);
+      else localStorage.setItem(THEME_KEY, next);
+    } catch {
+      // Not remembered, but still applied for this visit.
+    }
+  }, []);
+  return [theme, choose];
 }
