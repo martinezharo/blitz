@@ -5,6 +5,13 @@
   z-index: 50;
 }
 
+.cornerEnd {
+  position: fixed;
+  top: max(0.9rem, env(safe-area-inset-top));
+  right: max(0.9rem, env(safe-area-inset-right));
+  z-index: 50;
+}
+
 .page {
   width: min(100% - 2 * var(--page-gutter), var(--page-column));
   margin-inline: auto;

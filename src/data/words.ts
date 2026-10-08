@@ -2,6 +2,7 @@ import Dexie from 'dexie';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { type Draft, type Language, type Word, wordFields } from '../domain/word.ts';
 import { db } from './db.ts';
+import { requestSync } from './sync.ts';
 
 /** Newest first. `undefined` while the first read is in flight. */
 export function useWords(language: Language): Word[] | undefined {
@@ -25,12 +26,24 @@ export async function addWord(language: Language, draft: Draft): Promise<Word> {
     createdAt: now,
     updatedAt: now,
   };
-  await db.words.add(word);
+  await db.transaction('rw', db.words, db.pending, async () => {
+    await db.words.add(word);
+    await db.pending.put({ id: word.id, at: now });
+  });
+  requestSync();
   return word;
 }
 
 export async function updateWord(word: Word, draft: Draft): Promise<void> {
-  await db.words.update(word.id, { ...wordFields(word.language, draft), updatedAt: Date.now() });
+  const now = Date.now();
+  const fields = wordFields(word.language, draft);
+  await db.transaction('rw', db.words, db.pending, async () => {
+    // A new picture has to be uploaded again.
+    const photoKey = fields.photo === word.photo ? word.photoKey : null;
+    await db.words.update(word.id, { ...fields, photoKey, updatedAt: now });
+    await db.pending.put({ id: word.id, at: now });
+  });
+  requestSync();
 }
 
 /**
@@ -46,5 +59,9 @@ function newId(): string {
 }
 
 export async function deleteWord(id: string): Promise<void> {
-  await db.words.delete(id);
+  await db.transaction('rw', db.words, db.pending, async () => {
+    await db.words.delete(id);
+    await db.pending.put({ id, at: Date.now() });
+  });
+  requestSync();
 }

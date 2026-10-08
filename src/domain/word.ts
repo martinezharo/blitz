@@ -44,6 +44,11 @@ export interface Word {
   /** English explanation. */
   definition: string | null;
   photo: Blob | null;
+  /**
+   * SHA-256 of `photo` once sync has uploaded it, so it is hashed and sent
+   * only once. Absent when there is no photo or it has not been synced.
+   */
+  photoKey?: string | null;
   level: number;
   createdAt: number;
   updatedAt: number;

@@ -1,0 +1,215 @@
+/* Akin's account badge and sign-in card, mirrored into the top-right corner. */
+
+.badge {
+  display: flex;
+  max-width: 14rem;
+  align-items: center;
+  gap: 0.34rem;
+  padding: 0.48rem 0.58rem 0.48rem 0.72rem;
+  border: 1px solid color-mix(in srgb, var(--line) 86%, transparent);
+  border-radius: 1rem 0.5rem 1rem 1rem;
+  background: color-mix(in srgb, var(--background) 88%, transparent);
+  box-shadow: 0 0.55rem 1.8rem rgb(27 29 23 / 9%), inset 0 1px 0 rgb(255 255 255 / 36%);
+  backdrop-filter: blur(16px) saturate(1.3);
+  color: var(--foreground);
+  transform: rotate(1.5deg);
+}
+
+.badge > svg { width: 0.92rem; flex: none; color: var(--accent); stroke-width: 2.8; }
+.badge strong { overflow: hidden; font-size: var(--text-md); font-weight: var(--weight-black); text-overflow: ellipsis; white-space: nowrap; }
+
+.guestBadge { cursor: pointer; transition: transform var(--motion-spring), box-shadow var(--motion-standard); }
+.guestBadge:hover { box-shadow: 0 0.7rem 2rem rgb(27 29 23 / 13%), inset 0 1px 0 rgb(255 255 255 / 36%); transform: translateY(-1px) rotate(2.5deg); }
+.guestBadge:active { transform: scale(0.95) rotate(1.5deg); }
+
+.avatar {
+  display: grid;
+  width: 1.45rem;
+  height: 1.45rem;
+  flex: none;
+  place-items: center;
+  margin: -0.2rem 0.05rem -0.2rem -0.3rem;
+  border-radius: var(--radius-tail-sm);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-black);
+  object-fit: cover;
+}
+
+.avatarLarge { width: 2.5rem; height: 2.5rem; margin: 0; border-radius: var(--radius-tail-md); font-size: var(--text-lg); transform: rotate(-3deg); }
+
+.badge > .syncIcon { margin-left: 0.1rem; color: var(--muted); stroke-width: 2.6; }
+.syncIcon[data-status='synced'] { color: var(--das); }
+.syncIcon[data-status='syncing'] { animation: spin 900ms linear infinite; }
+
+/* Pinned under the badge, like the language menu on the other side. */
+.menu {
+  position: fixed;
+  inset: calc(max(0.9rem, env(safe-area-inset-top)) + 3.1rem) max(0.9rem, env(safe-area-inset-right)) auto auto;
+  width: min(17.5rem, calc(100vw - 1.8rem));
+  margin: 0;
+  padding: 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 1.35rem 0.45rem 1.35rem 1.35rem;
+  background: color-mix(in srgb, var(--background) 94%, transparent);
+  box-shadow: var(--shadow-floating);
+  backdrop-filter: blur(18px);
+}
+
+.menuHead { display: flex; align-items: center; gap: 0.7rem; padding: 0.65rem 0.65rem 0.55rem; }
+.menuHead > div { display: grid; min-width: 0; gap: 0.1rem; }
+.menuHead strong,
+.menuHead small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menuHead strong { font-size: var(--text-lg); font-weight: var(--weight-black); }
+.menuHead small { color: var(--muted); font-size: var(--text-sm); }
+
+.menuStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.3rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: var(--radius-tail-md);
+  background: var(--icon-background);
+  color: var(--muted);
+  font-size: var(--text-md);
+  font-weight: var(--weight-strong);
+}
+
+.menuStatus svg { width: 1rem; height: 1rem; flex: none; stroke-width: 2.6; }
+.menuStatus[data-status='synced'] svg { color: var(--das); }
+.menuStatus[data-status='syncing'] svg { animation: spin 900ms linear infinite; }
+.menuStatus[data-status='offline'] svg,
+.menuStatus[data-status='error'] svg { color: var(--accent); }
+
+.menuOption {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.75rem;
+  border: 0;
+  border-radius: var(--radius-tail-md);
+  background: transparent;
+  font-weight: 900;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menuOption:hover { background: var(--icon-background); }
+.menuOption:disabled { opacity: 0.6; cursor: wait; }
+.menuOption svg { width: 1.1rem; height: 1.1rem; color: var(--muted); }
+
+.authDialog {
+  position: fixed;
+  z-index: 300;
+  inset: 0;
+  display: none;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  place-items: center;
+  margin: 0;
+  padding: 1rem;
+  border: 0;
+  background: transparent;
+  overflow: auto;
+}
+
+.authDialog[open] { display: grid; }
+.authDialog::backdrop { background: rgb(8 9 7 / 56%); backdrop-filter: blur(11px); }
+
+.authCard {
+  position: relative;
+  width: min(100%, 29rem);
+  margin: max(3vh, 1rem) auto;
+  padding: clamp(1.4rem, 5vw, 2.25rem);
+  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  border-radius: var(--radius-tail-2xl);
+  background: var(--background);
+  box-shadow: 0 2rem 6rem rgb(0 0 0 / 28%);
+  color: var(--foreground);
+  animation: cardIn 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: var(--icon-background);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.close svg { width: 1.05rem; }
+
+.authMark {
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  place-items: center;
+  margin-bottom: 1.2rem;
+  border-radius: var(--radius-tail-md);
+  background: var(--accent);
+  box-shadow: 0.3rem 0.32rem 0 var(--selection);
+  color: var(--accent-ink);
+  transform: rotate(-4deg);
+}
+
+.authMark svg { width: 1.5rem; }
+.eyebrow { margin: 0 0 0.4rem; color: var(--accent); font-size: var(--text-sm); font-weight: var(--weight-black); letter-spacing: 0.12em; text-transform: uppercase; }
+.authTitle { max-width: 19rem; margin: 0; font-size: clamp(1.85rem, 8vw, 2.6rem); letter-spacing: -0.055em; line-height: 0.98; text-wrap: balance; }
+.authCopy { margin: 0.9rem 0 1.35rem; color: var(--muted); font-size: var(--text-lg); font-weight: var(--weight-body); line-height: 1.5; text-wrap: pretty; }
+.authBenefits { display: grid; gap: 0.5rem; margin: 0 0 1.25rem; padding: 0; list-style: none; }
+.authBenefits li { display: grid; grid-template-columns: 2rem 1fr; align-items: center; gap: 0.68rem; min-height: 2.8rem; padding: 0.45rem 0.65rem 0.45rem 0.45rem; border: 1px solid color-mix(in srgb, var(--line) 82%, transparent); border-radius: var(--radius-tail-md); background: color-mix(in srgb, var(--icon-background) 72%, transparent); color: var(--foreground); font-size: var(--text-md); font-weight: var(--weight-strong); line-height: 1.25; }
+.authBenefits li span { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: var(--radius-tail-sm); background: var(--background); color: var(--accent); }
+.authBenefits li svg { width: 1rem; height: 1rem; stroke-width: 2.6; }
+
+.authError { margin: 0.8rem 0 0; padding: 0.7rem 0.85rem; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); font-size: var(--text-md); font-weight: var(--weight-strong); line-height: 1.35; }
+
+.googleSubmit {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  height: 3.7rem;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  margin-top: 1.2rem;
+  padding: 0 0.75rem 0 1.1rem;
+  border: 0;
+  border-radius: var(--radius-tail-md);
+  background: var(--button-background);
+  color: var(--button-foreground);
+  text-align: left;
+  cursor: pointer;
+  transition: transform var(--motion-spring), opacity var(--motion-standard), box-shadow var(--motion-standard);
+}
+
+.googleSubmit > strong { font-size: var(--text-lg); font-weight: var(--weight-black); }
+.googleSubmit > svg { width: 1.15rem; }
+.googleBadge { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border-radius: var(--radius-tail-sm); background: var(--accent); color: #11120f; transform: rotate(-3deg); }
+.googleBadge svg { width: 1.25rem; }
+.googleSubmit:hover { box-shadow: 0 0.75rem 1.5rem rgb(15 16 13 / 18%); transform: translateY(-2px) rotate(-0.4deg); }
+.googleSubmit:disabled { opacity: 0.6; cursor: wait; }
+.authFootnote { margin: 0.65rem 0 0; color: var(--muted); font-size: var(--text-sm); font-weight: var(--weight-body); text-align: center; }
+
+.badge:focus-visible,
+.close:focus-visible,
+.googleSubmit:focus-visible { outline: var(--focus-ring); outline-offset: 3px; }
+
+@keyframes cardIn { from { opacity: 0; transform: translateY(1.5rem) scale(0.95) rotate(0.6deg); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 30rem) {
+  .authDialog { padding: 0.55rem; }
+  .authCard { margin: max(1vh, 0.25rem) auto; padding: 1.3rem; border-radius: var(--radius-tail-xl); }
+}

@@ -1,12 +1,25 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "blitz",
+  "main": "worker/index.ts",
   "compatibility_date": "2026-10-01",
   "previews": {},
-  // Static only for now: the whole app runs in the browser. A Worker script
-  // joins here once there is an API (AI fill, sync).
+  // The app runs in the browser; the Worker only answers /api: Google sign-in
+  // and sync. GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are secrets
+  // (`wrangler secret put`, or .dev.vars locally).
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
-  }
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "blitz",
+      "database_id": "376b2c0d-5951-46ef-948a-b2094f2bb172",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "blitz-photos" }],
+  "observability": { "enabled": true }
 }

@@ -10,6 +10,7 @@
   --button-muted: #b7b9b1;
   --accent: #e84b1b;
   --accent-shadow: rgb(232 75 27 / 32%);
+  --accent-ink: #2f1107;
   --danger: #c4314b;
   --selection: #ffd382;
   --selection-foreground: #321207;
@@ -38,11 +39,14 @@
   --weight-strong: 850;
   --weight-black: 950;
 
+  --radius-sm: 0.75rem;
   --radius-md: 1rem;
   --radius-lg: 1.35rem;
   --radius-xl: 1.75rem;
   --radius-pill: 999px;
+  --radius-round: 50%;
   /* Akin's signature: rounded everywhere but one pinched corner. */
+  --radius-tail-sm: 0.75rem 0.75rem 0.75rem 0.25rem;
   --radius-tail-md: 1rem 1rem 1rem 0.32rem;
   --radius-tail-lg: 1.35rem 1.35rem 1.35rem 0.45rem;
   --radius-tail-xl: 1.75rem 1.75rem 1.75rem 0.65rem;
