@@ -8,8 +8,10 @@ describe('draftProblems', () => {
     expect(draftProblems('de', emptyDraft())).toEqual(['term', 'type', 'meaning']);
   });
 
-  it('asks German nouns for an article', () => {
-    expect(draftProblems('de', { ...noun, article: null })).toEqual(['article']);
+  it('accepts German nouns without an article', () => {
+    const country: Draft = { ...emptyDraft('Deutschland'), type: 'noun', translation: 'Germany' };
+    expect(draftProblems('de', country)).toEqual([]);
+    expect(wordFields('de', country).article).toBeNull();
   });
 
   it('does not ask English nouns for an article', () => {
