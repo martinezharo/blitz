@@ -84,14 +84,13 @@ export function hasPlural(type: WordType | null): boolean {
   return type === 'noun';
 }
 
-export type DraftProblem = 'term' | 'type' | 'article' | 'meaning';
+export type DraftProblem = 'term' | 'type' | 'meaning';
 
 /** Why the draft cannot be saved yet, in form order. Empty when it can. */
 export function draftProblems(language: Language, draft: Draft): DraftProblem[] {
   const problems: DraftProblem[] = [];
   if (!draft.term.trim()) problems.push('term');
   if (!draft.type) problems.push('type');
-  if (hasArticle(language, draft.type) && !draft.article) problems.push('article');
   const translation = LANGUAGES[language].translated && draft.translation.trim();
   if (!translation && !draft.definition.trim() && !draft.photo) problems.push('meaning');
   return problems;

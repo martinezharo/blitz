@@ -22,7 +22,6 @@ import styles from './word-sheet.module.css';
 const PROBLEM_TEXT: Record<DraftProblem, string> = {
   term: 'Write the word',
   type: 'Pick what kind of word it is',
-  article: 'Pick its article',
   meaning: 'Give it a meaning',
 };
 
@@ -160,7 +159,9 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
           <div className={styles.noun}>
             {showArticle && (
               <fieldset className={styles.field}>
-                <legend className={styles.label}>Article</legend>
+                <legend className={styles.label}>
+                  Article <span className={styles.optional}>optional</span>
+                </legend>
                 <div className={styles.picks}>
                   {spec.articles!.map((article) => (
                     <button
@@ -169,7 +170,7 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
                       className={styles.pick}
                       data-article={article}
                       aria-pressed={draft.article === article}
-                      onClick={() => set({ article })}
+                      onClick={() => set({ article: draft.article === article ? null : article })}
                     >
                       {article}
                     </button>
