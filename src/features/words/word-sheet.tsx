@@ -25,7 +25,8 @@ const PROBLEM_TEXT: Record<DraftProblem, string> = {
   meaning: 'Give it a meaning',
 };
 
-type WordSheetProps = { language: Language; onClose: () => void } & (
+/** Closes the sheet; `landOn` is the word it should settle into, if it still exists. */
+type WordSheetProps = { language: Language; onClose: (landOn: string | null) => void } & (
   | { word: Word; term?: never }
   | { word?: never; term: string }
 );
@@ -45,6 +46,7 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
   const problems = draftProblems(language, draft);
   const showArticle = hasArticle(language, draft.type);
   const showPlural = hasPlural(draft.type);
+  const dismiss = () => onClose(word?.id ?? null);
   const set = (patch: Partial<Draft>) => setDraft((current) => ({ ...current, ...patch }));
 
   async function save(event?: FormEvent) {
@@ -54,8 +56,8 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
     setSaveError(false);
     try {
       if (word) await updateWord(word, draft);
-      else await addWord(language, draft);
-      onClose();
+      const saved = word ?? (await addWord(language, draft));
+      onClose(saved.id);
     } catch {
       setSaveError(true);
     } finally {
@@ -71,7 +73,7 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
     }
     try {
       await deleteWord(word.id);
-      onClose();
+      onClose(null);
     } catch {
       setSaveError(true);
     }
@@ -91,7 +93,7 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
     <Sheet
       eyebrow={`${spec.flag} ${spec.name}`}
       title={word ? 'Edit word' : 'New word'}
-      onClose={onClose}
+      onClose={dismiss}
       footer={
         <>
           {word ? (
@@ -106,7 +108,7 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
               {confirmingDelete ? 'Delete it' : <span className="sr-only">Delete</span>}
             </button>
           ) : (
-            <button type="button" className={`${styles.button} ${styles.quiet}`} onClick={onClose}>
+            <button type="button" className={`${styles.button} ${styles.quiet}`} onClick={dismiss}>
               Cancel
             </button>
           )}
@@ -136,6 +138,7 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
           spellCheck={false}
           lang={language}
           data-autofocus={!draft.term || undefined}
+          data-morph-term
         />
 
         <fieldset className={styles.field}>

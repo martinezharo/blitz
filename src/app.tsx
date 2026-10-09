@@ -10,9 +10,11 @@ import { LanguageMenu } from './features/language/language-menu.tsx';
 import { PreferencesModal } from './features/preferences/preferences-modal.tsx';
 import { PracticeDock } from './features/practice/practice-dock.tsx';
 import { PracticeSession } from './features/practice/practice-session.tsx';
-import { Composer } from './features/words/composer.tsx';
-import { WordList } from './features/words/word-list.tsx';
+import { Composer, composerAddButton } from './features/words/composer.tsx';
+import { WordList, wordRow } from './features/words/word-list.tsx';
 import { WordSheet } from './features/words/word-sheet.tsx';
+import { morph, morphEndsIn, waitFor } from './shared/ui/morph.ts';
+import { openSheetEnds } from './shared/ui/sheet.tsx';
 
 type Editing = { term: string } | { word: Word } | null;
 
@@ -44,6 +46,29 @@ export function App() {
   const [theme, setTheme] = useTheme();
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [practicing, setPracticing] = useState(false);
+
+  /**
+   * The sheet settles into the word's row; a new word's row may take a moment
+   * to show up. A cancelled new word shrinks back into the +.
+   */
+  function closeSheet(landOn: string | null) {
+    const from = openSheetEnds();
+    // Pulled off screen already: nothing left to morph.
+    if (!from) {
+      setEditing(null);
+      return;
+    }
+    const fresh = editing !== null && !('word' in editing);
+    morph(
+      from,
+      () => setEditing(null),
+      async () => {
+        if (landOn) return morphEndsIn(await waitFor(() => wordRow(landOn)));
+        if (fresh) return morphEndsIn(composerAddButton());
+        return null;
+      },
+    );
+  }
 
   return (
     <>
@@ -82,7 +107,7 @@ export function App() {
           key={'word' in editing ? editing.word.id : 'new'}
           language={language}
           {...editing}
-          onClose={() => setEditing(null)}
+          onClose={closeSheet}
         />
       )}
 
