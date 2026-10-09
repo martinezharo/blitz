@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { mastery } from '../../domain/practice.ts';
 import { LANGUAGES, type Language, MAX_LEVEL, type Word, wordSummary } from '../../domain/word.ts';
+import { sounds } from '../../shared/sound.ts';
 import { morph, morphEndsIn } from '../../shared/ui/morph.ts';
 import { openSheetEnds } from '../../shared/ui/sheet.tsx';
 import { useObjectUrl } from '../../shared/ui/use-object-url.ts';
@@ -41,7 +42,13 @@ export function WordList({ language, words, onOpen }: WordListProps) {
       <ul className={styles.words}>
         {words.map((word) => (
           <li key={word.id}>
-            <WordRow word={word} onOpen={(row) => morph(morphEndsIn(row), () => onOpen(word), openSheetEnds)} />
+            <WordRow
+              word={word}
+              onOpen={(row) => {
+                sounds.open();
+                morph(morphEndsIn(row), () => onOpen(word), openSheetEnds);
+              }}
+            />
           </li>
         ))}
       </ul>

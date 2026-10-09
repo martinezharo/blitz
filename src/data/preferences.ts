@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { LANGUAGES, type Language } from '../domain/word.ts';
+import { setSoundsOn, sounds } from '../shared/sound.ts';
 
 const KEY = 'blitz.language';
 
@@ -99,4 +100,33 @@ export function useTheme(): [Theme, (theme: Theme) => void] {
     }
   }, []);
   return [theme, choose];
+}
+
+const SOUNDS_KEY = 'blitz.sounds';
+
+function storedSounds(): boolean {
+  try {
+    return localStorage.getItem(SOUNDS_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+}
+
+/** Sound effects, on unless switched off on this device. */
+export function useSounds(): [boolean, (on: boolean) => void] {
+  const [on, setOn] = useState(storedSounds);
+  useEffect(() => setSoundsOn(on), [on]);
+  const choose = useCallback((next: boolean) => {
+    // The click plays while sound is still on, whichever way it goes.
+    if (!next) sounds.toggle(false);
+    setSoundsOn(next);
+    setOn(next);
+    if (next) sounds.toggle(true);
+    try {
+      localStorage.setItem(SOUNDS_KEY, next ? 'on' : 'off');
+    } catch {
+      // Not remembered, but still applied for this visit.
+    }
+  }, []);
+  return [on, choose];
 }

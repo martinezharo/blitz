@@ -137,7 +137,45 @@
 .themePicker button strong { font-weight: inherit; }
 .themePicker button[aria-pressed='true'] { color: var(--foreground); }
 
+/* A setting with a single switch keeps it beside its label, as in Akin. */
+.inline {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.85rem;
+  padding-bottom: 0;
+}
+
+.switch {
+  position: relative;
+  width: 2.55rem;
+  height: 1.45rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--line);
+  cursor: pointer;
+  transition: background var(--motion-standard);
+}
+
+.switch[aria-pressed='true'] { background: var(--accent); }
+
+.switch i {
+  position: absolute;
+  top: 0.18rem;
+  left: 0.18rem;
+  width: 1.09rem;
+  height: 1.09rem;
+  border-radius: var(--radius-round);
+  background: var(--background);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 18%);
+  transition: transform var(--motion-spring);
+}
+
+.switch[aria-pressed='true'] i { transform: translateX(1.1rem); }
+
 .close:focus-visible,
+.switch:focus-visible,
 .themePicker button:focus-visible { outline: var(--focus-ring); outline-offset: 3px; }
 
 @keyframes arrive { from { opacity: 0; transform: translateY(1.4rem) scale(0.95) rotate(0.7deg); } }

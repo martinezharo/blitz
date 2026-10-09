@@ -1,6 +1,7 @@
 import { Check, ChevronDown } from 'lucide-react';
 import { useRef } from 'react';
 import { LANGUAGE_ORDER, LANGUAGES, type Language } from '../../domain/word.ts';
+import { sounds } from '../../shared/sound.ts';
 import styles from './language-menu.module.css';
 
 /** Switches the language space. A native popover, so outside clicks and Escape close it. */
@@ -25,6 +26,7 @@ export function LanguageMenu({ language, onChange }: { language: Language; onCha
             className={styles.option}
             aria-pressed={option === language}
             onClick={() => {
+              if (option !== language) sounds.tap();
               onChange(option);
               menu.current?.hidePopover();
             }}

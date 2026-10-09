@@ -57,7 +57,7 @@ what is left and clears the device; the words stay in the account.
 src/domain/    Framework-free rules: languages, word types, the sync wire format
 src/data/      IndexedDB (Dexie), sync, account, photo resizing, preferences
 src/features/  Screens: word list and sheet, language menu, account, practice entry
-src/shared/    Reusable UI: the sheet, the morph into it, object URLs
+src/shared/    Reusable UI: the sheet, the morph into it, object URLs, sound effects
 worker/        Cloudflare Worker: Google sign-in, sessions, sync (D1), photos (R2)
 migrations/    D1 schema
 mockups/       Static design sketches that led here
