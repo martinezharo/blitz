@@ -84,6 +84,10 @@
   flex-direction: column;
 }
 
+.question:focus {
+  outline: none;
+}
+
 .body {
   /* The scrollbar sits in a strip of its own beside the column, so it never
      touches the content. */
@@ -523,4 +527,71 @@ input.articleField {
   margin: 0.3rem 0 0;
   color: var(--muted);
   font-size: var(--text-md);
+}
+
+.confirm {
+  width: min(100% - 2 * var(--page-gutter), 24rem);
+  padding: 1.4rem;
+  border: 0;
+  border-radius: var(--radius-tail-xl);
+  background: var(--background);
+  box-shadow: var(--shadow-floating);
+}
+
+.confirm::backdrop {
+  background: rgb(18 19 17 / 38%);
+  backdrop-filter: blur(3px);
+}
+
+.confirm h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-black);
+}
+
+.confirm p {
+  margin: 0.4rem 0 1.2rem;
+  color: var(--muted);
+  font-size: var(--text-md);
+}
+
+.confirmActions {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.confirmButton {
+  padding: 0.85rem 1.2rem;
+  border: 0;
+  border-radius: var(--radius-tail-lg);
+  font-size: 1rem;
+  font-weight: var(--weight-black);
+  cursor: pointer;
+  transition: transform var(--motion-spring), background var(--motion-standard), opacity var(--motion-standard);
+}
+
+.confirmButton:hover {
+  transform: translateY(-1px);
+}
+
+.confirmButton:active {
+  transform: scale(0.97);
+}
+
+.stay {
+  background: var(--button-background);
+  color: var(--button-foreground);
+}
+
+.leave {
+  background: var(--icon-background);
+  color: var(--danger);
+}
+
+.stay:hover {
+  opacity: 0.88;
+}
+
+.leave:hover {
+  background: color-mix(in srgb, var(--danger) 12%, var(--background));
 }

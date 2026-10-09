@@ -1,5 +1,5 @@
 import { Check, X } from 'lucide-react';
-import { type FormEvent, useEffect, useRef, useState } from 'react';
+import { type FormEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { recordAnswer } from '../../data/words.ts';
 import { type Answer, buildExercise, type Exercise, fillLetters, isCorrect, pickLesson } from '../../domain/practice.ts';
 import { LANGUAGES, type Language, type Word } from '../../domain/word.ts';
@@ -23,6 +23,7 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
   const [answered, setAnswered] = useState<Map<string, Word>>(new Map());
   const [step, setStep] = useState(0);
   const [right, setRight] = useState(0);
+  const [confirming, setConfirming] = useState(false);
 
   const latest = (word: Word) => {
     const local = answered.get(word.id);
@@ -31,11 +32,21 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
   const current = words.find((word) => word.id === lesson[step]);
   const [exercise, setExercise] = useState<Exercise | null>(() => (current ? buildExercise(current, words) : null));
 
-  useEffect(() => {
+  // A layout effect, so the dialog is open before the first question takes the
+  // focus; opened later, it would hand the focus to the close button.
+  useLayoutEffect(() => {
     const dialog = ref.current!;
     dialog.showModal();
     return () => dialog.close();
   }, []);
+
+  // Back from the confirmation, the focus returns to the question rather than to
+  // whatever opened it, which is often the close button.
+  const wasConfirming = useRef(false);
+  useEffect(() => {
+    if (wasConfirming.current && !confirming) focusQuestion(ref.current!);
+    wasConfirming.current = confirming;
+  }, [confirming]);
 
   async function answer(correct: boolean): Promise<Word> {
     const updated = await recordAnswer(latest(exercise!.word), correct);
@@ -60,6 +71,24 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
     sounds.close();
     onClose();
   };
+  // Leaving mid-lesson asks first, so a stray Enter on the close button costs nothing.
+  const leave = () => (done ? quit() : setConfirming(true));
+
+  // Escape is handled here rather than by the dialog: after a cancelled Escape,
+  // browsers close a dialog on the next one without asking it first.
+  const escape = useRef((_event: KeyboardEvent) => {});
+  escape.current = (event) => {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    if (event.repeat) return;
+    if (confirming) setConfirming(false);
+    else leave();
+  };
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => escape.current(event);
+    window.addEventListener('keydown', listener, true);
+    return () => window.removeEventListener('keydown', listener, true);
+  }, []);
 
   return (
     <dialog
@@ -68,11 +97,20 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
       aria-label={`${LANGUAGES[language].name} practice`}
       onCancel={(event) => {
         event.preventDefault();
-        quit();
+        leave();
+      }}
+      onClose={() => {
+        // Other close requests, like the back gesture, can still shut it unasked:
+        // open it again and ask, or the lesson could never be started again.
+        const dialog = ref.current!;
+        if (dialog.open) return;
+        if (done) return quit();
+        dialog.showModal();
+        setConfirming(true);
       }}
     >
       <header className={styles.top}>
-        <button type="button" className={styles.close} onClick={quit} aria-label="End practice">
+        <button type="button" className={styles.close} onClick={leave} aria-label="End practice">
           <X aria-hidden="true" />
         </button>
         <div
@@ -91,6 +129,59 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
       ) : (
         <Question key={step} language={language} exercise={exercise} onAnswer={answer} onNext={next} />
       )}
+
+      {confirming && <ConfirmQuit onStay={() => setConfirming(false)} onQuit={quit} />}
+    </dialog>
+  );
+}
+
+/** Puts the focus on the question: its first field, or the form itself, so Enter checks it. */
+function focusQuestion(root: HTMLElement) {
+  const form = root.querySelector<HTMLFormElement>('form');
+  if (!form) return;
+  (form.querySelector<HTMLInputElement>('input:not([readonly])') ?? form).focus({ preventScroll: true });
+}
+
+/** Asks before abandoning a lesson. Stays is the default, so Enter is safe. */
+function ConfirmQuit({ onStay, onQuit }: { onStay: () => void; onQuit: () => void }) {
+  const ref = useRef<HTMLDialogElement>(null);
+
+  useLayoutEffect(() => {
+    const dialog = ref.current!;
+    dialog.showModal();
+    dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+    return () => dialog.close();
+  }, []);
+
+  return (
+    <dialog
+      ref={ref}
+      className={styles.confirm}
+      data-confirm
+      aria-labelledby="confirm-title"
+      onCancel={(event) => {
+        // Escape closes only this question, not the lesson behind it.
+        event.preventDefault();
+        event.stopPropagation();
+        onStay();
+      }}
+      onClose={() => {
+        if (!ref.current!.open) onStay();
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onStay();
+      }}
+    >
+      <h2 id="confirm-title">End this lesson?</h2>
+      <p>Your answers so far are kept, but the rest of the lesson is lost.</p>
+      <div className={styles.confirmActions}>
+        <button type="button" className={`${styles.confirmButton} ${styles.stay}`} onClick={onStay} data-autofocus>
+          Keep practicing
+        </button>
+        <button type="button" className={`${styles.confirmButton} ${styles.leave}`} onClick={onQuit}>
+          End lesson
+        </button>
+      </div>
     </dialog>
   );
 }
@@ -136,6 +227,10 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
     if (result) nextButton.current?.focus();
   }, [result]);
 
+  // A new question loses the focus of the one before; without a place to land
+  // it falls to the first button, the close one, and the next Enter ends the lesson.
+  useEffect(() => focusQuestion(form.current!.parentElement!), []);
+
   async function check(event: FormEvent) {
     event.preventDefault();
     if (result) return onNext();
@@ -170,6 +265,8 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
   press.current = (event) => {
     if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
     const target = event.target;
+    // The question behind the confirmation must not react to its keys.
+    if (target instanceof Element && target.closest('[data-confirm]')) return;
     if (event.key === 'Enter') {
       // Fields submit the form themselves, and the main button is already one.
       if (target instanceof HTMLInputElement || target === nextButton.current) return;
@@ -199,7 +296,7 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
   const solution = `${word.article ? `${word.article} ` : ''}${word.term}`;
 
   return (
-    <form ref={form} className={styles.question} onSubmit={check} noValidate>
+    <form ref={form} className={styles.question} onSubmit={check} tabIndex={-1} noValidate>
       <div className={styles.body}>
         <p className={styles.prompt}>
           {gender === 'pick' || gender === 'write' ? 'Which word is it, with its article?' : 'Which word is it?'}
@@ -289,7 +386,6 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
                 spellCheck={false}
                 lang={language}
                 readOnly={locked}
-                autoFocus
               />
             )}
             <label className={styles.field}>
@@ -306,7 +402,6 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
                 spellCheck={false}
                 lang={language}
                 readOnly={locked}
-                autoFocus={gender !== 'write'}
               />
             </label>
           </div>

@@ -94,6 +94,8 @@ export function LetterBoard({ language, term, given, tiles, slots, onChange, loc
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     const target = event.target;
     if (target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+    // Not while the lesson asks whether to end.
+    if (target instanceof Element && target.closest('[data-confirm]')) return;
     if (event.key === 'Backspace') {
       const last = slots.map((tile) => tile !== null).lastIndexOf(true);
       if (last < 0) return;
