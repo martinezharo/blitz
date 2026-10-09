@@ -1,6 +1,7 @@
 import { type MouseEvent, type PointerEvent, useLayoutEffect, useRef, useState } from 'react';
 import { dropLetter } from '../../domain/practice.ts';
 import type { Language } from '../../domain/word.ts';
+import { sounds } from '../../shared/sound.ts';
 import styles from './practice-session.module.css';
 
 /** Which tile sits in each slot of the word, by its index in `tiles`. */
@@ -80,8 +81,14 @@ export function LetterBoard({ language, term, tiles, slots, onChange, locked }: 
 
   function tap(tile: number) {
     const at = slots.indexOf(tile);
-    if (at >= 0) onChange(dropLetter(slots, tile, at, null));
-    else if (slots.includes(null)) onChange(dropLetter(slots, tile, null, slots.indexOf(null)));
+    const free = slots.indexOf(null);
+    if (at >= 0) {
+      sounds.lift();
+      onChange(dropLetter(slots, tile, at, null));
+    } else if (free >= 0) {
+      sounds.place(free);
+      onChange(dropLetter(slots, tile, null, free));
+    }
   }
 
   /** The slot nearest the finger, when it is close enough to mean it. */
@@ -117,6 +124,7 @@ export function LetterBoard({ language, term, tiles, slots, onChange, locked }: 
     if (!start || start.id !== event.pointerId) return;
     if (!drag && Math.hypot(event.clientX - start.x, event.clientY - start.y) < DRAG_DISTANCE) return;
     const over = slotAt(event.clientX, event.clientY);
+    if (!drag) sounds.tap();
     if (!drag || drag.over !== over) setDrag({ tile: start.tile, from: start.from, over });
     follow(start.tile, event.clientX, event.clientY);
   }
@@ -131,6 +139,8 @@ export function LetterBoard({ language, term, tiles, slots, onChange, locked }: 
     setDrag(null);
     const over = slotAt(event.clientX, event.clientY);
     // Dropped off the word: a placed letter goes back, a loose one stays.
+    if (over !== null) sounds.place(over);
+    else if (start.from !== null) sounds.lift();
     if (over !== null || start.from !== null) onChange(dropLetter(slots, start.tile, start.from, over));
   }
 

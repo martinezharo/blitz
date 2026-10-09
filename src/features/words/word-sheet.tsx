@@ -15,6 +15,7 @@ import {
   type Word,
   WORD_TYPES,
 } from '../../domain/word.ts';
+import { sounds } from '../../shared/sound.ts';
 import { Sheet } from '../../shared/ui/sheet.tsx';
 import { useObjectUrl } from '../../shared/ui/use-object-url.ts';
 import styles from './word-sheet.module.css';
@@ -46,7 +47,10 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
   const problems = draftProblems(language, draft);
   const showArticle = hasArticle(language, draft.type);
   const showPlural = hasPlural(draft.type);
-  const dismiss = () => onClose(word?.id ?? null);
+  const dismiss = () => {
+    sounds.close();
+    onClose(word?.id ?? null);
+  };
   const set = (patch: Partial<Draft>) => setDraft((current) => ({ ...current, ...patch }));
 
   async function save(event?: FormEvent) {
@@ -57,8 +61,10 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
     try {
       if (word) await updateWord(word, draft);
       const saved = word ?? (await addWord(language, draft));
+      sounds.saved();
       onClose(saved.id);
     } catch {
+      sounds.nudge();
       setSaveError(true);
     } finally {
       setSaving(false);
@@ -68,13 +74,16 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
   async function remove() {
     if (!word) return;
     if (!confirmingDelete) {
+      sounds.armed();
       setConfirmingDelete(true);
       return;
     }
     try {
       await deleteWord(word.id);
+      sounds.deleted();
       onClose(null);
     } catch {
+      sounds.nudge();
       setSaveError(true);
     }
   }
@@ -84,7 +93,9 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
     setPhotoError(false);
     try {
       set({ photo: await compressPhoto(file) });
+      sounds.snap();
     } catch {
+      sounds.nudge();
       setPhotoError(true);
     }
   }
@@ -150,7 +161,10 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
                 type="button"
                 className={styles.pick}
                 aria-pressed={draft.type === value}
-                onClick={() => set({ type: value })}
+                onClick={() => {
+                  if (draft.type !== value) sounds.tap();
+                  set({ type: value });
+                }}
               >
                 {label}
               </button>
@@ -173,7 +187,10 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
                       className={styles.pick}
                       data-article={article}
                       aria-pressed={draft.article === article}
-                      onClick={() => set({ article: draft.article === article ? null : article })}
+                      onClick={() => {
+                        sounds.tap();
+                        set({ article: draft.article === article ? null : article });
+                      }}
                     >
                       {article}
                     </button>
@@ -245,7 +262,15 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
                 <button type="button" className={styles.photoChange} onClick={() => fileInput.current?.click()}>
                   Change
                 </button>
-                <button type="button" className={styles.photoRemove} onClick={() => set({ photo: null })} aria-label="Remove picture">
+                <button
+                  type="button"
+                  className={styles.photoRemove}
+                  onClick={() => {
+                    sounds.lift();
+                    set({ photo: null });
+                  }}
+                  aria-label="Remove picture"
+                >
                   <X aria-hidden="true" />
                 </button>
               </div>

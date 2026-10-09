@@ -3,6 +3,7 @@ import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { recordAnswer } from '../../data/words.ts';
 import { buildExercise, type Exercise, isCorrect, pickLesson } from '../../domain/practice.ts';
 import { LANGUAGES, type Language, type Word } from '../../domain/word.ts';
+import { sounds } from '../../shared/sound.ts';
 import { useObjectUrl } from '../../shared/ui/use-object-url.ts';
 import { emptySlots, LetterBoard, type Slots } from './letter-board.tsx';
 import styles from './practice-session.module.css';
@@ -49,11 +50,16 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
     let index = step + 1;
     while (index < lesson.length && !fresh.some((word) => word.id === lesson[index])) index++;
     const word = fresh.find((candidate) => candidate.id === lesson[index]);
+    if (!word) sounds.complete(right === lesson.length);
     setStep(index);
     setExercise(word ? buildExercise(word, fresh) : null);
   }
 
   const done = !exercise;
+  const quit = () => {
+    sounds.close();
+    onClose();
+  };
 
   return (
     <dialog
@@ -62,11 +68,11 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
       aria-label={`${LANGUAGES[language].name} practice`}
       onCancel={(event) => {
         event.preventDefault();
-        onClose();
+        quit();
       }}
     >
       <header className={styles.top}>
-        <button type="button" className={styles.close} onClick={onClose} aria-label="End practice">
+        <button type="button" className={styles.close} onClick={quit} aria-label="End practice">
           <X aria-hidden="true" />
         </button>
         <div
@@ -129,8 +135,12 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
     const correct = isCorrect(exercise, article, built);
     try {
       const updated = await onAnswer(correct);
+      if (correct) sounds.correct();
+      else sounds.wrong();
+      if (updated.level > exercise.level) sounds.levelUp();
       setResult({ correct, level: updated.level !== exercise.level ? updated.level : null });
     } catch {
+      sounds.nudge();
       setFailed(true);
     }
   }
@@ -168,7 +178,10 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
                 data-article={option}
                 aria-pressed={article === option}
                 disabled={locked}
-                onClick={() => setArticle(option)}
+                onClick={() => {
+                  if (article !== option) sounds.tap();
+                  setArticle(option);
+                }}
               >
                 {option}
               </button>
@@ -186,7 +199,10 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
                 aria-pressed={term === option}
                 disabled={locked}
                 lang={language}
-                onClick={() => setTerm(option)}
+                onClick={() => {
+                  if (term !== option) sounds.tap();
+                  setTerm(option);
+                }}
               >
                 {option}
               </button>

@@ -1,6 +1,7 @@
 import { PencilLine, Plus } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { LANGUAGES, type Language } from '../../domain/word.ts';
+import { sounds } from '../../shared/sound.ts';
 import { morph } from '../../shared/ui/morph.ts';
 import { openSheetEnds } from '../../shared/ui/sheet.tsx';
 import styles from './composer.module.css';
@@ -24,9 +25,11 @@ export function Composer({ language, onAdd }: { language: Language; onAdd: (term
       onSubmit={(event) => {
         event.preventDefault();
         if (!ready) {
+          sounds.nudge();
           input.current!.focus();
           return;
         }
+        sounds.open();
         morph(
           { box: add.current!, term: input.current },
           () => {

@@ -28,10 +28,20 @@ export function AccountBadge({
   if (state.status === 'loading') return null;
   if (state.status === 'guest') {
     return (
-      <button className={`${styles.badge} ${styles.guestBadge}`} type="button" onClick={onSignIn} aria-label="Sign in to sync your words">
-        <LogIn aria-hidden="true" />
-        <strong>Sign in</strong>
-      </button>
+      <>
+        <button
+          className={`${styles.badge} ${styles.guestBadge} ${styles.iconBadge}`}
+          type="button"
+          onClick={onOpenPreferences}
+          aria-label="Preferences"
+        >
+          <Settings2 aria-hidden="true" />
+        </button>
+        <button className={`${styles.badge} ${styles.guestBadge}`} type="button" onClick={onSignIn} aria-label="Sign in to sync your words">
+          <LogIn aria-hidden="true" />
+          <strong>Sign in</strong>
+        </button>
+      </>
     );
   }
   return <AccountMenu account={state.account} onSignOut={onSignOut} onOpenPreferences={onOpenPreferences} />;

@@ -22,6 +22,12 @@
 .guestBadge:hover { box-shadow: 0 0.7rem 2rem rgb(27 29 23 / 13%), inset 0 1px 0 rgb(255 255 255 / 36%); transform: translateY(-1px) rotate(2.5deg); }
 .guestBadge:active { transform: scale(0.95) rotate(1.5deg); }
 
+/* Guests reach preferences from here; signed-in people through their menu. */
+.iconBadge { padding-inline: 0.62rem; border-radius: 1rem; transform: rotate(-1.5deg); }
+.iconBadge > svg { color: var(--muted); }
+.iconBadge:hover { transform: translateY(-1px) rotate(-6deg); }
+.iconBadge:active { transform: scale(0.95) rotate(-1.5deg); }
+
 .avatar {
   display: grid;
   width: 1.45rem;

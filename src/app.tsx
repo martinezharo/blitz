@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAccount } from './data/account.ts';
-import { useLanguage, useTheme } from './data/preferences.ts';
+import { useLanguage, useSounds, useTheme } from './data/preferences.ts';
 import { useWords } from './data/words.ts';
 import type { Word } from './domain/word.ts';
 import styles from './app.module.css';
@@ -13,6 +13,7 @@ import { PracticeSession } from './features/practice/practice-session.tsx';
 import { Composer, composerAddButton } from './features/words/composer.tsx';
 import { WordList, wordRow } from './features/words/word-list.tsx';
 import { WordSheet } from './features/words/word-sheet.tsx';
+import { sounds } from './shared/sound.ts';
 import { morph, morphEndsIn, waitFor } from './shared/ui/morph.ts';
 import { openSheetEnds } from './shared/ui/sheet.tsx';
 
@@ -44,6 +45,7 @@ export function App() {
   const { state: account, signIn, signOut } = useAccount();
   const [auth, setAuth] = useState(takeSignInOutcome);
   const [theme, setTheme] = useTheme();
+  const [soundsOn, setSoundsOn] = useSounds();
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [practicing, setPracticing] = useState(false);
 
@@ -78,9 +80,15 @@ export function App() {
       <div className={styles.cornerEnd}>
         <AccountBadge
           state={account}
-          onSignIn={() => setAuth({ open: true, error: null })}
+          onSignIn={() => {
+            sounds.open();
+            setAuth({ open: true, error: null });
+          }}
           onSignOut={signOut}
-          onOpenPreferences={() => setPreferencesOpen(true)}
+          onOpenPreferences={() => {
+            sounds.open();
+            setPreferencesOpen(true);
+          }}
         />
       </div>
 
@@ -111,10 +119,25 @@ export function App() {
         />
       )}
 
-      {preferencesOpen && <PreferencesModal theme={theme} onThemeChange={setTheme} onDismiss={() => setPreferencesOpen(false)} />}
+      {preferencesOpen && (
+        <PreferencesModal
+          theme={theme}
+          onThemeChange={setTheme}
+          soundsOn={soundsOn}
+          onSoundsChange={setSoundsOn}
+          onDismiss={() => setPreferencesOpen(false)}
+        />
+      )}
 
       {auth.open && account.status !== 'signed-in' && (
-        <AuthModal error={auth.error} onSignIn={signIn} onDismiss={() => setAuth({ open: false, error: null })} />
+        <AuthModal
+          error={auth.error}
+          onSignIn={signIn}
+          onDismiss={() => {
+            sounds.close();
+            setAuth({ open: false, error: null });
+          }}
+        />
       )}
     </>
   );
