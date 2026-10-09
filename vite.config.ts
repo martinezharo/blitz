@@ -27,8 +27,11 @@ function secureOrigin(): Plugin {
         if (!origin || request.headers['x-forwarded-proto'] === 'https' || ['localhost', '127.0.0.1', '[::1]'].includes(host)) {
           return next();
         }
+        // A path like `//elsewhere.example` would resolve to another host.
+        const target = new URL(request.url ?? '/', origin);
+        if (target.origin !== new URL(origin).origin) return next();
         response.statusCode = 307;
-        response.setHeader('Location', new URL(request.url ?? '/', origin).toString());
+        response.setHeader('Location', target.toString());
         response.end();
       });
     },
