@@ -33,7 +33,9 @@ production Worker with `wrangler secret put DEVELOPMENT_BRIDGE_SECRET`. Open
 the app on any HTTPS development origin or `http://localhost:<port>`. On the
 VPS that is its Tailscale HTTPS address (`https://<host>.ts.net:8443` for port
 5173); Vite accepts the hostname because the VPS lists it in
-`DEV_ALLOWED_HOSTS`. Plain HTTP on a tailnet address cannot sign in or sync,
+`DEV_ALLOWED_HOSTS`, and the dev server redirects plain-HTTP visits on the
+tailnet IP there when the VPS pairs the port with it in `DEV_HTTPS_ORIGINS`.
+Plain HTTP on a tailnet address cannot sign in or sync,
 because browsers require a secure context for photo hashing. The Google button sends you through production's fixed callback; a
 five-minute, single-use ticket bound to this browser signs in the
 local origin. In this mode `/api/me`, `/api/sync`, photos, and sign-out are
