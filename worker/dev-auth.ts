@@ -4,7 +4,6 @@ import { startGoogleSignIn } from './auth.ts';
 
 const VERIFIER = 'blitz_dev_verifier';
 const SESSION = 'blitz_session';
-const FIVE_MINUTES = 5 * 60 * 1000;
 const TOKEN = /^[A-Za-z0-9_-]{43}$/;
 const HASH = /^[0-9a-f]{64}$/;
 
@@ -70,7 +69,7 @@ export async function beginProductionSignIn(request: Request, env: Env): Promise
   await env.DB.prepare('DELETE FROM dev_sign_ins WHERE expires_at < ?').bind(Date.now()).run();
   await env.DB.prepare(
     'INSERT INTO dev_sign_ins (state_hash, origin, challenge, expires_at) VALUES (?, ?, ?, ?)',
-  ).bind(await sha256(state), origin, challenge, Date.now() + FIVE_MINUTES).run();
+  ).bind(await sha256(state), origin, challenge, Date.now() + 10 * 60 * 1000).run();
   return startGoogleSignIn(request, env, state);
 }
 
@@ -132,6 +131,8 @@ export async function proxyAccountRequest(request: Request, env: Env): Promise<R
   });
   const responseHeaders = new Headers(result.headers);
   responseHeaders.delete('Set-Cookie');
-  if (local.pathname === '/api/auth/sign-out') responseHeaders.append('Set-Cookie', cookie(SESSION, '', 0));
+  if (local.pathname === '/api/auth/sign-out' && request.method === 'POST' && result.ok) {
+    responseHeaders.append('Set-Cookie', cookie(SESSION, '', 0));
+  }
   return new Response(result.body, { status: result.status, headers: responseHeaders });
 }

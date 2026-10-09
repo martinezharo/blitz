@@ -52,13 +52,13 @@ export async function finishGoogleSignIn(request: Request, env: Env): Promise<Re
 
   const user = await upsertUser(env, profile);
   const transfer = await env.DB.prepare(
-    'SELECT origin, challenge FROM dev_sign_ins WHERE state_hash = ? AND expires_at > ? AND ticket_hash IS NULL',
-  ).bind(await sha256(state), Date.now()).first<{ origin: string; challenge: string }>();
+    'SELECT origin FROM dev_sign_ins WHERE state_hash = ? AND expires_at > ? AND ticket_hash IS NULL',
+  ).bind(await sha256(state), Date.now()).first<{ origin: string }>();
   if (transfer) {
     const ticket = randomToken();
     await env.DB.prepare(
-      'UPDATE dev_sign_ins SET ticket_hash = ?, user_id = ? WHERE state_hash = ? AND ticket_hash IS NULL',
-    ).bind(await sha256(ticket), user.id, await sha256(state)).run();
+      'UPDATE dev_sign_ins SET ticket_hash = ?, user_id = ?, expires_at = ? WHERE state_hash = ? AND ticket_hash IS NULL',
+    ).bind(await sha256(ticket), user.id, Date.now() + 5 * 60 * 1000, await sha256(state)).run();
     const destination = new URL('/api/auth/dev/finish', transfer.origin);
     destination.searchParams.set('ticket', ticket);
     return new Response(null, {
