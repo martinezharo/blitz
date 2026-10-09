@@ -43,7 +43,7 @@ const DRAG_DISTANCE = 6;
  */
 export function LetterBoard({ language, term, tiles, slots, onChange, locked }: LetterBoardProps) {
   const [drag, setDrag] = useState<Drag | null>(null);
-  const press = useRef<{ tile: number; from: number | null; x: number; y: number; id: number } | null>(null);
+  const press = useRef<{ tile: number; from: number | null; x: number; y: number; id: number; lifted?: boolean } | null>(null);
   const board = useRef<HTMLDivElement>(null);
   const tileElements = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -124,7 +124,11 @@ export function LetterBoard({ language, term, tiles, slots, onChange, locked }: 
     if (!start || start.id !== event.pointerId) return;
     if (!drag && Math.hypot(event.clientX - start.x, event.clientY - start.y) < DRAG_DISTANCE) return;
     const over = slotAt(event.clientX, event.clientY);
-    if (!drag) sounds.tap();
+    // On the ref, not `drag`: several moves can land before that state does.
+    if (!start.lifted) {
+      start.lifted = true;
+      sounds.tap();
+    }
     if (!drag || drag.over !== over) setDrag({ tile: start.tile, from: start.from, over });
     follow(start.tile, event.clientX, event.clientY);
   }
