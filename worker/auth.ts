@@ -17,11 +17,10 @@ export interface User {
 const callbackUrl = (request: Request) => new URL('/api/auth/callback', request.url).toString();
 
 /** Sends the browser to Google's account chooser. */
-export function startGoogleSignIn(request: Request, env: Env): Response {
+export function startGoogleSignIn(request: Request, env: Env, state = randomToken()): Response {
   if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
     return Response.redirect(new URL('/?signin=unavailable', request.url).toString(), 303);
   }
-  const state = randomToken();
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   url.searchParams.set('client_id', env.GOOGLE_CLIENT_ID);
   url.searchParams.set('redirect_uri', callbackUrl(request));
@@ -52,6 +51,21 @@ export async function finishGoogleSignIn(request: Request, env: Env): Promise<Re
   if (!profile) return fail('failed');
 
   const user = await upsertUser(env, profile);
+  const transfer = await env.DB.prepare(
+    'SELECT origin FROM dev_sign_ins WHERE state_hash = ? AND expires_at > ? AND ticket_hash IS NULL',
+  ).bind(await sha256(state), Date.now()).first<{ origin: string }>();
+  if (transfer) {
+    const ticket = randomToken();
+    await env.DB.prepare(
+      'UPDATE dev_sign_ins SET ticket_hash = ?, user_id = ?, expires_at = ? WHERE state_hash = ? AND ticket_hash IS NULL',
+    ).bind(await sha256(ticket), user.id, Date.now() + 5 * 60 * 1000, await sha256(state)).run();
+    const destination = new URL('/api/auth/dev/finish', transfer.origin);
+    destination.searchParams.set('ticket', ticket);
+    return new Response(null, {
+      status: 303,
+      headers: { Location: destination.toString(), 'Set-Cookie': clearState, 'Referrer-Policy': 'no-referrer' },
+    });
+  }
   const token = randomToken();
   await env.DB.prepare('INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)')
     .bind(await sha256(token), user.id, Date.now() + SESSION_DAYS * DAY * 1000)

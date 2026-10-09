@@ -4,4 +4,8 @@ export interface Env {
   ASSETS: Fetcher;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
+  /** Set only on a local Worker to use the production account and data. */
+  DEVELOPMENT_UPSTREAM?: string;
+  /** Shared only by production and trusted development Workers. */
+  DEVELOPMENT_BRIDGE_SECRET?: string;
 }

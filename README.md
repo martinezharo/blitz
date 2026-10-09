@@ -22,10 +22,23 @@ pnpm deploy   # build, migrate D1 and publish to Cloudflare Workers
 `pnpm dev` runs the Worker too, on local D1 and R2 (`.wrangler/state`). Apply
 the schema once with `pnpm wrangler d1 migrations apply blitz --local`.
 Google sign-in needs `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, in
-`.dev.vars` locally and as Worker secrets in production. Google only accepts
-HTTPS or `localhost` redirects, so sign-in works on the deployed app and on
-`http://localhost:<port>`, not over the plain-HTTP tailnet address; the
-authorised redirect URI is `<origin>/api/auth/callback`.
+`.dev.vars` locally and as Worker secrets in production. In isolated local
+mode, Google only accepts HTTPS or `localhost` redirects; the authorised
+redirect URI is `<origin>/api/auth/callback`.
+
+To sign in to the production account from development on any localhost port,
+put `DEVELOPMENT_UPSTREAM=https://blitz.olma.workers.dev` and the shared
+`DEVELOPMENT_BRIDGE_SECRET` in `.dev.vars`. The same secret must be set in the
+production Worker with `wrangler secret put DEVELOPMENT_BRIDGE_SECRET`. Open
+the app on any HTTPS development origin or `http://localhost:<port>` (use an
+SSH port forward if the dev server runs on the VPS). Plain HTTP on a tailnet
+address cannot sync, because browsers require a secure context for photo
+hashing. The Google button sends you through production's fixed callback; a
+five-minute, single-use ticket bound to this browser signs in the
+local origin. In this mode `/api/me`, `/api/sync`, photos, and sign-out are
+proxied to production. **Edits in development change your real account data.**
+Remove `DEVELOPMENT_UPSTREAM` to return to isolated local D1/R2. This setting
+must never be added to the deployed Worker.
 
 ## Sync
 
