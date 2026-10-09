@@ -30,10 +30,11 @@ To sign in to the production account from development on any localhost port,
 put `DEVELOPMENT_UPSTREAM=https://blitz.olma.workers.dev` and the shared
 `DEVELOPMENT_BRIDGE_SECRET` in `.dev.vars`. The same secret must be set in the
 production Worker with `wrangler secret put DEVELOPMENT_BRIDGE_SECRET`. Open
-the app on any HTTPS development origin or `http://localhost:<port>` (use an
-SSH port forward if the dev server runs on the VPS). Plain HTTP on a tailnet
-address cannot sync, because browsers require a secure context for photo
-hashing. The Google button sends you through production's fixed callback; a
+the app on any HTTPS development origin or `http://localhost:<port>`. On the
+VPS that is its Tailscale HTTPS address (`https://<host>.ts.net:8443` for port
+5173); Vite accepts the hostname because the VPS lists it in
+`DEV_ALLOWED_HOSTS`. Plain HTTP on a tailnet address cannot sign in or sync,
+because browsers require a secure context for photo hashing. The Google button sends you through production's fixed callback; a
 five-minute, single-use ticket bound to this browser signs in the
 local origin. In this mode `/api/me`, `/api/sync`, photos, and sign-out are
 proxied to production. **Edits in development change your real account data.**
