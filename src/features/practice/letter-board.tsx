@@ -1,5 +1,6 @@
-import { type MouseEvent, type PointerEvent, useLayoutEffect, useRef, useState } from 'react';
-import { dropLetter } from '../../domain/practice.ts';
+import { Keyboard } from 'lucide-react';
+import { type ChangeEvent, type MouseEvent, type PointerEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { dropLetter, tileForTyped } from '../../domain/practice.ts';
 import type { Language } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import styles from './practice-session.module.css';
@@ -31,6 +32,9 @@ interface Drag {
   over: number | null;
 }
 
+/** Whether the main way of pointing is a finger, which is when typing means opening the on-screen keyboard. */
+const touchFirst = () => window.matchMedia('(pointer: coarse)').matches;
+
 /** How far a press has to travel before it counts as a drag, not a tap. */
 const DRAG_DISTANCE = 6;
 
@@ -42,12 +46,19 @@ const DRAG_DISTANCE = 6;
  * Every letter stays mounted and is moved with `translate`, so it glides from
  * place to place, and the one under the finger keeps its pointer capture.
  * Pointer events, so fingers and mice behave the same.
+ *
+ * Or type it: the button below focuses a hidden field (which opens the keyboard
+ * on a phone) whose text mirrors the placed letters, so each keystroke is either
+ * a letter added in the first free slot or a deletion of the last one. On a
+ * keyboard, `/` opens it and Escape closes it, without ending the lesson.
  */
 export function LetterBoard({ language, term, given, tiles, slots, onChange, locked }: LetterBoardProps) {
   const [drag, setDrag] = useState<Drag | null>(null);
   const press = useRef<{ tile: number; from: number | null; x: number; y: number; id: number; lifted?: boolean } | null>(null);
   const board = useRef<HTMLDivElement>(null);
   const tileElements = useRef<(HTMLButtonElement | null)[]>([]);
+  const field = useRef<HTMLInputElement>(null);
+  const [typing, setTyping] = useState(false);
 
   // While a letter hovers over the word, the others already make room for it.
   const shown = drag && drag.over !== null ? dropLetter(slots, drag.tile, drag.from, drag.over) : slots;
@@ -81,6 +92,18 @@ export function LetterBoard({ language, term, given, tiles, slots, onChange, loc
     };
   }, []);
 
+  useEffect(() => {
+    if (locked) return;
+    const open = (event: KeyboardEvent) => {
+      if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey) return;
+      if (document.activeElement instanceof HTMLInputElement) return;
+      event.preventDefault();
+      field.current?.focus();
+    };
+    window.addEventListener('keydown', open);
+    return () => window.removeEventListener('keydown', open);
+  }, [locked]);
+
   function tap(tile: number) {
     const at = slots.indexOf(tile);
     const free = slots.indexOf(null);
@@ -91,6 +114,29 @@ export function LetterBoard({ language, term, given, tiles, slots, onChange, loc
       sounds.place(free);
       onChange(dropLetter(slots, tile, null, free));
     }
+  }
+
+  const placed = slots.flatMap((tile) => (tile === null ? [] : [tiles[tile]!]));
+
+  function type(event: ChangeEvent<HTMLInputElement>) {
+    const text = [...event.target.value];
+    let next = slots;
+    if (text.length < placed.length) {
+      for (let count = placed.length - text.length; count > 0; count--) {
+        const last = next.map((tile) => tile !== null).lastIndexOf(true);
+        if (last >= 0) next = dropLetter(next, next[last]!, last, null);
+      }
+      sounds.lift();
+    } else {
+      for (const char of text.slice(placed.length)) {
+        const free = next.indexOf(null);
+        const tile = free >= 0 ? tileForTyped(tiles, next, char) : null;
+        if (tile === null) continue;
+        sounds.place(free);
+        next = dropLetter(next, tile, null, free);
+      }
+    }
+    if (next !== slots) onChange(next);
   }
 
   /** The slot nearest the finger, when it is close enough to mean it. */
@@ -204,6 +250,51 @@ export function LetterBoard({ language, term, given, tiles, slots, onChange, loc
           {letter}
         </button>
       ))}
+      <div className={styles.typing}>
+        <button
+          type="button"
+          className={styles.typeButton}
+          aria-pressed={typing}
+          disabled={locked}
+          // Keeps the field focused, so pressing the button does not blur it first.
+          onPointerDown={(event) => event.preventDefault()}
+          onClick={() => (typing ? field.current!.blur() : field.current!.focus())}
+        >
+          <Keyboard aria-hidden="true" />
+          Type
+          {!touchFirst() && <kbd className={styles.key}>/</kbd>}
+        </button>
+        {typing && !touchFirst() && (
+          <p className={styles.typeHint}>
+            Use your keyboard. Only the letters above work; Backspace takes one out, <kbd className={styles.key}>Esc</kbd>{' '}
+            stops typing.
+          </p>
+        )}
+        <input
+          ref={field}
+          className={styles.typeField}
+          value={placed.join('')}
+          onChange={type}
+          onFocus={() => setTyping(true)}
+          onBlur={() => setTyping(false)}
+          aria-label="Type the word"
+          autoComplete="off"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          enterKeyHint="done"
+          onKeyDown={(event) => {
+            // Leaves typing instead of ending the lesson.
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              event.currentTarget.blur();
+            }
+          }}
+          readOnly={locked}
+          tabIndex={-1}
+          lang={language}
+        />
+      </div>
     </div>
   );
 }

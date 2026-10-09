@@ -157,6 +157,17 @@ export function shuffle<T>(items: T[], random: Random = Math.random): T[] {
 }
 
 /**
+ * The loose letter a typed character stands for, if any is left: the same
+ * letter first, then the same one without its accent ("e" for "é").
+ */
+export function tileForTyped(tiles: string[], slots: (number | null)[], typed: string): number | null {
+  const plain = (text: string) => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+  const loose = tiles.map((_, tile) => tile).filter((tile) => !slots.includes(tile));
+  const exact = loose.find((tile) => tiles[tile]!.toLowerCase() === typed.toLowerCase());
+  return exact ?? loose.find((tile) => plain(tiles[tile]!) === plain(typed)) ?? null;
+}
+
+/**
  * Where every letter ends up when `tile` is dropped on slot `to`, coming from
  * slot `from` (null: from the loose letters). Letters in the way slide aside
  * into the nearest free slot, right first. Dropped on no slot (`to` null), a

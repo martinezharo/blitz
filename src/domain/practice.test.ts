@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildExercise, dropLetter, fillLetters, isCorrect, mastery, pickLesson, progress } from './practice.ts';
+import { buildExercise, dropLetter, fillLetters, isCorrect, mastery, pickLesson, progress, tileForTyped } from './practice.ts';
 import type { Word } from './word.ts';
 
 const word = (patch: Partial<Word> = {}): Word => ({
@@ -144,5 +144,27 @@ describe('dropLetter', () => {
 
   it('takes a letter out when dropped off the word', () => {
     expect(dropLetter([0, 1, 2], 1, 1, null)).toEqual([0, null, 2]);
+  });
+});
+
+describe('tileForTyped', () => {
+  const tiles = ['a', 'é', 'a', 'T'];
+
+  it('finds a loose letter, ignoring case', () => {
+    expect(tileForTyped(tiles, [null, null], 't')).toBe(3);
+  });
+
+  it('skips letters already placed', () => {
+    expect(tileForTyped(tiles, [0, null], 'a')).toBe(2);
+    expect(tileForTyped(tiles, [0, 2], 'a')).toBeNull();
+  });
+
+  it('takes a plain letter for an accented one, but prefers an exact match', () => {
+    expect(tileForTyped(tiles, [], 'e')).toBe(1);
+    expect(tileForTyped(['e', 'é'], [], 'é')).toBe(1);
+  });
+
+  it('ignores letters that are not there', () => {
+    expect(tileForTyped(tiles, [], 'z')).toBeNull();
   });
 });
