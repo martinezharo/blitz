@@ -13,8 +13,10 @@ export function emptySlots(tiles: string[]): Slots {
 
 interface LetterBoardProps {
   language: Language;
-  /** The word, only for where its spaces fall. */
+  /** The word, for where its spaces and given letters fall. */
   term: string;
+  /** Which characters of the word are already in place. */
+  given: boolean[];
   tiles: string[];
   slots: Slots;
   onChange: (slots: Slots) => void;
@@ -33,7 +35,7 @@ interface Drag {
 const DRAG_DISTANCE = 6;
 
 /**
- * Letters to put in order. Tap a letter to drop it in the first free slot, or
+ * Letters to put in order, in the free spots between the ones already given. Tap a letter to drop it in the first free slot, or
  * tap a placed one to send it back. Or drag it: letters in the way slide aside
  * while it hovers, and dropping it off the word takes it out.
  *
@@ -41,7 +43,7 @@ const DRAG_DISTANCE = 6;
  * place to place, and the one under the finger keeps its pointer capture.
  * Pointer events, so fingers and mice behave the same.
  */
-export function LetterBoard({ language, term, tiles, slots, onChange, locked }: LetterBoardProps) {
+export function LetterBoard({ language, term, given, tiles, slots, onChange, locked }: LetterBoardProps) {
   const [drag, setDrag] = useState<Drag | null>(null);
   const press = useRef<{ tile: number; from: number | null; x: number; y: number; id: number; lifted?: boolean } | null>(null);
   const board = useRef<HTMLDivElement>(null);
@@ -160,6 +162,10 @@ export function LetterBoard({ language, term, tiles, slots, onChange, locked }: 
         {[...term].map((char, index) =>
           /\s/.test(char) ? (
             <span key={index} className={styles.gap} />
+          ) : given[index] ? (
+            <span key={index} className={styles.slot} data-given="">
+              {char}
+            </span>
           ) : (
             <span key={index} className={styles.slot} data-slot={slot} data-over={drag?.over === slot++ || undefined} />
           ),

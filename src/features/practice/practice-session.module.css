@@ -246,6 +246,11 @@
   transition: border-color var(--motion-standard);
 }
 
+.slot[data-given] {
+  border-color: var(--foreground);
+  font-weight: 900;
+}
+
 .slot[data-over] {
   border-color: var(--accent);
 }

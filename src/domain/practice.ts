@@ -64,7 +64,7 @@ export type Gender = 'shown' | 'pick' | 'write' | null;
 
 export type Answer =
   | { kind: 'choice'; options: string[] }
-  | { kind: 'letters'; tiles: string[] }
+  | { kind: 'letters'; tiles: string[]; given: boolean[] }
   | { kind: 'write'; hint: string };
 
 export interface Exercise {
@@ -103,10 +103,16 @@ export function buildExercise(word: Word, words: Word[], random: Random = Math.r
     }
     answer = { kind: 'choice', options: shuffle([...options], random) };
   } else if (level === 3) {
-    const letters = [...word.term.replace(/\s/g, '')];
+    // A third of the letters start in place, so only the rest are left to order.
+    const chars = [...word.term];
+    const places = chars.flatMap((char, index) => (/\s/.test(char) ? [] : [index]));
+    const kept = places.length < 2 ? 0 : Math.max(1, Math.round(places.length / 3));
+    const given = chars.map(() => false);
+    for (const index of shuffle(places, random).slice(0, kept)) given[index] = true;
+    const letters = chars.filter((char, index) => !/\s/.test(char) && !given[index]);
     let tiles = shuffle(letters, random);
     for (let tries = 0; tiles.join('') === letters.join('') && tries < 5; tries++) tiles = shuffle(letters, random);
-    answer = { kind: 'letters', tiles };
+    answer = { kind: 'letters', tiles, given };
   } else {
     const share = level === 4 ? Math.round(word.term.length / 4) : 1;
     answer = { kind: 'write', hint: word.term.slice(0, Math.max(1, share)) };
@@ -131,6 +137,14 @@ export function isCorrect(exercise: Exercise, article: string, term: string): bo
   }
   if (answer.kind === 'letters') return articleOk && term === word.term.replace(/\s/g, '');
   return articleOk && sameText(answer.hint + term, word.term);
+}
+
+/** The word as spelled so far: the letters given, and the placed ones in the free spots between. */
+export function fillLetters(term: string, given: boolean[], placed: string[]): string {
+  let next = 0;
+  return [...term]
+    .map((char, index) => (/\s/.test(char) ? '' : given[index] ? char : (placed[next++] ?? '')))
+    .join('');
 }
 
 export function shuffle<T>(items: T[], random: Random = Math.random): T[] {

@@ -1,7 +1,7 @@
 import { Check, X } from 'lucide-react';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { recordAnswer } from '../../data/words.ts';
-import { buildExercise, type Exercise, isCorrect, pickLesson } from '../../domain/practice.ts';
+import { buildExercise, type Exercise, fillLetters, isCorrect, pickLesson } from '../../domain/practice.ts';
 import { LANGUAGES, type Language, type Word } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import { useObjectUrl } from '../../shared/ui/use-object-url.ts';
@@ -119,7 +119,10 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
   const photo = useObjectUrl(clue.kind === 'photo' ? clue.photo : null);
   const nextButton = useRef<HTMLButtonElement>(null);
 
-  const built = answer.kind === 'letters' ? slots.map((index) => (index === null ? '' : answer.tiles[index])).join('') : term;
+  const built =
+    answer.kind === 'letters'
+      ? fillLetters(word.term, answer.given, slots.map((index) => (index === null ? '' : answer.tiles[index]!)))
+      : term;
   const ready =
     (gender === null || gender === 'shown' || article.trim() !== '') &&
     (answer.kind === 'letters' ? !slots.includes(null) : term.trim() !== '');
@@ -214,6 +217,7 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
           <LetterBoard
             language={language}
             term={word.term}
+            given={answer.given}
             tiles={answer.tiles}
             slots={slots}
             onChange={setSlots}

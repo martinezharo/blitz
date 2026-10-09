@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildExercise, dropLetter, isCorrect, mastery, pickLesson, progress } from './practice.ts';
+import { buildExercise, dropLetter, fillLetters, isCorrect, mastery, pickLesson, progress } from './practice.ts';
 import type { Word } from './word.ts';
 
 const word = (patch: Partial<Word> = {}): Word => ({
@@ -88,11 +88,24 @@ describe('exercises', () => {
     expect(isCorrect(exercise, 'der', 'Bank')).toBe(false);
   });
 
-  it('level three: the letters of the word, shuffled', () => {
+  it('level three: the letters left over, shuffled, with a third already in place', () => {
     const exercise = buildExercise(word({ level: 3, term: 'Bus stop', article: null }), words);
     expect(exercise.gender).toBeNull();
-    expect(exercise.answer.kind === 'letters' && [...exercise.answer.tiles].sort()).toEqual([...'Busstop'].sort());
-    expect(isCorrect(exercise, '', 'Busstop')).toBe(true);
+    const { answer } = exercise;
+    if (answer.kind !== 'letters') throw new Error('expected letters');
+    expect(answer.given.filter(Boolean)).toHaveLength(2);
+    expect(answer.given[3]).toBe(false);
+    const given = [...'Bus stop'].filter((_, index) => answer.given[index]);
+    expect([...answer.tiles, ...given].sort()).toEqual([...'Busstop'].sort());
+    const rest = [...'Bus stop'].filter((char, index) => char !== ' ' && !answer.given[index]);
+    const filled = fillLetters('Bus stop', answer.given, rest);
+    expect(filled).toBe('Busstop');
+    expect(isCorrect(exercise, '', filled)).toBe(true);
+  });
+
+  it('level three: a one-letter word has nothing given', () => {
+    const exercise = buildExercise(word({ level: 3, term: 'a', article: null }), words);
+    expect(exercise.answer).toEqual({ kind: 'letters', tiles: ['a'], given: [false] });
   });
 
   it('level four: a quarter of the word given, the article written', () => {
