@@ -103,6 +103,13 @@ describe('exercises', () => {
     expect(isCorrect(exercise, '', filled)).toBe(true);
   });
 
+  it('level three: a capital and a small letter swapped still count as right', () => {
+    const exercise = buildExercise(word({ level: 3, term: 'Es tut mir leid', article: null }), words);
+    expect(isCorrect(exercise, '', 'estutmirleid')).toBe(true);
+    expect(isCorrect(exercise, '', 'esTutmirlEid')).toBe(true);
+    expect(isCorrect(exercise, '', 'estutmirliad')).toBe(false);
+  });
+
   it('level three: a one-letter word has nothing given', () => {
     const exercise = buildExercise(word({ level: 3, term: 'a', article: null }), words);
     expect(exercise.answer).toEqual({ kind: 'letters', tiles: ['a'], given: [false] });

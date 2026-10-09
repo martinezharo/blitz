@@ -135,7 +135,8 @@ export function isCorrect(exercise: Exercise, article: string, term: string): bo
     const expected = gender === 'shown' ? `${word.article} ${word.term}` : word.term;
     return articleOk && term === expected;
   }
-  if (answer.kind === 'letters') return articleOk && term === word.term.replace(/\s/g, '');
+  // Case does not count: the same letter can be a capital in one spot and not in another.
+  if (answer.kind === 'letters') return articleOk && sameText(term, word.term.replace(/\s/g, ''));
   return articleOk && sameText(answer.hint + term, word.term);
 }
 
