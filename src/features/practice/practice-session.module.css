@@ -323,6 +323,12 @@
   border-color: var(--foreground);
 }
 
+.tile[data-wrong] {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, var(--background));
+  color: var(--danger);
+}
+
 .board .tile[data-dragging] {
   z-index: 1;
   border-color: var(--accent);

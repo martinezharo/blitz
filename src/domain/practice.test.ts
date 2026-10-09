@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildExercise, dropLetter, fillLetters, isCorrect, mastery, pickLesson, progress, tileForTyped } from './practice.ts';
+import { buildExercise, dropLetter, fillLetters, isCorrect, mastery, misplacedTiles, pickLesson, progress, tileForTyped } from './practice.ts';
 import type { Word } from './word.ts';
 
 const word = (patch: Partial<Word> = {}): Word => ({
@@ -108,6 +108,15 @@ describe('exercises', () => {
     expect(isCorrect(exercise, '', 'estutmirleid')).toBe(true);
     expect(isCorrect(exercise, '', 'esTutmirlEid')).toBe(true);
     expect(isCorrect(exercise, '', 'estutmirliad')).toBe(false);
+  });
+
+  it('marks the tiles that are not where the word has them, skipping given letters and spaces', () => {
+    // "Bus stop" with B and p given leaves u, s, s, t, o to place.
+    const given = [true, false, false, false, false, false, false, true];
+    const tiles = ['u', 's', 's', 't', 'o'];
+    expect(misplacedTiles('Bus stop', given, tiles, [0, 1, 2, 3, 4])).toEqual([]);
+    expect(misplacedTiles('Bus stop', given, tiles, [1, 0, 2, 4, 3])).toEqual([1, 0, 4, 3]);
+    expect(misplacedTiles('Bus stop', given, ['U', 'S', 's', 'T', 'o'], [0, 1, 2, 3, 4])).toEqual([]);
   });
 
   it('level three: a one-letter word has nothing given', () => {

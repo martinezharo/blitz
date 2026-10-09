@@ -1,5 +1,5 @@
 import { type MouseEvent, type PointerEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { dropLetter, tileForTyped } from '../../domain/practice.ts';
+import { dropLetter, misplacedTiles, tileForTyped } from '../../domain/practice.ts';
 import type { Language } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import styles from './practice-session.module.css';
@@ -21,6 +21,8 @@ interface LetterBoardProps {
   slots: Slots;
   onChange: (slots: Slots) => void;
   locked: boolean;
+  /** Whether the word was checked and found wrong, which marks the letters out of place. */
+  wrong: boolean;
 }
 
 interface Drag {
@@ -47,11 +49,13 @@ const DRAG_DISTANCE = 6;
  * letter in the first free slot, and Backspace takes the last placed one out.
  * A small note says so, and is hidden on touch screens.
  */
-export function LetterBoard({ language, term, given, tiles, slots, onChange, locked }: LetterBoardProps) {
+export function LetterBoard({ language, term, given, tiles, slots, onChange, locked, wrong }: LetterBoardProps) {
   const [drag, setDrag] = useState<Drag | null>(null);
   const press = useRef<{ tile: number; from: number | null; x: number; y: number; id: number; lifted?: boolean } | null>(null);
   const board = useRef<HTMLDivElement>(null);
   const tileElements = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const misplaced = wrong ? misplacedTiles(term, given, tiles, slots) : [];
 
   // While a letter hovers over the word, the others already make room for it.
   const shown = drag && drag.over !== null ? dropLetter(slots, drag.tile, drag.from, drag.over) : slots;
@@ -224,6 +228,7 @@ export function LetterBoard({ language, term, given, tiles, slots, onChange, loc
           className={styles.tile}
           data-placed={shown.includes(tile) || undefined}
           data-dragging={drag?.tile === tile || undefined}
+          data-wrong={misplaced.includes(tile) || undefined}
           disabled={locked}
           onPointerDown={(event) => down(event, tile)}
           onPointerMove={move}

@@ -148,6 +148,12 @@ export function fillLetters(term: string, given: boolean[], placed: string[]): s
     .join('');
 }
 
+/** The tiles sitting in the wrong slot, once the word is complete. Case does not matter, as when checking. */
+export function misplacedTiles(term: string, given: boolean[], tiles: string[], slots: (number | null)[]): number[] {
+  const wanted = [...term].filter((char, index) => !/\s/.test(char) && !given[index]);
+  return slots.flatMap((tile, slot) => (tile !== null && !sameText(tiles[tile]!, wanted[slot] ?? '') ? [tile] : []));
+}
+
 export function shuffle<T>(items: T[], random: Random = Math.random): T[] {
   const result = [...items];
   for (let i = result.length - 1; i > 0; i--) {

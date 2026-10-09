@@ -265,6 +265,7 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
             slots={slots}
             onChange={setSlots}
             locked={locked}
+            wrong={result?.correct === false}
           />
         )}
 
