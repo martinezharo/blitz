@@ -1,7 +1,7 @@
 import { Check, X } from 'lucide-react';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { recordAnswer } from '../../data/words.ts';
-import { buildExercise, type Exercise, fillLetters, isCorrect, pickLesson } from '../../domain/practice.ts';
+import { type Answer, buildExercise, type Exercise, fillLetters, isCorrect, pickLesson } from '../../domain/practice.ts';
 import { LANGUAGES, type Language, type Word } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import { useObjectUrl } from '../../shared/ui/use-object-url.ts';
@@ -108,6 +108,9 @@ interface Result {
   level: number | null;
 }
 
+/** The keys for the articles, in order: letters when numbers pick an option, numbers otherwise (letters are typed in the word). */
+const articleKeys = (answer: Answer) => (answer.kind === 'choice' ? ['a', 's', 'd'] : ['1', '2', '3']);
+
 function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
   const { word, clue, gender, answer } = exercise;
   const articles = LANGUAGES[language].articles ?? [];
@@ -118,6 +121,8 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
   const [failed, setFailed] = useState(false);
   const photo = useObjectUrl(clue.kind === 'photo' ? clue.photo : null);
   const nextButton = useRef<HTMLButtonElement>(null);
+  const form = useRef<HTMLFormElement>(null);
+  const termField = useRef<HTMLInputElement>(null);
 
   const built =
     answer.kind === 'letters'
@@ -148,11 +153,53 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
     }
   }
 
-  const solution = `${word.article ? `${word.article} ` : ''}${word.term}`;
   const locked = result !== null;
 
+  function pickTerm(option: string) {
+    if (term !== option) sounds.tap();
+    setTerm(option);
+  }
+
+  function pickArticle(option: string) {
+    if (article !== option) sounds.tap();
+    setArticle(option);
+  }
+
+  // Everything has a key: numbers pick an option, A S D (or 1 2 3) an article, and Enter checks or moves on.
+  const press = useRef((_event: KeyboardEvent) => {});
+  press.current = (event) => {
+    if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
+    const target = event.target;
+    if (event.key === 'Enter') {
+      // Fields submit the form themselves, and the main button is already one.
+      if (target instanceof HTMLInputElement || target === nextButton.current) return;
+      // The close button and the like keep their own Enter.
+      if (target instanceof HTMLButtonElement && !form.current!.contains(target)) return;
+      event.preventDefault();
+      form.current!.requestSubmit();
+      return;
+    }
+    if (target instanceof HTMLInputElement || locked) return;
+    const key = event.key.toLowerCase();
+    const keys = articleKeys(answer);
+    if (answer.kind === 'choice' && /^[1-9]$/.test(key) && answer.options[Number(key) - 1] !== undefined) {
+      event.preventDefault();
+      pickTerm(answer.options[Number(key) - 1]!);
+    } else if (gender === 'pick' && keys.includes(key) && articles[keys.indexOf(key)] !== undefined) {
+      event.preventDefault();
+      pickArticle(articles[keys.indexOf(key)]!);
+    }
+  };
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => press.current(event);
+    window.addEventListener('keydown', listener);
+    return () => window.removeEventListener('keydown', listener);
+  }, []);
+
+  const solution = `${word.article ? `${word.article} ` : ''}${word.term}`;
+
   return (
-    <form className={styles.question} onSubmit={check} noValidate>
+    <form ref={form} className={styles.question} onSubmit={check} noValidate>
       <div className={styles.body}>
         <p className={styles.prompt}>
           {gender === 'pick' || gender === 'write' ? 'Which word is it, with its article?' : 'Which word is it?'}
@@ -173,7 +220,7 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
 
         {gender === 'pick' && (
           <div className={styles.articles} role="group" aria-label="Article">
-            {articles.map((option) => (
+            {articles.map((option, index) => (
               <button
                 key={option}
                 type="button"
@@ -181,12 +228,10 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
                 data-article={option}
                 aria-pressed={article === option}
                 disabled={locked}
-                onClick={() => {
-                  if (article !== option) sounds.tap();
-                  setArticle(option);
-                }}
+                onClick={() => pickArticle(option)}
               >
                 {option}
+                {articleKeys(answer)[index] && <kbd className={styles.keyHint}>{articleKeys(answer)[index]}</kbd>}
               </button>
             ))}
           </div>
@@ -194,7 +239,7 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
 
         {answer.kind === 'choice' && (
           <div className={styles.options} data-many={answer.options.length > 4 || undefined}>
-            {answer.options.map((option) => (
+            {answer.options.map((option, index) => (
               <button
                 key={option}
                 type="button"
@@ -202,12 +247,10 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
                 aria-pressed={term === option}
                 disabled={locked}
                 lang={language}
-                onClick={() => {
-                  if (term !== option) sounds.tap();
-                  setTerm(option);
-                }}
+                onClick={() => pickTerm(option)}
               >
                 {option}
+                {index < 9 && <kbd className={styles.keyHint}>{index + 1}</kbd>}
               </button>
             ))}
           </div>
@@ -232,6 +275,12 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
                 className={`${styles.field} ${styles.articleField}`}
                 value={article}
                 onChange={(event) => setArticle(event.target.value)}
+                onKeyDown={(event) => {
+                  // On to the word, rather than checking an answer that has none yet.
+                  if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
+                  event.preventDefault();
+                  if (article.trim() !== '') termField.current?.focus();
+                }}
                 placeholder="article"
                 aria-label="Article"
                 autoComplete="off"
@@ -247,6 +296,7 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
                 {answer.hint}
               </span>
               <input
+                ref={termField}
                 value={term}
                 onChange={(event) => setTerm(event.target.value)}
                 aria-label={`The word, starting with ${answer.hint}`}

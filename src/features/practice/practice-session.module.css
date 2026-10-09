@@ -177,6 +177,10 @@
 }
 
 .article {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
   flex: 1;
   padding: 0.65rem;
   border-radius: var(--radius-tail-pill);
@@ -200,6 +204,10 @@
 }
 
 .option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
   padding: 0.85rem 1rem;
   border-radius: var(--radius-tail-lg);
   font-size: var(--text-xl);
@@ -211,6 +219,33 @@
   border-color: var(--foreground);
   background: var(--foreground);
   color: var(--button-foreground);
+}
+
+/* The key that picks an option or an article; there is nothing to press on a touch screen. */
+.keyHint {
+  flex: none;
+  font-weight: var(--weight-strong);
+  text-transform: uppercase;
+  min-width: 1.4rem;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 0.3rem;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.option[aria-pressed='true'] .keyHint,
+.article[aria-pressed='true'] .keyHint {
+  border-color: currentColor;
+  color: inherit;
+}
+
+@media (pointer: coarse) {
+  .keyHint {
+    display: none;
+  }
 }
 
 .board {
@@ -302,79 +337,17 @@
   cursor: default;
 }
 
-.typing {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-  margin-top: 1.4rem;
-}
-
-.typeButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.45rem 0.9rem;
-  border: 2px solid var(--line);
-  border-radius: var(--radius-tail-md);
-  background: var(--background);
-  color: var(--muted);
-  font-size: var(--text-sm);
-  font-weight: 900;
-  cursor: pointer;
-  transition: background var(--motion-standard), border-color var(--motion-standard), color var(--motion-standard);
-}
-
-.typeButton svg {
-  width: 1.1rem;
-  height: 1.1rem;
-}
-
-.typeButton:hover:not(:disabled) {
-  border-color: var(--faint);
-}
-
-.typeButton[aria-pressed='true'] {
-  border-color: var(--foreground);
-  color: var(--foreground);
-}
-
-.typeButton:disabled {
-  cursor: default;
-}
-
-.key {
-  min-width: 1.4rem;
-  padding: 0.05rem 0.35rem;
-  border: 1px solid var(--line);
-  border-bottom-width: 2px;
-  border-radius: 0.3rem;
-  color: var(--muted);
-  font: inherit;
-  text-align: center;
-}
-
 .typeHint {
-  margin: 0;
-  color: var(--muted);
+  margin: 1.4rem 0 0;
+  color: var(--faint);
   font-size: var(--text-sm);
   text-align: center;
 }
 
-/* Out of sight but still focusable, so the on-screen keyboard can open. */
-.typeField {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  border: 0;
-  opacity: 0;
-  pointer-events: none;
-  /* Under 16px, iOS zooms the page when the field takes focus. */
-  font-size: 16px;
+@media (pointer: coarse) {
+  .typeHint {
+    display: none;
+  }
 }
 
 .write {
