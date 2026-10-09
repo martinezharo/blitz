@@ -85,10 +85,18 @@
 }
 
 .body {
-  width: min(100% - 2 * var(--page-gutter), var(--page-column));
+  /* The scrollbar sits in a strip of its own beside the column, so it never
+     touches the content. */
+  --scroll-air: 0.75rem;
+
+  width: min(100% - 2 * var(--page-gutter) + var(--scroll-air), var(--page-column) + var(--scroll-air));
   flex: 1;
   margin: 0 auto;
+  /* Re-centre the column itself: the strip hangs off its right edge. */
+  position: relative;
+  left: calc(var(--scroll-air) / 2);
   padding-block: 1.6rem;
+  padding-inline-end: var(--scroll-air);
   overflow: auto;
 }
 
