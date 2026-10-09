@@ -124,27 +124,6 @@
   overflow: auto;
   overscroll-behavior: contain;
   padding: 0.6rem 1.2rem 1.2rem;
-  scrollbar-width: thin;
-  scrollbar-color: var(--line) transparent;
-}
-
-/* Safari still ignores scrollbar-width; give it the same slim, quiet thumb. */
-.body::-webkit-scrollbar {
-  width: 0.7rem;
-}
-
-.body::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.body::-webkit-scrollbar-thumb {
-  border: 0.25rem solid transparent;
-  border-radius: var(--radius-pill);
-  background: var(--line) padding-box;
-}
-
-.body::-webkit-scrollbar-thumb:hover {
-  background-color: var(--faint);
 }
 
 .foot {

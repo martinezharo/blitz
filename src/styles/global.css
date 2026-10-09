@@ -81,6 +81,32 @@
   box-sizing: border-box;
 }
 
+/* One slim, quiet scrollbar for every scroller: the page, sheets and lessons. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+/* Safari still ignores scrollbar-width; give it the same slim, quiet thumb. */
+::-webkit-scrollbar {
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 0.25rem solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--line) padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--faint);
+}
+
 html {
   min-height: 100%;
   background: var(--background);
