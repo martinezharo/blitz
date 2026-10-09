@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAccount } from './data/account.ts';
 import { useLanguage, useSounds, useTheme } from './data/preferences.ts';
 import { useWords } from './data/words.ts';
@@ -41,6 +41,8 @@ function takeSignInOutcome(): { open: boolean; error: string | null } {
 export function App() {
   const [language, setLanguage] = useLanguage();
   const words = useWords(language);
+  // Archived words are out of practice and tucked away at the end of the list.
+  const active = useMemo(() => words?.filter((word) => !word.archived), [words]);
   const [editing, setEditing] = useState<Editing>(null);
   const { state: account, signIn, signOut } = useAccount();
   const [auth, setAuth] = useState(takeSignInOutcome);
@@ -97,14 +99,14 @@ export function App() {
         {words && <WordList language={language} words={words} onOpen={(word) => setEditing({ word })} />}
       </main>
 
-      <PracticeDock words={words?.length ?? 0} onStart={() => setPracticing(true)} />
+      <PracticeDock words={active?.length ?? 0} onStart={() => setPracticing(true)} />
 
-      {practicing && words && (
+      {practicing && active && (
         <PracticeSession
           // A new lesson whenever the language changes under it.
           key={language}
           language={language}
-          words={words}
+          words={active}
           onClose={() => setPracticing(false)}
         />
       )}

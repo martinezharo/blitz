@@ -1,7 +1,7 @@
-import { ImagePlus, Trash2, X } from 'lucide-react';
+import { Archive, ArchiveRestore, ImagePlus, Trash2, X } from 'lucide-react';
 import { type FormEvent, useId, useRef, useState } from 'react';
 import { compressPhoto } from '../../data/photo.ts';
-import { addWord, deleteWord, updateWord } from '../../data/words.ts';
+import { addWord, deleteWord, setArchived, updateWord } from '../../data/words.ts';
 import {
   type Draft,
   type DraftProblem,
@@ -88,6 +88,18 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
     }
   }
 
+  async function toggleArchived() {
+    if (!word) return;
+    try {
+      await setArchived(word, !word.archived);
+      sounds.saved();
+      onClose(null);
+    } catch {
+      sounds.nudge();
+      setSaveError(true);
+    }
+  }
+
   async function pickPhoto(file: File | undefined) {
     if (!file) return;
     setPhotoError(false);
@@ -121,6 +133,12 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
           ) : (
             <button type="button" className={`${styles.button} ${styles.quiet}`} onClick={dismiss}>
               Cancel
+            </button>
+          )}
+          {word && (
+            <button type="button" className={`${styles.button} ${styles.quiet} ${styles.archive}`} onClick={toggleArchived}>
+              {word.archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}
+              {word.archived ? 'Unarchive' : 'Archive'}
             </button>
           )}
           <button

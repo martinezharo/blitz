@@ -60,6 +60,19 @@ export async function recordAnswer(word: Word, correct: boolean): Promise<Word> 
   return updated;
 }
 
+/** Archives a word, or brings it back. Returns it as stored. */
+export async function setArchived(word: Word, archived: boolean): Promise<Word> {
+  const now = Date.now();
+  // Back from the archive it is a fresh start at the top: one miss and it drops.
+  const updated: Word = { ...word, archived, streak: 0, updatedAt: now };
+  await db.transaction('rw', db.words, db.pending, async () => {
+    await db.words.update(word.id, { archived, streak: 0, updatedAt: now });
+    await db.pending.put({ id: word.id, at: now });
+  });
+  requestSync();
+  return updated;
+}
+
 /**
  * A v4 UUID. `crypto.randomUUID` only exists on secure origins, and the dev
  * server is reached over plain HTTP on the tailnet.

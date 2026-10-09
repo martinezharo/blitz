@@ -450,6 +450,39 @@ input.articleField {
   font-size: var(--text-md);
 }
 
+/* Puts the word away for good. Quiet by default, filled once the lesson suggests it. */
+.archive {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  padding: 0.5rem 0.85rem;
+  border: 2px solid currentColor;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  font-size: var(--text-md);
+  font-weight: var(--weight-black);
+  cursor: pointer;
+  transition: transform var(--motion-spring), background var(--motion-standard), color var(--motion-standard);
+}
+
+.archive svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.archive:active {
+  transform: scale(0.95);
+}
+
+.archive[data-offered],
+.archive[aria-pressed='true'] {
+  background: var(--result);
+  color: var(--background);
+}
+
 .mark {
   display: grid;
   width: 2.6rem;

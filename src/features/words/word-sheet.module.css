@@ -272,6 +272,12 @@ textarea.input {
   background: var(--icon-background);
 }
 
+/* Shares the footer with delete and save, so it keeps to its words and a tighter fit. */
+.archive {
+  padding-inline: 0.85rem;
+  white-space: nowrap;
+}
+
 .delete {
   background: var(--icon-background);
   color: var(--danger);
@@ -283,7 +289,10 @@ textarea.input {
 }
 
 .main {
+  min-width: 0;
   flex: 1;
+  padding-inline: 0.8rem;
+  white-space: nowrap;
   background: var(--button-background);
   color: var(--button-foreground);
 }

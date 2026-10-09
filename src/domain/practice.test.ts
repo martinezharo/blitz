@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { buildExercise, dropLetter, fillLetters, isCorrect, mastery, misplacedTiles, pickLesson, progress, tileForTyped } from './practice.ts';
+import {
+  buildExercise,
+  dropLetter,
+  fillLetters,
+  isCorrect,
+  mastery,
+  misplacedTiles,
+  offersArchive,
+  pickLesson,
+  progress,
+  STREAK_TO_ARCHIVE,
+  tileForTyped,
+} from './practice.ts';
 import { FILLERS } from './fillers.ts';
 import type { Word } from './word.ts';
 
@@ -32,6 +44,10 @@ describe('mastery', () => {
   it('counts words from before practice as level one', () => {
     expect(mastery([{ level: 0 }])).toEqual({ points: 1, max: 5 });
   });
+
+  it('counts archived words as learned, whatever their level', () => {
+    expect(mastery([{ level: 2, archived: true }, { level: 2 }])).toEqual({ points: 7, max: 10 });
+  });
 });
 
 describe('progress', () => {
@@ -46,12 +62,33 @@ describe('progress', () => {
   });
 
   it('stays at the top until a miss drops it to four', () => {
-    expect(progress({ level: 5, streak: 0 }, true)).toEqual({ level: 5, streak: 0 });
-    expect(progress({ level: 5, streak: 0 }, false)).toEqual({ level: 4, streak: 0 });
+    expect(progress({ level: 5, streak: 0 }, true)).toEqual({ level: 5, streak: 1 });
+    expect(progress({ level: 5, streak: 4 }, false)).toEqual({ level: 4, streak: 0 });
+  });
+
+  it('stops counting just past the archive offer', () => {
+    expect(progress({ level: 5, streak: STREAK_TO_ARCHIVE }, true)).toEqual({ level: 5, streak: STREAK_TO_ARCHIVE + 1 });
+    expect(progress({ level: 5, streak: STREAK_TO_ARCHIVE + 1 }, true)).toEqual({ level: 5, streak: STREAK_TO_ARCHIVE + 1 });
+  });
+
+  it('starts counting from nothing on reaching the top', () => {
+    expect(progress({ level: 4, streak: 2 }, true)).toEqual({ level: 5, streak: 0 });
   });
 
   it('treats words from before practice as level one', () => {
     expect(progress({ level: 0 }, true)).toEqual({ level: 1, streak: 1 });
+  });
+});
+
+describe('offersArchive', () => {
+  it('offers only on the answer that passes five right in a row at the top', () => {
+    expect(offersArchive({ level: 5, streak: STREAK_TO_ARCHIVE - 1 })).toBe(false);
+    expect(offersArchive({ level: 5, streak: STREAK_TO_ARCHIVE })).toBe(true);
+    expect(offersArchive({ level: 5, streak: STREAK_TO_ARCHIVE + 1 })).toBe(false);
+  });
+
+  it('never offers below the top level', () => {
+    expect(offersArchive({ level: 4, streak: STREAK_TO_ARCHIVE })).toBe(false);
   });
 });
 

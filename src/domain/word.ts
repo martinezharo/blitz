@@ -52,6 +52,8 @@ export interface Word {
   level: number;
   /** Right answers in a row at the current level. Absent on older words. */
   streak?: number;
+  /** Learned for good: out of the list's practice, kept in an archive. Absent means not archived. */
+  archived?: boolean;
   createdAt: number;
   updatedAt: number;
 }

@@ -5,12 +5,16 @@ import { MAX_LEVEL, type Word } from './word.ts';
  * How practice works. Each word climbs five levels, each one a harder kind of
  * question. Three right answers in a row move a word up; one wrong answer
  * moves it down. Past the top level a word keeps coming back, and a single
- * miss drops it to level four again.
+ * miss drops it to level four again. Right answers in a row at the top level
+ * are counted too: once there are more than five, the word is offered for the
+ * archive, where it stops coming back.
  */
 
 const LESSON_SIZE = 10;
 /** Right answers in a row that move a word up a level. */
 const STREAK_TO_LEVEL_UP = 3;
+/** Right answers in a row at the top level that make a word worth archiving: more than five. */
+export const STREAK_TO_ARCHIVE = 6;
 
 type Random = () => number;
 
@@ -19,9 +23,10 @@ export function levelOf(word: Pick<Word, 'level'>): number {
   return Math.min(MAX_LEVEL, Math.max(1, word.level));
 }
 
-/** How much of a list is learned: the sum of its levels, out of every word at the top. */
-export function mastery(words: Pick<Word, 'level'>[]): { points: number; max: number } {
-  return { points: words.reduce((sum, word) => sum + levelOf(word), 0), max: words.length * MAX_LEVEL };
+/** How much of a list is learned: the sum of its levels, out of every word at the top. Archived words count as learned. */
+export function mastery(words: Pick<Word, 'level' | 'archived'>[]): { points: number; max: number } {
+  const points = words.reduce((sum, word) => sum + (word.archived ? MAX_LEVEL : levelOf(word)), 0);
+  return { points, max: words.length * MAX_LEVEL };
 }
 
 export function progress(word: Pick<Word, 'level' | 'streak'>, correct: boolean): { level: number; streak: number } {
@@ -29,7 +34,13 @@ export function progress(word: Pick<Word, 'level' | 'streak'>, correct: boolean)
   if (!correct) return { level: Math.max(1, level - 1), streak: 0 };
   const streak = (word.streak ?? 0) + 1;
   if (streak >= STREAK_TO_LEVEL_UP && level < MAX_LEVEL) return { level: level + 1, streak: 0 };
-  return { level, streak: level < MAX_LEVEL ? streak : 0 };
+  // At the top the streak keeps counting, but stops once it has passed the archive offer.
+  return { level, streak: level < MAX_LEVEL ? streak : Math.min(streak, STREAK_TO_ARCHIVE + 1) };
+}
+
+/** Whether this answer is the one that makes the word worth archiving. Asked once per run of right answers. */
+export function offersArchive(word: Pick<Word, 'level' | 'streak'>): boolean {
+  return levelOf(word) === MAX_LEVEL && word.streak === STREAK_TO_ARCHIVE;
 }
 
 /** About ten questions, fewer while there are only a couple of words. */

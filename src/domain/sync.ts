@@ -83,6 +83,7 @@ function parseWireWord(value: unknown): WireWord | null {
     (word.level as number) >= 0 &&
     (word.level as number) <= MAX_LEVEL &&
     (word.streak === undefined || (Number.isInteger(word.streak) && (word.streak as number) >= 0 && (word.streak as number) < 100)) &&
+    (word.archived === undefined || typeof word.archived === 'boolean') &&
     isTime(word.createdAt) &&
     isTime(word.updatedAt);
   if (!valid) return null;
@@ -99,6 +100,8 @@ function parseWireWord(value: unknown): WireWord | null {
     photo: word.photo as string | null,
     level: word.level as number,
     streak: (word.streak as number | undefined) ?? 0,
+    // Only an archived word carries the flag; absent means not archived.
+    ...(word.archived === true && { archived: true }),
     createdAt: word.createdAt as number,
     updatedAt: word.updatedAt as number,
   };

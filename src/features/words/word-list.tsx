@@ -1,4 +1,5 @@
-import type { CSSProperties } from 'react';
+import { Archive, ChevronDown } from 'lucide-react';
+import { type CSSProperties, useState } from 'react';
 import { mastery } from '../../domain/practice.ts';
 import { LANGUAGES, type Language, MAX_LEVEL, type Word, wordSummary } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
@@ -13,7 +14,10 @@ interface WordListProps {
   onOpen: (word: Word) => void;
 }
 
+/** Every word of the language: the ones in practice first, the archived ones in a drawer below. */
 export function WordList({ language, words, onOpen }: WordListProps) {
+  const [showArchived, setShowArchived] = useState(false);
+
   if (words.length === 0) {
     return (
       <div className={styles.empty}>
@@ -27,31 +31,63 @@ export function WordList({ language, words, onOpen }: WordListProps) {
   }
 
   const { points, max } = mastery(words);
+  const active = words.filter((word) => !word.archived);
+  const archived = words.filter((word) => word.archived);
+  const open = (word: Word, row: HTMLElement) => {
+    sounds.open();
+    morph(morphEndsIn(row), () => onOpen(word), openSheetEnds);
+  };
 
   return (
     <>
       <div className={styles.count}>
         <span>
-          {words.length} {words.length === 1 ? 'word' : 'words'}
+          {active.length} {active.length === 1 ? 'word' : 'words'}
         </span>
         <span className={styles.mastery} role="img" aria-label={`Mastery ${points} of ${max} points`}>
           <span className={styles.meter} style={{ '--fill': points / max } as CSSProperties} />
           {points} / {max}
         </span>
       </div>
-      <ul className={styles.words}>
-        {words.map((word) => (
-          <li key={word.id}>
-            <WordRow
-              word={word}
-              onOpen={(row) => {
-                sounds.open();
-                morph(morphEndsIn(row), () => onOpen(word), openSheetEnds);
-              }}
-            />
-          </li>
-        ))}
-      </ul>
+      {active.length > 0 ? (
+        <ul className={styles.words}>
+          {active.map((word) => (
+            <li key={word.id}>
+              <WordRow word={word} onOpen={(row) => open(word, row)} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={styles.allArchived}>Every word is archived. Add a new one to practise again.</p>
+      )}
+
+      {archived.length > 0 && (
+        <section className={styles.archive}>
+          <button
+            type="button"
+            className={styles.archiveToggle}
+            aria-expanded={showArchived}
+            onClick={() => {
+              sounds.toggle(!showArchived);
+              setShowArchived(!showArchived);
+            }}
+          >
+            <Archive aria-hidden="true" />
+            Archived
+            <span className={styles.archiveCount}>{archived.length}</span>
+            <ChevronDown className={styles.chevron} aria-hidden="true" />
+          </button>
+          {showArchived && (
+            <ul className={`${styles.words} ${styles.archived}`}>
+              {archived.map((word) => (
+                <li key={word.id}>
+                  <WordRow word={word} onOpen={(row) => open(word, row)} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
     </>
   );
 }

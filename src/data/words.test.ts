@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type Draft, emptyDraft } from '../domain/word.ts';
 import { db } from './db.ts';
-import { addWord, deleteWord, recordAnswer, updateWord } from './words.ts';
+import { addWord, deleteWord, recordAnswer, setArchived, updateWord } from './words.ts';
 
 const bank: Draft = { ...emptyDraft('Bank'), type: 'noun', article: 'die', translation: 'bench' };
 
@@ -38,6 +38,15 @@ describe('words', () => {
     expect(await db.words.get(word.id)).toMatchObject({ level: 2, streak: 0 });
     await recordAnswer(word, false);
     expect(await db.words.get(word.id)).toMatchObject({ level: 1, streak: 0 });
+  });
+
+  it('archives a word and brings it back', async () => {
+    const word = await addWord('de', bank);
+    const archived = await setArchived(word, true);
+    expect(await db.words.get(word.id)).toMatchObject({ archived: true, streak: 0 });
+    expect(await db.pending.get(word.id)).toMatchObject({ at: archived.updatedAt });
+    await setArchived(archived, false);
+    expect(await db.words.get(word.id)).toMatchObject({ archived: false });
   });
 
   it('deletes a word', async () => {

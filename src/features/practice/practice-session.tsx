@@ -1,7 +1,7 @@
-import { Check, X } from 'lucide-react';
+import { Archive, Check, X } from 'lucide-react';
 import { type FormEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { recordAnswer } from '../../data/words.ts';
-import { type Answer, buildExercise, type Exercise, fillLetters, isCorrect, pickLesson } from '../../domain/practice.ts';
+import { recordAnswer, setArchived } from '../../data/words.ts';
+import { type Answer, buildExercise, type Exercise, fillLetters, isCorrect, offersArchive, pickLesson, STREAK_TO_ARCHIVE } from '../../domain/practice.ts';
 import { LANGUAGES, type Language, type Word } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import { useObjectUrl } from '../../shared/ui/use-object-url.ts';
@@ -24,6 +24,8 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
   const [step, setStep] = useState(0);
   const [right, setRight] = useState(0);
   const [confirming, setConfirming] = useState(false);
+  // Fewer than the lesson holds when words are archived along the way.
+  const [asked, setAsked] = useState(0);
 
   const latest = (word: Word) => {
     const local = answered.get(word.id);
@@ -51,17 +53,24 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
   async function answer(correct: boolean): Promise<Word> {
     const updated = await recordAnswer(latest(exercise!.word), correct);
     setAnswered((map) => new Map(map).set(updated.id, updated));
+    setAsked((count) => count + 1);
     if (correct) setRight((count) => count + 1);
     return updated;
   }
 
+  async function archive(archived: boolean): Promise<void> {
+    const updated = await setArchived(latest(exercise!.word), archived);
+    setAnswered((map) => new Map(map).set(updated.id, updated));
+  }
+
   function next() {
-    const fresh = words.map(latest);
+    // A word archived mid-lesson is not asked again.
+    const fresh = words.map(latest).filter((word) => !word.archived);
     // A word deleted on another device mid-lesson is skipped.
     let index = step + 1;
     while (index < lesson.length && !fresh.some((word) => word.id === lesson[index])) index++;
     const word = fresh.find((candidate) => candidate.id === lesson[index]);
-    if (!word) sounds.complete(right === lesson.length);
+    if (!word) sounds.complete(right === asked);
     setStep(index);
     setExercise(word ? buildExercise(word, fresh) : null);
   }
@@ -125,9 +134,9 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
       </header>
 
       {done ? (
-        <Summary right={right} total={lesson.length} onClose={onClose} />
+        <Summary right={right} total={asked} onClose={onClose} />
       ) : (
-        <Question key={step} language={language} exercise={exercise} onAnswer={answer} onNext={next} />
+        <Question key={step} language={language} exercise={exercise} onAnswer={answer} onArchive={archive} onNext={next} />
       )}
 
       {confirming && <ConfirmQuit onStay={() => setConfirming(false)} onQuit={quit} />}
@@ -190,6 +199,7 @@ interface QuestionProps {
   language: Language;
   exercise: Exercise;
   onAnswer: (correct: boolean) => Promise<Word>;
+  onArchive: (archived: boolean) => Promise<void>;
   onNext: () => void;
 }
 
@@ -197,12 +207,14 @@ interface Result {
   correct: boolean;
   /** Set when the answer moved the word to another level. */
   level: number | null;
+  /** Set when the word has been right so often at the top level that it is worth archiving. */
+  offer: boolean;
 }
 
 /** The keys for the articles, in order: letters when numbers pick an option, numbers otherwise (letters are typed in the word). */
 const articleKeys = (answer: Answer) => (answer.kind === 'choice' ? ['a', 's', 'd'] : ['1', '2', '3']);
 
-function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
+function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionProps) {
   const { word, clue, gender, answer } = exercise;
   const articles = LANGUAGES[language].articles ?? [];
   const [article, setArticle] = useState('');
@@ -210,6 +222,7 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
   const [slots, setSlots] = useState<Slots>(() => (answer.kind === 'letters' ? emptySlots(answer.tiles) : []));
   const [result, setResult] = useState<Result | null>(null);
   const [failed, setFailed] = useState(false);
+  const [archived, setArchivedNow] = useState(false);
   const photo = useObjectUrl(clue.kind === 'photo' ? clue.photo : null);
   const nextButton = useRef<HTMLButtonElement>(null);
   const form = useRef<HTMLFormElement>(null);
@@ -241,7 +254,11 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
       if (correct) sounds.correct();
       else sounds.wrong();
       if (updated.level > exercise.level) sounds.levelUp();
-      setResult({ correct, level: updated.level !== exercise.level ? updated.level : null });
+      setResult({
+        correct,
+        level: updated.level !== exercise.level ? updated.level : null,
+        offer: correct && offersArchive(updated),
+      });
     } catch {
       sounds.nudge();
       setFailed(true);
@@ -249,6 +266,18 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
   }
 
   const locked = result !== null;
+
+  async function toggleArchived() {
+    try {
+      await onArchive(!archived);
+      sounds.saved();
+      setArchivedNow(!archived);
+      setFailed(false);
+    } catch {
+      sounds.nudge();
+      setFailed(true);
+    }
+  }
 
   function pickTerm(option: string) {
     if (term !== option) sounds.tap();
@@ -424,7 +453,22 @@ function Question({ language, exercise, onAnswer, onNext }: QuestionProps) {
               {result.level !== null && (
                 <span>{result.correct ? `Level up: ${result.level}` : `Back to level ${result.level}`}</span>
               )}
+              {result.offer && !archived && (
+                <span>You've got it right {STREAK_TO_ARCHIVE} times at the top level. Archive it?</span>
+              )}
             </span>
+            {result.correct && (
+              <button
+                type="button"
+                className={styles.archive}
+                data-offered={(result.offer && !archived) || undefined}
+                aria-pressed={archived}
+                onClick={() => void toggleArchived()}
+              >
+                <Archive aria-hidden="true" />
+                {archived ? 'Archived' : 'Archive'}
+              </button>
+            )}
           </div>
         )}
         {failed && (
