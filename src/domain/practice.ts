@@ -18,6 +18,11 @@ export function levelOf(word: Pick<Word, 'level'>): number {
   return Math.min(MAX_LEVEL, Math.max(1, word.level));
 }
 
+/** How much of a list is learned: the sum of its levels, out of every word at the top. */
+export function mastery(words: Pick<Word, 'level'>[]): { points: number; max: number } {
+  return { points: words.reduce((sum, word) => sum + levelOf(word), 0), max: words.length * MAX_LEVEL };
+}
+
 export function progress(word: Pick<Word, 'level' | 'streak'>, correct: boolean): { level: number; streak: number } {
   const level = levelOf(word);
   if (!correct) return { level: Math.max(1, level - 1), streak: 0 };

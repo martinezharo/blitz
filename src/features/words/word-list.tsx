@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+import { mastery } from '../../domain/practice.ts';
 import { LANGUAGES, type Language, MAX_LEVEL, type Word, wordSummary } from '../../domain/word.ts';
 import { morph, morphEndsIn } from '../../shared/ui/morph.ts';
 import { openSheetEnds } from '../../shared/ui/sheet.tsx';
@@ -23,11 +25,19 @@ export function WordList({ language, words, onOpen }: WordListProps) {
     );
   }
 
+  const { points, max } = mastery(words);
+
   return (
     <>
-      <p className={styles.count}>
-        {words.length} {words.length === 1 ? 'word' : 'words'}
-      </p>
+      <div className={styles.count}>
+        <span>
+          {words.length} {words.length === 1 ? 'word' : 'words'}
+        </span>
+        <span className={styles.mastery} role="img" aria-label={`Mastery ${points} of ${max} points`}>
+          <span className={styles.meter} style={{ '--fill': points / max } as CSSProperties} />
+          {points} / {max}
+        </span>
+      </div>
       <ul className={styles.words}>
         {words.map((word) => (
           <li key={word.id}>

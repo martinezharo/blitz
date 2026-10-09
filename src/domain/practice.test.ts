@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildExercise, dropLetter, isCorrect, pickLesson, progress } from './practice.ts';
+import { buildExercise, dropLetter, isCorrect, mastery, pickLesson, progress } from './practice.ts';
 import type { Word } from './word.ts';
 
 const word = (patch: Partial<Word> = {}): Word => ({
@@ -22,6 +22,16 @@ const word = (patch: Partial<Word> = {}): Word => ({
 const others = ['Tisch', 'Stuhl', 'Haus', 'Auto', 'Baum', 'Hund', 'Katze', 'Buch', 'Lampe'].map((term) =>
   word({ id: term, term, article: 'der' }),
 );
+
+describe('mastery', () => {
+  it('adds up levels out of every word at the top', () => {
+    expect(mastery([{ level: 1 }, { level: 3 }, { level: 5 }])).toEqual({ points: 9, max: 15 });
+  });
+
+  it('counts words from before practice as level one', () => {
+    expect(mastery([{ level: 0 }])).toEqual({ points: 1, max: 5 });
+  });
+});
 
 describe('progress', () => {
   it('moves up after three right answers in a row', () => {
