@@ -82,6 +82,7 @@ function parseWireWord(value: unknown): WireWord | null {
     Number.isInteger(word.level) &&
     (word.level as number) >= 0 &&
     (word.level as number) <= MAX_LEVEL &&
+    (word.streak === undefined || (Number.isInteger(word.streak) && (word.streak as number) >= 0 && (word.streak as number) < 100)) &&
     isTime(word.createdAt) &&
     isTime(word.updatedAt);
   if (!valid) return null;
@@ -97,6 +98,7 @@ function parseWireWord(value: unknown): WireWord | null {
     definition: word.definition as string | null,
     photo: word.photo as string | null,
     level: word.level as number,
+    streak: (word.streak as number | undefined) ?? 0,
     createdAt: word.createdAt as number,
     updatedAt: word.updatedAt as number,
   };

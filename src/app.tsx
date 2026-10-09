@@ -9,6 +9,7 @@ import { AuthModal } from './features/account/auth-modal.tsx';
 import { LanguageMenu } from './features/language/language-menu.tsx';
 import { PreferencesModal } from './features/preferences/preferences-modal.tsx';
 import { PracticeDock } from './features/practice/practice-dock.tsx';
+import { PracticeSession } from './features/practice/practice-session.tsx';
 import { Composer } from './features/words/composer.tsx';
 import { WordList } from './features/words/word-list.tsx';
 import { WordSheet } from './features/words/word-sheet.tsx';
@@ -42,6 +43,7 @@ export function App() {
   const [auth, setAuth] = useState(takeSignInOutcome);
   const [theme, setTheme] = useTheme();
   const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [practicing, setPracticing] = useState(false);
 
   return (
     <>
@@ -62,7 +64,17 @@ export function App() {
         {words && <WordList language={language} words={words} onOpen={(word) => setEditing({ word })} />}
       </main>
 
-      <PracticeDock />
+      <PracticeDock words={words?.length ?? 0} onStart={() => setPracticing(true)} />
+
+      {practicing && words && (
+        <PracticeSession
+          // A new lesson whenever the language changes under it.
+          key={language}
+          language={language}
+          words={words}
+          onClose={() => setPracticing(false)}
+        />
+      )}
 
       {editing && (
         <WordSheet

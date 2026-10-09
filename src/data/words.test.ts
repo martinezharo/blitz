@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type Draft, emptyDraft } from '../domain/word.ts';
 import { db } from './db.ts';
-import { addWord, deleteWord, updateWord } from './words.ts';
+import { addWord, deleteWord, recordAnswer, updateWord } from './words.ts';
 
 const bank: Draft = { ...emptyDraft('Bank'), type: 'noun', article: 'die', translation: 'bench' };
 
@@ -11,9 +11,9 @@ beforeEach(async () => {
 });
 
 describe('words', () => {
-  it('adds a word at level zero', async () => {
+  it('adds a word at level one', async () => {
     const word = await addWord('de', bank);
-    expect(await db.words.get(word.id)).toMatchObject({ term: 'Bank', article: 'die', level: 0, language: 'de' });
+    expect(await db.words.get(word.id)).toMatchObject({ term: 'Bank', article: 'die', level: 1, language: 'de' });
   });
 
   it('keeps languages apart', async () => {
@@ -30,6 +30,14 @@ describe('words', () => {
     expect(stored?.translation).toBe('bank');
     expect(stored!.updatedAt).toBeGreaterThan(word.updatedAt);
     expect(stored!.createdAt).toBe(word.createdAt);
+  });
+
+  it('records practice answers', async () => {
+    let word = await addWord('de', bank);
+    for (let i = 0; i < 3; i++) word = await recordAnswer(word, true);
+    expect(await db.words.get(word.id)).toMatchObject({ level: 2, streak: 0 });
+    await recordAnswer(word, false);
+    expect(await db.words.get(word.id)).toMatchObject({ level: 1, streak: 0 });
   });
 
   it('deletes a word', async () => {

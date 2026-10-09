@@ -1,14 +1,24 @@
 import { Play } from 'lucide-react';
+import { lessonLength } from '../../domain/practice.ts';
 import styles from './practice-dock.module.css';
 
-/** The way into practice. Practice itself is not built yet, so it stays shut. */
-export function PracticeDock() {
+/** The way into practice. Shut until the language has a word to ask about. */
+export function PracticeDock({ words, onStart }: { words: number; onStart: () => void }) {
+  const ready = words > 0;
+
   return (
     <div className={styles.dock}>
-      <button type="button" className={styles.cta} aria-disabled="true">
+      <button
+        type="button"
+        className={styles.cta}
+        aria-disabled={!ready}
+        onClick={() => {
+          if (ready) onStart();
+        }}
+      >
         <span className={styles.text}>
           <strong>Practice</strong>
-          <small>Coming soon</small>
+          <small>{ready ? `${lessonLength(words)} quick questions` : 'Add a word first'}</small>
         </span>
         <span className={styles.go} aria-hidden="true">
           <Play />

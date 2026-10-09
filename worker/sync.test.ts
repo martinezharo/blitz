@@ -21,7 +21,8 @@ const word = (id: string, updatedAt: number, term = 'Bank'): WireWord => ({
   translation: 'bench',
   definition: null,
   photo: null,
-  level: 0,
+  level: 1,
+  streak: 0,
   createdAt: 1,
   updatedAt,
 });

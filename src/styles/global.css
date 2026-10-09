@@ -18,6 +18,7 @@
      dark, where the accent lightens, so both themes use dark ink. */
   --accent-ink: #2f1107;
   --danger: light-dark(#c4314b, #ff6b84);
+  --success: light-dark(#2e9a5a, #4cc57f);
   --selection: light-dark(#ffd382, #9d341e);
   --selection-foreground: light-dark(#321207, #ffffff);
   --icon-background: light-dark(#f3f3ef, #171815);

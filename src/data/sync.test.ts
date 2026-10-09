@@ -59,7 +59,7 @@ describe('sync', () => {
       {
         id,
         updatedAt: now,
-        word: { id, language: 'en', type: 'verb', term: 'run', article: null, plural: null, translation: null, definition: 'Move fast', photo: null, level: 0, createdAt: now, updatedAt: now },
+        word: { id, language: 'en', type: 'verb', term: 'run', article: null, plural: null, translation: null, definition: 'Move fast', photo: null, level: 1, streak: 0, createdAt: now, updatedAt: now },
       },
     ]);
     await syncNow();

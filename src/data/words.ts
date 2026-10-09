@@ -1,5 +1,6 @@
 import Dexie from 'dexie';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { progress } from '../domain/practice.ts';
 import { type Draft, type Language, type Word, wordFields } from '../domain/word.ts';
 import { db } from './db.ts';
 import { requestSync } from './sync.ts';
@@ -22,7 +23,8 @@ export async function addWord(language: Language, draft: Draft): Promise<Word> {
   const word: Word = {
     ...wordFields(language, draft),
     id: newId(),
-    level: 0,
+    level: 1,
+    streak: 0,
     createdAt: now,
     updatedAt: now,
   };
@@ -44,6 +46,18 @@ export async function updateWord(word: Word, draft: Draft): Promise<void> {
     await db.pending.put({ id: word.id, at: now });
   });
   requestSync();
+}
+
+/** Moves a word up or down after a practice answer. Returns it as stored. */
+export async function recordAnswer(word: Word, correct: boolean): Promise<Word> {
+  const now = Date.now();
+  const updated: Word = { ...word, ...progress(word, correct), updatedAt: now };
+  await db.transaction('rw', db.words, db.pending, async () => {
+    await db.words.update(word.id, { level: updated.level, streak: updated.streak, updatedAt: now });
+    await db.pending.put({ id: word.id, at: now });
+  });
+  requestSync();
+  return updated;
 }
 
 /**

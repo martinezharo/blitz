@@ -27,7 +27,7 @@ export const WORD_TYPES: { value: WordType; label: string }[] = [
   { value: 'other', label: 'other' },
 ];
 
-/** Highest practice level. Practice is not built yet, so every word sits at 0. */
+/** Highest practice level. Words start at 1. */
 export const MAX_LEVEL = 5;
 
 export interface Word {
@@ -50,6 +50,8 @@ export interface Word {
    */
   photoKey?: string | null;
   level: number;
+  /** Right answers in a row at the current level. Absent on older words. */
+  streak?: number;
   createdAt: number;
   updatedAt: number;
 }
