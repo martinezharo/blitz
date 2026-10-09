@@ -1,3 +1,4 @@
+import { FILLERS, type Filler } from './fillers.ts';
 import { MAX_LEVEL, type Word } from './word.ts';
 
 /**
@@ -90,10 +91,13 @@ export function buildExercise(word: Word, words: Word[], random: Random = Math.r
 
   let answer: Answer;
   if (level <= 2) {
-    const label = (other: Word) => (gender === 'shown' && other.article ? `${other.article} ${other.term}` : other.term);
+    const label = (other: Filler) => (gender === 'shown' && other.article ? `${other.article} ${other.term}` : other.term);
     const correct = label(word);
-    // Same kind of word first, so the wrong options are not giveaways.
-    const others = shuffle(words.filter((other) => other.id !== word.id), random).sort(
+    // Common words make up the numbers while the list is short, never one already in it.
+    const fillers = FILLERS[word.language].filter((filler) => !words.some((other) => sameText(other.term, filler.term)));
+    // Same kind of word first, so the wrong options are not giveaways, and the
+    // user's own words before the fillers.
+    const others = [...shuffle(words.filter((other) => other.id !== word.id), random), ...shuffle(fillers, random)].sort(
       (a, b) => Number(b.type === word.type) - Number(a.type === word.type),
     );
     const options = new Set([correct]);

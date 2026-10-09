@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildExercise, dropLetter, fillLetters, isCorrect, mastery, misplacedTiles, pickLesson, progress, tileForTyped } from './practice.ts';
+import { FILLERS } from './fillers.ts';
 import type { Word } from './word.ts';
 
 const word = (patch: Partial<Word> = {}): Word => ({
@@ -78,6 +79,26 @@ describe('exercises', () => {
     expect(exercise.answer.options).toContain('die Bank');
     expect(isCorrect(exercise, '', 'die Bank')).toBe(true);
     expect(isCorrect(exercise, '', 'der Tisch')).toBe(false);
+  });
+
+  it('pads the options with common words while the list is short', () => {
+    const exercise = buildExercise(word(), [word(), word({ id: 'tisch', term: 'Tisch', article: 'der' })]);
+    if (exercise.answer.kind !== 'choice') throw new Error('Expected a choice');
+    const options = exercise.answer.options;
+    expect(options).toHaveLength(4);
+    expect(options).toContain('die Bank');
+    expect(options).toContain('der Tisch');
+    expect(options.filter((option) => option === 'der Tisch')).toHaveLength(1);
+    expect(isCorrect(exercise, '', 'die Bank')).toBe(true);
+  });
+
+  it('pads with words of the same kind first', () => {
+    const verb = word({ level: 2, type: 'verb', term: 'laufen', article: null });
+    const exercise = buildExercise(verb, [verb]);
+    if (exercise.answer.kind !== 'choice') throw new Error('Expected a choice');
+    expect(exercise.answer.options).toHaveLength(8);
+    const fillerVerbs = FILLERS.de.filter((filler) => filler.type === 'verb').map((filler) => filler.term);
+    expect(exercise.answer.options.filter((option) => option !== 'laufen').every((option) => fillerVerbs.includes(option))).toBe(true);
   });
 
   it('level two: eight options and the article to pick', () => {
