@@ -194,21 +194,32 @@ export function LetterBoard({ language, term, given, tiles, slots, onChange, loc
     setDrag(null);
   }
 
+  // Each word is its own group, so a line break only ever falls between words.
+  const words: { char: string; index: number }[][] = [[]];
+  [...term].forEach((char, index) => {
+    if (!/\s/.test(char)) words[words.length - 1]!.push({ char, index });
+    else if (words[words.length - 1]!.length > 0) words.push([]);
+  });
+
   let slot = 0;
   return (
     <div ref={board} className={styles.board} lang={language}>
       <div className={styles.slots} aria-label="Your word">
-        {[...term].map((char, index) =>
-          /\s/.test(char) ? (
-            <span key={index} className={styles.gap} />
-          ) : given[index] ? (
-            <span key={index} className={styles.slot} data-given="">
-              {char}
+        {words
+          .filter((letters) => letters.length > 0)
+          .map((letters) => (
+            <span key={letters[0]!.index} className={styles.word}>
+              {letters.map(({ char, index }) =>
+                given[index] ? (
+                  <span key={index} className={styles.slot} data-given="">
+                    {char}
+                  </span>
+                ) : (
+                  <span key={index} className={styles.slot} data-slot={slot} data-over={drag?.over === slot++ || undefined} />
+                ),
+              )}
             </span>
-          ) : (
-            <span key={index} className={styles.slot} data-slot={slot} data-over={drag?.over === slot++ || undefined} />
-          ),
-        )}
+          ))}
       </div>
       <div className={styles.tiles}>
         {tiles.map((_, tile) => (

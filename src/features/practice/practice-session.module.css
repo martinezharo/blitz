@@ -267,12 +267,22 @@
 .slots {
   min-height: 3rem;
   margin-bottom: 1.6rem;
+  /* Wider between words than between letters. */
+  gap: 0.4rem 1.8rem;
+}
+
+/* A word stays on one line unless it is longer than the line itself. */
+.word {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  max-width: 100%;
 }
 
 .slot,
 .home,
-.tile,
-.gap {
+.tile {
   display: grid;
   width: 2.6rem;
   height: 3rem;
@@ -292,10 +302,6 @@
 
 .slot[data-over] {
   border-color: var(--accent);
-}
-
-.gap {
-  width: 1rem;
 }
 
 /* Where each loose letter lives; shows as a dashed hole once it has left. */
