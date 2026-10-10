@@ -43,6 +43,15 @@ proxied to production. **Edits in development change your real account data.**
 Remove `DEVELOPMENT_UPSTREAM` to return to isolated local D1/R2. This setting
 must never be added to the deployed Worker.
 
+### Seed words
+
+In development, open the app with `?seed` to fill this browser with words that
+only have a photo, at a mix of levels, so practice shows every exercise with a
+photo clue. `?seed=3` puts every seed word at level 3, and `?seed=clear`
+removes them. It does nothing on a signed-in device: practising a seed word
+would sync it to the account. For a headless check, Playwright can drive the
+VPS's Chromium with `chromium.launch({ executablePath: '/srv/data/state/bin/chromium' })`.
+
 ## Sync
 
 Each local write also leaves a row in `pending`. A sync round sends those to
