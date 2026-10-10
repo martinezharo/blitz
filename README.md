@@ -19,6 +19,16 @@ pnpm build    # app and Worker in dist/
 pnpm deploy   # build, migrate D1 and publish to Cloudflare Workers
 ```
 
+### Dictionary
+
+Typing a word suggests entries from `public/dict/`, static JSON built from
+[Wiktionary](https://en.wiktionary.org) (via [kaikki.org](https://kaikki.org),
+CC BY-SA) and ranked with OpenSubtitles word frequencies. A German word is
+defined by the English definition of its translation. It is committed, so
+nothing runs on deploy. To refresh it, run `pnpm dictionary` (downloads about
+4.5 GB into `.cache/dictionary` the first time). German is searched by the
+German word or its English translation; English by the English word.
+
 `pnpm dev` runs the Worker too, on local D1 and R2 (`.wrangler/state`). Apply
 the schema once with `pnpm wrangler d1 migrations apply blitz --local`.
 Google sign-in needs `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, in

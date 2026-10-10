@@ -1,7 +1,9 @@
 import { Archive, ArchiveRestore, ImagePlus, Trash2, X } from 'lucide-react';
-import { type FormEvent, useId, useRef, useState } from 'react';
+import { type FormEvent, useEffect, useId, useRef, useState } from 'react';
 import { compressPhoto } from '../../data/photo.ts';
+import { lookupWord } from '../../data/dictionary.ts';
 import { addWord, deleteWord, setArchived, updateWord } from '../../data/words.ts';
+import { fillDraft, normalize, type Suggestion } from '../../domain/dictionary.ts';
 import {
   type Draft,
   type DraftProblem,
@@ -28,14 +30,19 @@ const PROBLEM_TEXT: Record<DraftProblem, string> = {
 
 /** Closes the sheet; `landOn` is the word it should settle into, if it still exists. */
 type WordSheetProps = { language: Language; onClose: (landOn: string | null) => void } & (
-  | { word: Word; term?: never }
-  | { word?: never; term: string }
+  | { word: Word; term?: never; suggestion?: never }
+  | { word?: never; term: string; suggestion?: Suggestion }
 );
 
 /** Adds a word, or edits one when `word` is given. */
-export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
+export function WordSheet({ language, word, term, suggestion, onClose }: WordSheetProps) {
   const spec = LANGUAGES[language];
-  const [draft, setDraft] = useState<Draft>(() => (word ? draftFromWord(word) : emptyDraft(term)));
+  const [draft, setDraft] = useState<Draft>(() => {
+    if (word) return draftFromWord(word);
+    return suggestion ? fillDraft(language, emptyDraft(suggestion.term), suggestion) : emptyDraft(term);
+  });
+  // A word picked from the dictionary is already filled in; a typed one is looked up.
+  const [filled, setFilled] = useState(suggestion !== undefined);
   const [saving, setSaving] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [photoError, setPhotoError] = useState(false);
@@ -52,6 +59,30 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
     onClose(word?.id ?? null);
   };
   const set = (patch: Partial<Draft>) => setDraft((current) => ({ ...current, ...patch }));
+
+  // A new word that is typed, not picked, is filled in from the dictionary
+  // once it settles on a word it knows. Only what is still empty is filled.
+  const typed = word || suggestion ? null : draft.term;
+  useEffect(() => {
+    if (!typed) return;
+    let current = true;
+    const timer = setTimeout(() => {
+      void lookupWord(language, typed).then((found) => {
+        if (!current || !found) return;
+        setDraft((now) => {
+          // Typing went on while it was looked up.
+          if (normalize(now.term) !== normalize(found.term)) return now;
+          const next = fillDraft(language, { ...now, term: found.term }, found);
+          if (next.type !== now.type) setFilled(true);
+          return next;
+        });
+      });
+    }, 250);
+    return () => {
+      current = false;
+      clearTimeout(timer);
+    };
+  }, [language, typed]);
 
   async function save(event?: FormEvent) {
     event?.preventDefault();
@@ -169,6 +200,7 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
           data-autofocus={!draft.term || undefined}
           data-morph-term
         />
+        {filled && !word && <p className={styles.source}>Filled in from Wiktionary. Change anything.</p>}
 
         <fieldset className={styles.field}>
           <legend className={styles.label}>Type</legend>
@@ -261,15 +293,17 @@ export function WordSheet({ language, word, term, onClose }: WordSheetProps) {
             <label className={styles.label} htmlFor={`${ids}definition`}>
               Definition
             </label>
-            <textarea
-              id={`${ids}definition`}
-              className={styles.input}
-              value={draft.definition}
-              onChange={(event) => set({ definition: event.target.value })}
-              placeholder="Explain it in English, in your own words"
-              rows={2}
-              lang="en"
-            />
+            <div className={styles.textFrame}>
+              <textarea
+                id={`${ids}definition`}
+                className={styles.textarea}
+                value={draft.definition}
+                onChange={(event) => set({ definition: event.target.value })}
+                placeholder="Explain it in English, in your own words"
+                rows={2}
+                lang="en"
+              />
+            </div>
           </div>
 
           <div className={styles.field}>

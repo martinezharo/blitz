@@ -10,14 +10,14 @@ import { LanguageMenu } from './features/language/language-menu.tsx';
 import { PreferencesModal } from './features/preferences/preferences-modal.tsx';
 import { PracticeDock } from './features/practice/practice-dock.tsx';
 import { PracticeSession } from './features/practice/practice-session.tsx';
-import { Composer, composerAddButton } from './features/words/composer.tsx';
+import { Composer, composerAddButton, type NewWord } from './features/words/composer.tsx';
 import { WordList, wordRow } from './features/words/word-list.tsx';
 import { WordSheet } from './features/words/word-sheet.tsx';
 import { sounds } from './shared/sound.ts';
 import { morph, morphEndsIn, waitFor } from './shared/ui/morph.ts';
 import { openSheetEnds } from './shared/ui/sheet.tsx';
 
-type Editing = { term: string } | { word: Word } | null;
+type Editing = NewWord | { word: Word } | null;
 
 const SIGN_IN_ERRORS: Record<string, string | null> = {
   failed: "Google couldn't sign you in. Try again.",
@@ -95,7 +95,7 @@ export function App() {
       </div>
 
       <main className={styles.page}>
-        <Composer language={language} onAdd={(term) => setEditing({ term })} />
+        <Composer language={language} onAdd={setEditing} />
         {words && <WordList language={language} words={words} onOpen={(word) => setEditing({ word })} />}
       </main>
 

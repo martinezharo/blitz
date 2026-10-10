@@ -14,9 +14,9 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
-    "types": ["vite/client"]
+    "types": ["vite/client", "node"]
   },
-  "include": ["src", "vite.config.ts", "vitest.config.ts"],
+  "include": ["src", "scripts", "vite.config.ts", "vitest.config.ts"],
   // Runs the Worker, whose types (workers-types) clash with the DOM ones here.
   "exclude": ["src/data/sync.test.ts"]
 }
