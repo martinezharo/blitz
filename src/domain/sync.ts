@@ -42,7 +42,7 @@ export interface Account {
 export const MAX_PUSH = 100;
 /** Changes the Worker returns in one response. */
 export const MAX_PULL = 200;
-/** Stored photos are small JPEGs; anything far bigger is not one of ours. */
+/** Stored photos are small WebP or JPEG files; anything far bigger is not one of ours. */
 export const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;

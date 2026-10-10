@@ -87,6 +87,6 @@ function photo(term: string, color: string): Promise<Blob> {
   context.textBaseline = 'middle';
   context.fillText(term[0]!.toUpperCase(), 200, 210);
   return new Promise((resolve, reject) =>
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Could not draw the seed photo'))), 'image/jpeg'),
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Could not draw the seed photo'))), 'image/webp', 0.75),
   );
 }
