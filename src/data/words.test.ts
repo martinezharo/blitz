@@ -1,8 +1,8 @@
 import 'fake-indexeddb/auto';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { type Draft, emptyDraft } from '../domain/word.ts';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { type Draft, emptyDraft, type Word } from '../domain/word.ts';
 import { db } from './db.ts';
-import { addWord, deleteWord, recordAnswer, setArchived, updateWord } from './words.ts';
+import { addWord, deleteWord, fillCounterparts, recordAnswer, setArchived, updateWord } from './words.ts';
 
 const bank: Draft = { ...emptyDraft('Bank'), type: 'noun', article: 'die', translation: 'bench' };
 
@@ -60,5 +60,60 @@ describe('ids', () => {
   it('are v4 UUIDs', async () => {
     const { id } = await addWord('de', bank);
     expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  });
+});
+
+describe('fillCounterparts', () => {
+  const dictionary: Record<string, unknown[]> = {
+    '/dict/de/le.json': [{ w: 'Lehrer', r: 1, s: [{ t: 'n', a: 'der', p: 'Lehrer', f: 'Lehrerin', g: ['teacher'] }] }],
+    '/dict/de/ar.json': [{ w: 'Arzt', r: 1, s: [{ t: 'n', a: 'der', f: 'Ärztin', g: ['doctor'] }] }],
+  };
+  const old = (id: string, term: string, article: string | null, patch: Partial<Word> = {}): Word => ({
+    id,
+    language: 'de',
+    type: 'noun',
+    term,
+    article,
+    plural: null,
+    translation: 'x',
+    definition: null,
+    photo: null,
+    level: 2,
+    createdAt: 1,
+    updatedAt: 1,
+    ...patch,
+  });
+
+  beforeEach(async () => {
+    await db.pending.clear();
+    vi.stubGlobal('fetch', async (url: string) =>
+      dictionary[url]
+        ? new Response(JSON.stringify(dictionary[url]), { headers: { 'content-type': 'application/json' } })
+        : new Response('', { status: 404 }),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('fills the counterpart of nouns saved before, and syncs it', async () => {
+    const words = [old('a', 'Lehrer', 'der'), old('b', 'Tisch', 'der')];
+    await db.words.bulkAdd(words);
+    await fillCounterparts(words);
+    expect(await db.words.get('a')).toMatchObject({ counterpart: 'Lehrerin', level: 2 });
+    expect((await db.words.get('a'))!.updatedAt).toBeGreaterThan(1);
+    // Nothing found: marked, so it is not looked up again, but not synced.
+    expect(await db.words.get('b')).toMatchObject({ counterpart: null, updatedAt: 1 });
+    expect((await db.pending.toArray()).map((row) => row.id)).toEqual(['a']);
+  });
+
+  it('leaves alone a word with another article, or one that already had the field', async () => {
+    const words = [old('a', 'Lehrer', 'die'), old('b', 'Arzt', 'der', { counterpart: null })];
+    await db.words.bulkAdd(words);
+    await fillCounterparts(words);
+    expect((await db.words.get('a'))!.counterpart).toBeNull();
+    expect((await db.words.get('b'))!.counterpart).toBeNull();
+    expect(await db.pending.count()).toBe(0);
   });
 });

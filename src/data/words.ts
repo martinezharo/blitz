@@ -1,8 +1,10 @@
 import Dexie from 'dexie';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { normalize } from '../domain/dictionary.ts';
 import { progress } from '../domain/practice.ts';
-import { type Draft, type Language, type Word, wordFields } from '../domain/word.ts';
+import { type Draft, hasCounterpart, type Language, sexOf, type Word, wordFields } from '../domain/word.ts';
 import { db } from './db.ts';
+import { lookup } from './dictionary.ts';
 import { requestSync } from './sync.ts';
 
 /** Newest first. `undefined` while the first read is in flight. */
@@ -71,6 +73,51 @@ export async function setArchived(word: Word, archived: boolean): Promise<Word> 
   });
   requestSync();
   return updated;
+}
+
+let filling = false;
+
+/**
+ * Nouns saved before they could have a counterpart get one from the
+ * dictionary: Lehrerin for a der Lehrer saved earlier. Only words that never
+ * had the field are looked at, so one the person cleared stays clear. A word
+ * the dictionary has no counterpart for is marked on this device alone, so it
+ * is not looked up again and nothing about it syncs.
+ */
+export async function fillCounterparts(words: Word[]): Promise<void> {
+  const missing = words.filter(
+    (word) => word.counterpart === undefined && hasCounterpart(word.language, word.type) && sexOf(word.article) !== null,
+  );
+  if (filling || missing.length === 0) return;
+  filling = true;
+  try {
+    for (const word of missing) {
+      const found = (await lookup(word.language, word.term)).find(
+        (suggestion) =>
+          !suggestion.translated &&
+          normalize(suggestion.term) === normalize(word.term) &&
+          suggestion.type === 'noun' &&
+          suggestion.article === word.article &&
+          suggestion.counterpart,
+      );
+      const counterpart = found?.counterpart ?? null;
+      const now = Date.now();
+      await db.transaction('rw', db.words, db.pending, async () => {
+        // Changed meanwhile, by an edit or a sync: left for the next round.
+        const current = await db.words.get(word.id);
+        if (!current || current.updatedAt !== word.updatedAt || current.counterpart !== undefined) return;
+        if (counterpart === null) {
+          await db.words.update(word.id, { counterpart: null });
+          return;
+        }
+        await db.words.update(word.id, { counterpart, updatedAt: now });
+        await db.pending.put({ id: word.id, at: now });
+      });
+    }
+  } finally {
+    filling = false;
+  }
+  requestSync();
 }
 
 /**

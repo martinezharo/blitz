@@ -24,7 +24,9 @@ pnpm deploy   # build, migrate D1 and publish to Cloudflare Workers
 Typing a word suggests entries from `public/dict/`, static JSON built from
 [Wiktionary](https://en.wiktionary.org) (via [kaikki.org](https://kaikki.org),
 CC BY-SA) and ranked with OpenSubtitles word frequencies. A German word is
-defined by the English definition of its translation. It is committed, so
+defined by the English definition of its translation, and a German noun
+for a person or animal brings its form for the other sex (Lehrer, Lehrerin),
+which practice asks for half the time. It is committed, so
 nothing runs on deploy. To refresh it, run `pnpm dictionary` (downloads about
 4.5 GB into `.cache/dictionary` the first time). German is searched by the
 German word or its English translation; English by the English word.

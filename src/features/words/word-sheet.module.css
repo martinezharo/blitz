@@ -151,7 +151,7 @@
   color: var(--background);
 }
 
-/* Article and plural share a row when there is room. */
+/* Article and plural share a row when there is room; the form for the other sex goes under them. */
 .noun {
   display: grid;
   gap: 0 0.9rem;
@@ -160,6 +160,10 @@
 @media (min-width: 30rem) {
   .noun:has(> :nth-child(2)) {
     grid-template-columns: auto 1fr;
+  }
+
+  .counterpart {
+    grid-column: 1 / -1;
   }
 }
 

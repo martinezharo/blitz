@@ -39,6 +39,11 @@ export interface Word {
   article: string | null;
   /** Nouns only. */
   plural: string | null;
+  /**
+   * The same noun for the other sex: Lehrerin for der Lehrer, Lehrer for die
+   * Lehrerin. Nouns in a language with genders only. Absent on older words.
+   */
+  counterpart?: string | null;
   /** English meaning. Only for languages that are `translated`. */
   translation: string | null;
   /** English explanation. */
@@ -64,13 +69,14 @@ export interface Draft {
   term: string;
   article: string | null;
   plural: string;
+  counterpart: string;
   translation: string;
   definition: string;
   photo: Blob | null;
 }
 
 export function emptyDraft(term = ''): Draft {
-  return { type: null, term, article: null, plural: '', translation: '', definition: '', photo: null };
+  return { type: null, term, article: null, plural: '', counterpart: '', translation: '', definition: '', photo: null };
 }
 
 export function draftFromWord(word: Word): Draft {
@@ -79,6 +85,7 @@ export function draftFromWord(word: Word): Draft {
     term: word.term,
     article: word.article,
     plural: word.plural ?? '',
+    counterpart: word.counterpart ?? '',
     translation: word.translation ?? '',
     definition: word.definition ?? '',
     photo: word.photo,
@@ -87,6 +94,21 @@ export function draftFromWord(word: Word): Draft {
 
 export function hasArticle(language: Language, type: WordType | null): boolean {
   return type === 'noun' && LANGUAGES[language].articles !== null;
+}
+
+/** Whether a noun can have a counterpart of the other sex: where nouns have genders. */
+export const hasCounterpart = hasArticle;
+
+export type Sex = 'male' | 'female';
+
+/** Which sex a person or animal noun names, going by its article. Null when the article does not say. */
+export function sexOf(article: string | null): Sex | null {
+  return article === 'der' ? 'male' : article === 'die' ? 'female' : null;
+}
+
+/** The article of a noun's counterpart: the other of der and die. */
+export function counterpartArticle(article: string | null): string | null {
+  return article === 'der' ? 'die' : article === 'die' ? 'der' : null;
 }
 
 export function hasPlural(type: WordType | null): boolean {
@@ -122,14 +144,17 @@ export function wordFields(language: Language, draft: Draft) {
     term: clean(draft.term)!,
     article: hasArticle(language, draft.type) ? draft.article : null,
     plural: hasPlural(draft.type) ? clean(draft.plural) : null,
+    counterpart: hasCounterpart(language, draft.type) ? clean(draft.counterpart) : null,
     translation: LANGUAGES[language].translated ? clean(draft.translation) : null,
     definition: clean(draft.definition),
     photo: draft.photo,
   };
 }
 
-/** A short line under the word in the list: meaning first, then the plural. */
+/** A short line under the word in the list: meaning first, then the plural and the counterpart. */
 export function wordSummary(word: Word): string {
   const meaning = word.translation ?? word.definition ?? '';
-  return [meaning, word.plural && `pl. ${word.plural}`].filter(Boolean).join(' · ');
+  const other = counterpartArticle(word.article);
+  const counterpart = word.counterpart && (other ? `${other} ${word.counterpart}` : word.counterpart);
+  return [meaning, word.plural && `pl. ${word.plural}`, counterpart].filter(Boolean).join(' · ');
 }

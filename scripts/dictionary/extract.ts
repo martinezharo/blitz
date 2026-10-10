@@ -5,7 +5,7 @@ export interface RawEntry {
   word?: string;
   pos?: string;
   forms?: { form?: string; tags?: string[]; source?: string }[];
-  senses?: { glosses?: string[]; tags?: string[] }[];
+  senses?: { glosses?: string[]; tags?: string[]; form_of?: { word?: string; extra?: string }[] }[];
 }
 
 const TYPE_OF_POS: Record<string, SenseType> = {
@@ -50,6 +50,7 @@ const FORM_GLOSS =
   /^(?:(?:alternative|obsolete|archaic|dated|nonstandard|rare|dialectal|eye dialect|pronunciation|misspelling|superseded)\b.*\b(?:of|for)\b|(?:plural|singular|past|present|simple|inflection|abbreviation|initialism|acronym|contraction|clipping|short|gerund|comparative|superlative|genitive|nominative|accusative|dative|imperative|subjunctive|participle)\b.*\b(?:of|for)\b)/i;
 
 const CONTINUATION = /^(?:or|and|etc|especially|usually|such|as|in|of|on|with|for|used|esp)\b/i;
+const DESCRIPTION = /^(?:one|someone|something|a person|a thing) (?:who|that|which)\b/i;
 const MAX_TRANSLATION_LENGTH = 28;
 const MAX_TRANSLATION_WORDS = 4;
 const MAX_TRANSLATIONS = 3;
@@ -65,12 +66,25 @@ export function isLearnable(term: string, multiword: boolean): boolean {
   return multiword || !term.includes(' ');
 }
 
+/**
+ * The meaning of a word that Wiktionary files as a form of another but that
+ * is a word to learn of its own: "agent noun of lehren: teacher" (Lehrer),
+ * "female equivalent of Lehrer (“teacher”)" (Lehrerin).
+ */
+function ownMeaning(sense: NonNullable<RawEntry['senses']>[number]): string | undefined {
+  const gloss = sense.glosses?.at(-1) ?? '';
+  if (!sense.tags?.includes('agent') && !/^(?:fe)?male equivalent of\b/i.test(gloss)) return undefined;
+  return sense.form_of?.find((form) => form.extra)?.extra;
+}
+
 function usableGlosses(senses: RawEntry['senses']): string[] {
   const out: string[] = [];
   for (const sense of senses ?? []) {
-    if (sense.tags?.some((tag) => SKIPPED_TAGS.has(tag))) continue;
+    const own = ownMeaning(sense);
+    const tags = own ? sense.tags?.filter((tag) => tag !== 'form-of') : sense.tags;
+    if (tags?.some((tag) => SKIPPED_TAGS.has(tag))) continue;
     // Nested meanings list their parents first; the last one is the meaning.
-    const gloss = clean(sense.glosses?.at(-1) ?? '');
+    const gloss = clean(own ?? sense.glosses?.at(-1) ?? '');
     if (gloss && !FORM_GLOSS.test(gloss)) out.push(gloss);
   }
   return out;
@@ -114,6 +128,8 @@ function shortTranslation(fragment: string): string | null {
   if (text.split(' ').length > MAX_TRANSLATION_WORDS || /[:/]/.test(text)) return null;
   // The rest of a sentence the comma cut: "or within a fissure", "especially of ...".
   if (CONTINUATION.test(text)) return null;
+  // A description, not a translation: "one who teaches".
+  if (DESCRIPTION.test(text)) return null;
   return text;
 }
 
@@ -143,6 +159,16 @@ function germanPlural(entry: RawEntry): string | undefined {
   return plural && /^\p{L}[\p{L}' -]*$/u.test(plural) ? plural : undefined;
 }
 
+/** The same noun for the other sex the entry gives: Lehrerin for Lehrer, Lehrer for Lehrerin. */
+function germanCounterpart(entry: RawEntry): string | undefined {
+  const term = entry.word?.trim();
+  const form = entry.forms?.find(
+    (form) => !form.source && form.tags?.length === 1 && (form.tags[0] === 'feminine' || form.tags[0] === 'masculine'),
+  );
+  const counterpart = form?.form?.trim();
+  return counterpart && counterpart !== term && /^\p{L}[\p{L}' -]*$/u.test(counterpart) ? counterpart : undefined;
+}
+
 function germanArticle(entry: RawEntry): string | undefined {
   for (const sense of entry.senses ?? []) {
     for (const tag of sense.tags ?? []) {
@@ -166,8 +192,11 @@ export function germanSense(entry: RawEntry): { term: string; sense: DictSense }
   if (type === 'n') {
     const article = germanArticle(entry);
     const plural = germanPlural(entry);
+    // Only a masculine or feminine noun has a counterpart of the other sex.
+    const counterpart = article === 'der' || article === 'die' ? germanCounterpart(entry) : undefined;
     if (article) sense.a = article;
     if (plural) sense.p = plural;
+    if (counterpart) sense.f = counterpart;
   }
   if (g.length > 0) sense.g = g;
   if (d) sense.d = d;

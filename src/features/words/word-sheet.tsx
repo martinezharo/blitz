@@ -10,7 +10,9 @@ import {
   draftFromWord,
   draftProblems,
   emptyDraft,
+  counterpartArticle,
   hasArticle,
+  hasCounterpart,
   hasPlural,
   LANGUAGES,
   type Language,
@@ -54,6 +56,8 @@ export function WordSheet({ language, word, term, suggestion, onClose }: WordShe
   const problems = draftProblems(language, draft);
   const showArticle = hasArticle(language, draft.type);
   const showPlural = hasPlural(draft.type);
+  const showCounterpart = hasCounterpart(language, draft.type);
+  const otherArticle = counterpartArticle(draft.article);
   const dismiss = () => {
     sounds.close();
     onClose(word?.id ?? null);
@@ -258,6 +262,24 @@ export function WordSheet({ language, word, term, suggestion, onClose }: WordShe
                   className={styles.input}
                   value={draft.plural}
                   onChange={(event) => set({ plural: event.target.value })}
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  lang={language}
+                />
+              </div>
+            )}
+            {showCounterpart && (
+              <div className={`${styles.field} ${styles.counterpart}`}>
+                <label className={styles.label} htmlFor={`${ids}counterpart`}>
+                  {otherArticle === 'die' ? 'Female form' : otherArticle === 'der' ? 'Male form' : 'Form for the other sex'}
+                  <span className={styles.optional}>optional</span>
+                </label>
+                <input
+                  id={`${ids}counterpart`}
+                  className={styles.input}
+                  value={draft.counterpart}
+                  onChange={(event) => set({ counterpart: event.target.value })}
                   autoComplete="off"
                   autoCapitalize="off"
                   spellCheck={false}

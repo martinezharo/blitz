@@ -190,6 +190,47 @@ describe('exercises', () => {
     expect(isCorrect(exercise, 'das', 'hnhof')).toBe(false);
   });
 
+  describe('a word with a form for each sex', () => {
+    const teacher = (patch: Partial<Word> = {}) =>
+      word({ id: 'lehrer', term: 'Lehrer', article: 'der', counterpart: 'Lehrerin', translation: 'teacher', ...patch });
+    // The first roll picks the clue, the second whether the counterpart is asked.
+    const rolls = (...values: number[]) => () => values.shift() ?? 0;
+
+    it('asks for the word itself half the time, saying which sex', () => {
+      const exercise = buildExercise(teacher({ level: 4 }), words, rolls(0, 0.5));
+      expect(exercise).toMatchObject({ term: 'Lehrer', article: 'der', sex: 'male' });
+      expect(isCorrect(exercise, 'der', 'hrer')).toBe(true);
+    });
+
+    it('asks for the counterpart, with its article, the other half', () => {
+      const exercise = buildExercise(teacher({ level: 4 }), words, rolls(0, 0.4));
+      expect(exercise).toMatchObject({ term: 'Lehrerin', article: 'die', sex: 'female', answer: { hint: 'Le' } });
+      expect(isCorrect(exercise, 'die', 'hrerin')).toBe(true);
+      expect(isCorrect(exercise, 'der', 'hrerin')).toBe(false);
+    });
+
+    it('offers the other form as a wrong option', () => {
+      const exercise = buildExercise(teacher(), words, rolls(0, 0.4));
+      if (exercise.answer.kind !== 'choice') throw new Error('Expected a choice');
+      expect(exercise.answer.options).toEqual(expect.arrayContaining(['die Lehrerin', 'der Lehrer']));
+      expect(isCorrect(exercise, '', 'die Lehrerin')).toBe(true);
+      expect(isCorrect(exercise, '', 'der Lehrer')).toBe(false);
+    });
+
+    it('spells out the counterpart in letter exercises', () => {
+      const exercise = buildExercise(teacher({ level: 3 }), words, rolls(0, 0.4));
+      expect(exercise.answer.kind === 'letters' && exercise.answer.given).toHaveLength('Lehrerin'.length);
+      expect(isCorrect(exercise, 'die', 'lehrerin')).toBe(true);
+    });
+
+    it('never asks for the counterpart when the article does not say which sex', () => {
+      for (const article of [null, 'das']) {
+        const exercise = buildExercise(teacher({ article }), words, rolls(0, 0));
+        expect(exercise).toMatchObject({ term: 'Lehrer', sex: null });
+      }
+    });
+  });
+
   it('level five: only the first letter', () => {
     const exercise = buildExercise(word({ level: 5, type: 'verb', term: 'laufen', article: null }), words);
     expect(exercise.answer).toEqual({ kind: 'write', hint: 'l' });

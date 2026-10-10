@@ -42,7 +42,7 @@ export interface Account {
 export const MAX_PUSH = 100;
 /** Changes the Worker returns in one response. */
 export const MAX_PULL = 200;
-/** Stored photos are small JPEGs; anything far bigger is not one of ours. */
+/** Stored photos are small WebP or JPEG files; anything far bigger is not one of ours. */
 export const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -76,6 +76,7 @@ function parseWireWord(value: unknown): WireWord | null {
     isText(word.term, 200) &&
     (word.article === null || (typeof word.article === 'string' && !!articles?.includes(word.article))) &&
     isOptionalText(word.plural, 200) &&
+    (word.counterpart === undefined || isOptionalText(word.counterpart, 200)) &&
     isOptionalText(word.translation, 500) &&
     isOptionalText(word.definition, 2000) &&
     (word.photo === null || (typeof word.photo === 'string' && PHOTO_KEY.test(word.photo))) &&
@@ -95,6 +96,8 @@ function parseWireWord(value: unknown): WireWord | null {
     term: word.term as string,
     article: word.article as string | null,
     plural: word.plural as string | null,
+    // Absent on words saved before it existed, so devices still fill it in.
+    ...(word.counterpart !== undefined && { counterpart: word.counterpart as string | null }),
     translation: word.translation as string | null,
     definition: word.definition as string | null,
     photo: word.photo as string | null,

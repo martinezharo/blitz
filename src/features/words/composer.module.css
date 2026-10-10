@@ -134,6 +134,47 @@
   background: var(--icon-background);
 }
 
+/* The last option, for a word the dictionary does not have or does not get right. */
+.custom {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.custom:not(:first-child) {
+  margin-top: 0.35rem;
+  position: relative;
+}
+
+.custom:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  inset: -0.2rem 0.75rem auto;
+  border-top: 1px solid var(--line);
+}
+
+.customIcon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: none;
+  color: var(--muted);
+  stroke-width: 2.6;
+}
+
+.customLabel {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--text-md);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customLabel strong {
+  color: var(--foreground);
+  font-weight: var(--weight-black);
+}
+
 [data-article='der'] { --gender: var(--der); }
 [data-article='die'] { --gender: var(--die); }
 [data-article='das'] { --gender: var(--das); }

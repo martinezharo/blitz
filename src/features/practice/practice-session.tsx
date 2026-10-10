@@ -1,4 +1,4 @@
-import { Archive, Check, Download, Volume2, X } from 'lucide-react';
+import { Archive, Check, Download, Mars, Venus, Volume2, X } from 'lucide-react';
 import { type FormEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { recordAnswer, setArchived } from '../../data/words.ts';
 import { type Answer, buildExercise, type Exercise, fillLetters, isCorrect, offersArchive, pickLesson, STREAK_TO_ARCHIVE } from '../../domain/practice.ts';
@@ -263,7 +263,7 @@ interface Result {
 const articleKeys = (answer: Answer) => (answer.kind === 'choice' ? ['a', 's', 'd'] : ['1', '2', '3']);
 
 function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionProps) {
-  const { word, clue, gender, answer } = exercise;
+  const { sex, clue, gender, answer } = exercise;
   const articles = LANGUAGES[language].articles ?? [];
   const [article, setArticle] = useState('');
   const [term, setTerm] = useState('');
@@ -278,7 +278,7 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
 
   const built =
     answer.kind === 'letters'
-      ? fillLetters(word.term, answer.given, slots.map((index) => (index === null ? '' : answer.tiles[index]!)))
+      ? fillLetters(exercise.term, answer.given, slots.map((index) => (index === null ? '' : answer.tiles[index]!)))
       : term;
   const ready =
     (gender === null || gender === 'shown' || article.trim() !== '') &&
@@ -288,7 +288,7 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
     if (result) nextButton.current?.focus();
   }, [result]);
 
-  const solution = `${word.article ? `${word.article} ` : ''}${word.term}`;
+  const solution = `${exercise.article ? `${exercise.article} ` : ''}${exercise.term}`;
 
   // Every word this question can say, made while it is being read, or as soon as the voice is there.
   const voice = useVoice(language).status;
@@ -400,6 +400,12 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
         </p>
 
         <div className={styles.clue}>
+          {sex && (
+            <span className={styles.sex} data-article={exercise.article ?? undefined}>
+              {sex === 'female' ? <Venus aria-hidden="true" /> : <Mars aria-hidden="true" />}
+              {sex === 'female' ? 'Female' : 'Male'}
+            </span>
+          )}
           {clue.kind === 'photo' ? (
             photo && <img src={photo} alt="" />
           ) : (
@@ -454,7 +460,7 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
           {answer.kind === 'letters' && (
             <LetterBoard
               language={language}
-              term={word.term}
+              term={exercise.term}
               given={answer.given}
               tiles={answer.tiles}
               slots={slots}

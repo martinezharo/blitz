@@ -1,5 +1,5 @@
 import { FILLERS, type Filler } from './fillers.ts';
-import { MAX_LEVEL, type Word } from './word.ts';
+import { counterpartArticle, MAX_LEVEL, type Sex, sexOf, type Word } from './word.ts';
 
 /**
  * How practice works. Each word climbs five levels, each one a harder kind of
@@ -82,6 +82,14 @@ export type Answer =
 export interface Exercise {
   word: Word;
   level: number;
+  /**
+   * What the answer is: the word, or its counterpart of the other sex. Half
+   * the time a word with a counterpart asks for the counterpart instead.
+   */
+  term: string;
+  article: string | null;
+  /** Which sex is asked for, when the word has a counterpart and it has to be said. Null otherwise. */
+  sex: Sex | null;
   clue: Clue;
   /** How the article is asked. Null when the word has none. */
   gender: Gender;
@@ -98,12 +106,19 @@ export function buildExercise(word: Word, words: Word[], random: Random = Math.r
   if (word.definition) clues.push({ kind: 'definition', text: word.definition });
   const clue = clues[Math.floor(random() * clues.length)]!;
 
-  const gender: Gender = !word.article ? null : level === 1 ? 'shown' : level <= 3 ? 'pick' : 'write';
+  // The counterpart is only asked when the article says which sex each form is.
+  const counterpart = word.counterpart && sexOf(word.article) ? word.counterpart : null;
+  const other = counterpart !== null && random() < 0.5;
+  const term = other ? counterpart! : word.term;
+  const article = other ? counterpartArticle(word.article) : word.article;
+  const sex = counterpart === null ? null : sexOf(article);
+
+  const gender: Gender = !article ? null : level === 1 ? 'shown' : level <= 3 ? 'pick' : 'write';
 
   let answer: Answer;
   if (level <= 2) {
-    const label = (other: Filler) => (gender === 'shown' && other.article ? `${other.article} ${other.term}` : other.term);
-    const correct = label(word);
+    const label = (option: Filler) => (gender === 'shown' && option.article ? `${option.article} ${option.term}` : option.term);
+    const correct = label({ type: word.type, term, article });
     // Common words make up the numbers while the list is short, never one already in it.
     const fillers = FILLERS[word.language].filter((filler) => !words.some((other) => sameText(other.term, filler.term)));
     // Same kind of word first, so the wrong options are not giveaways, and the
@@ -112,6 +127,10 @@ export function buildExercise(word: Word, words: Word[], random: Random = Math.r
       (a, b) => Number(b.type === word.type) - Number(a.type === word.type),
     );
     const options = new Set([correct]);
+    // The other form is the trickiest wrong option: it takes reading which sex is asked.
+    if (counterpart !== null) {
+      options.add(other ? label(word) : label({ type: word.type, term: counterpart, article: counterpartArticle(word.article) }));
+    }
     for (const other of others) {
       if (options.size >= CHOICES[level]!) break;
       options.add(label(other));
@@ -119,7 +138,7 @@ export function buildExercise(word: Word, words: Word[], random: Random = Math.r
     answer = { kind: 'choice', options: shuffle([...options], random) };
   } else if (level === 3) {
     // A third of the letters start in place, so only the rest are left to order.
-    const chars = [...word.term];
+    const chars = [...term];
     const places = chars.flatMap((char, index) => (/\s/.test(char) ? [] : [index]));
     const kept = places.length < 2 ? 0 : Math.max(1, Math.round(places.length / 3));
     const given = chars.map(() => false);
@@ -129,11 +148,11 @@ export function buildExercise(word: Word, words: Word[], random: Random = Math.r
     for (let tries = 0; tiles.join('') === letters.join('') && tries < 5; tries++) tiles = shuffle(letters, random);
     answer = { kind: 'letters', tiles, given };
   } else {
-    const share = level === 4 ? Math.round(word.term.length / 4) : 1;
-    answer = { kind: 'write', hint: word.term.slice(0, Math.max(1, share)) };
+    const share = level === 4 ? Math.round(term.length / 4) : 1;
+    answer = { kind: 'write', hint: term.slice(0, Math.max(1, share)) };
   }
 
-  return { word, level, clue, gender, answer };
+  return { word, level, term, article, sex, clue, gender, answer };
 }
 
 /** Forgiving about case and spacing, strict about every letter. */
@@ -144,15 +163,15 @@ export function sameText(a: string, b: string): boolean {
 
 /** Whether the typed or picked article and word answer the exercise. */
 export function isCorrect(exercise: Exercise, article: string, term: string): boolean {
-  const { word, gender, answer } = exercise;
-  const articleOk = gender === null || gender === 'shown' || sameText(article, word.article!);
+  const { gender, answer } = exercise;
+  const articleOk = gender === null || gender === 'shown' || sameText(article, exercise.article!);
   if (answer.kind === 'choice') {
-    const expected = gender === 'shown' ? `${word.article} ${word.term}` : word.term;
+    const expected = gender === 'shown' ? `${exercise.article} ${exercise.term}` : exercise.term;
     return articleOk && term === expected;
   }
   // Case does not count: the same letter can be a capital in one spot and not in another.
-  if (answer.kind === 'letters') return articleOk && sameText(term, word.term.replace(/\s/g, ''));
-  return articleOk && sameText(answer.hint + term, word.term);
+  if (answer.kind === 'letters') return articleOk && sameText(term, exercise.term.replace(/\s/g, ''));
+  return articleOk && sameText(answer.hint + term, exercise.term);
 }
 
 /** The word as spelled so far: the letters given, and the placed ones in the free spots between. */
