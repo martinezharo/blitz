@@ -133,12 +133,21 @@
 .sex {
   justify-self: start;
   margin-bottom: 0.35rem;
-  padding: 0.15rem 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.65rem 0.2rem 0.5rem;
   border-radius: var(--radius-tail-pill);
   background: var(--gender, var(--muted));
   color: var(--background);
   font-size: var(--text-sm);
   font-weight: var(--weight-black);
+}
+
+.sex svg {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 3;
 }
 
 .clueLabel {

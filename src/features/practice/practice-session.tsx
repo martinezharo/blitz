@@ -1,4 +1,4 @@
-import { Archive, Check, X } from 'lucide-react';
+import { Archive, Check, Mars, Venus, X } from 'lucide-react';
 import { type FormEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { recordAnswer, setArchived } from '../../data/words.ts';
 import { type Answer, buildExercise, type Exercise, fillLetters, isCorrect, offersArchive, pickLesson, STREAK_TO_ARCHIVE } from '../../domain/practice.ts';
@@ -341,7 +341,8 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
         <div className={styles.clue}>
           {sex && (
             <span className={styles.sex} data-article={exercise.article ?? undefined}>
-              {sex === 'female' ? '♀ Female' : '♂ Male'}
+              {sex === 'female' ? <Venus aria-hidden="true" /> : <Mars aria-hidden="true" />}
+              {sex === 'female' ? 'Female' : 'Male'}
             </span>
           )}
           {clue.kind === 'photo' ? (
