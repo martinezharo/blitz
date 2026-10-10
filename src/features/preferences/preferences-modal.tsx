@@ -111,6 +111,14 @@ export function PreferencesModal({
             <i aria-hidden="true" />
           </button>
         </section>
+
+        <p className={styles.credit}>
+          Word suggestions come from{' '}
+          <a href="https://en.wiktionary.org" target="_blank" rel="noreferrer">
+            Wiktionary
+          </a>
+          , under CC BY-SA.
+        </p>
       </div>
     </dialog>
   );
