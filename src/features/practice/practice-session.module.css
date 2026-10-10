@@ -77,6 +77,60 @@
   transition: width 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+.voice {
+  position: relative;
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--icon-background);
+  color: var(--muted);
+  animation: voice-in var(--motion-spring);
+}
+
+button.voice {
+  cursor: pointer;
+  transition: background var(--motion-standard);
+}
+
+button.voice:hover {
+  background: var(--icon-hover);
+}
+
+.voice > svg:not(.voiceRing) {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+/* Fills clockwise from the top as the voice downloads. */
+.voiceRing {
+  position: absolute;
+  inset: 0;
+  rotate: -90deg;
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.voiceRing circle:first-child {
+  stroke: var(--line);
+}
+
+.voiceRing circle:last-child {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke-dasharray 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes voice-in {
+  from {
+    opacity: 0;
+    scale: 0.8;
+  }
+}
+
 .question {
   display: flex;
   min-height: 0;

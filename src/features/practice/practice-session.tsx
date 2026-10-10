@@ -1,9 +1,10 @@
-import { Archive, Check, X } from 'lucide-react';
+import { Archive, Check, Download, Volume2, X } from 'lucide-react';
 import { type FormEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { recordAnswer, setArchived } from '../../data/words.ts';
 import { type Answer, buildExercise, type Exercise, fillLetters, isCorrect, offersArchive, pickLesson, STREAK_TO_ARCHIVE } from '../../domain/practice.ts';
 import { LANGUAGES, type Language, type Word } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
+import { downloadVoice, preloadSpeech, prepareVoice, speak, useVoice } from '../../shared/speech/speech.ts';
 import { useObjectUrl } from '../../shared/ui/use-object-url.ts';
 import { emptySlots, LetterBoard, type Slots } from './letter-board.tsx';
 import styles from './practice-session.module.css';
@@ -41,6 +42,9 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
     dialog.showModal();
     return () => dialog.close();
   }, []);
+
+  // The voice wakes up, or downloads the first time, while the first question is read.
+  useEffect(() => void prepareVoice(language), []);
 
   // Back from the confirmation, the focus returns to the question rather than to
   // whatever opened it, which is often the close button.
@@ -131,6 +135,7 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
         >
           <i style={{ width: `${(step / Math.max(1, lesson.length)) * 100}%` }} />
         </div>
+        <VoiceStatus language={language} />
       </header>
 
       {done ? (
@@ -141,6 +146,49 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
 
       {confirming && <ConfirmQuit onStay={() => setConfirming(false)} onQuit={quit} />}
     </dialog>
+  );
+}
+
+/**
+ * The voice's first download, which takes a while: a small ring that fills up
+ * and leaves once it is done. Words can be practised meanwhile, just not heard.
+ * Where the connection asks to save data, it waits for a tap instead.
+ */
+function VoiceStatus({ language }: { language: Language }) {
+  const voice = useVoice(language);
+  const name = LANGUAGES[language].name;
+  if (voice.status === 'offered') {
+    const size = `${Math.round(voice.bytes / 1e6)} MB`;
+    return (
+      <button
+        type="button"
+        className={styles.voice}
+        onClick={() => downloadVoice(language)}
+        aria-label={`Download the ${name} voice, ${size}, to hear the words`}
+        title={`Hear the words: download the ${name} voice, ${size}, once`}
+      >
+        <Download aria-hidden="true" />
+      </button>
+    );
+  }
+  if (voice.status !== 'downloading') return null;
+  const percent = Math.floor(voice.progress * 100);
+  return (
+    <span
+      className={styles.voice}
+      role="progressbar"
+      aria-label={`Downloading the ${name} voice`}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={percent}
+      title={`Downloading the ${name} voice, ${percent}%. Only this once.`}
+    >
+      <svg className={styles.voiceRing} viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="18" pathLength="100" />
+        <circle cx="20" cy="20" r="18" pathLength="100" strokeDasharray={`${voice.progress * 100} 100`} />
+      </svg>
+      <Volume2 aria-hidden="true" />
+    </span>
   );
 }
 
@@ -240,6 +288,19 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
     if (result) nextButton.current?.focus();
   }, [result]);
 
+  const solution = `${word.article ? `${word.article} ` : ''}${word.term}`;
+
+  // Every word this question can say, made while it is being read, or as soon as the voice is there.
+  const voice = useVoice(language).status;
+  useEffect(() => preloadSpeech(language, answer.kind === 'choice' ? answer.options : [solution]), [voice]);
+
+  // Letters and writing are said once the answer is complete and right, and
+  // only then: a wrong one stays silent.
+  const solved = answer.kind !== 'choice' && isCorrect(exercise, article, built);
+  useEffect(() => {
+    if (solved) void speak(language, solution);
+  }, [solved]);
+
   // A new question loses the focus of the one before; without a place to land
   // it falls to the first button, the close one, and the next Enter ends the lesson.
   useEffect(() => focusQuestion(form.current!.parentElement!), []);
@@ -279,8 +340,10 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
     }
   }
 
+  /** An option is said aloud whenever it is picked, right or wrong, so it can be heard before checking. */
   function pickTerm(option: string) {
     if (term !== option) sounds.tap();
+    void speak(language, option);
     setTerm(option);
   }
 
@@ -321,8 +384,6 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
     window.addEventListener('keydown', listener);
     return () => window.removeEventListener('keydown', listener);
   }, []);
-
-  const solution = `${word.article ? `${word.article} ` : ''}${word.term}`;
 
   return (
     <form
