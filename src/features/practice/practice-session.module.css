@@ -129,6 +129,18 @@
   object-fit: cover;
 }
 
+/* Which form to give, for a word that has one for each sex. */
+.sex {
+  justify-self: start;
+  margin-bottom: 0.35rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-tail-pill);
+  background: var(--gender, var(--muted));
+  color: var(--background);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-black);
+}
+
 .clueLabel {
   color: var(--muted);
   font-size: var(--text-xs);

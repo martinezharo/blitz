@@ -30,6 +30,45 @@ describe('germanSense', () => {
     expect(germanSense(noun({ senses: [{ glosses: ['genitive singular of Bank'] }] }))).toBeNull();
   });
 
+  it('reads the form for the other sex of a masculine or feminine noun', () => {
+    const teacher = noun({
+      word: 'Lehrer',
+      forms: [
+        { form: 'Lehrer', tags: ['plural'] },
+        { form: 'Lehrerin', tags: ['feminine'] },
+      ],
+      senses: [{ glosses: ['teacher'], tags: ['masculine'] }],
+    });
+    expect(germanSense(teacher)?.sense).toMatchObject({ a: 'der', f: 'Lehrerin' });
+    expect(germanSense({ ...teacher, senses: [{ glosses: ['teacher'], tags: ['neuter'] }] })?.sense.f).toBeUndefined();
+  });
+
+  it('keeps agent nouns and female equivalents, by the meaning given beside', () => {
+    const agent = noun({
+      word: 'Fahrer',
+      senses: [
+        {
+          glosses: ['agent noun of fahren; driver (person)'],
+          tags: ['agent', 'form-of', 'masculine'],
+          form_of: [{ word: 'fahren', extra: 'driver (person)' }],
+        },
+      ],
+    });
+    expect(germanSense(agent)?.sense).toMatchObject({ a: 'der', g: ['driver'] });
+    const female = noun({
+      word: 'Lehrerin',
+      senses: [
+        {
+          glosses: ['female equivalent of Lehrer (“teacher”)'],
+          tags: ['feminine', 'form-of'],
+          form_of: [{ word: 'Lehrer', extra: 'teacher' }],
+        },
+      ],
+    });
+    expect(germanSense(female)?.sense).toMatchObject({ a: 'die', g: ['teacher'] });
+    expect(germanSense(noun({ senses: [{ glosses: ['agent noun of fahren'], tags: ['agent', 'form-of'], form_of: [{ word: 'fahren' }] }] }))).toBeNull();
+  });
+
   it('gives no article or plural to a verb', () => {
     const verb: RawEntry = { word: 'laufen', pos: 'verb', senses: [{ glosses: ['to run'], tags: ['strong'] }] };
     expect(germanSense(verb)).toEqual({ term: 'laufen', sense: { t: 'v', g: ['to run'] } });
@@ -52,6 +91,10 @@ describe('germanMeaning', () => {
   it('falls back to a definition when nothing is short enough', () => {
     const long = 'a very long description of what the word is and how it is used by people';
     expect(germanMeaning([long])).toEqual({ g: [], d: long });
+  });
+
+  it('drops descriptions among the translations', () => {
+    expect(germanMeaning(['one who teaches, teacher, instructor']).g).toEqual(['teacher', 'instructor']);
   });
 
   it('drops the tail of a sentence cut by a comma', () => {

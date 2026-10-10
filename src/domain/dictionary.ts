@@ -1,4 +1,4 @@
-import { type Draft, hasArticle, LANGUAGES, type Language, type WordType } from './word.ts';
+import { type Draft, hasArticle, hasCounterpart, LANGUAGES, type Language, type WordType } from './word.ts';
 
 /**
  * The dictionary is static JSON built from Wiktionary (see
@@ -24,6 +24,8 @@ export interface DictSense {
   a?: string;
   /** Plural. Nouns only. */
   p?: string;
+  /** The same noun for the other sex: Lehrerin for Lehrer. German nouns only. */
+  f?: string;
   /** Short English translations. German words only. */
   g?: string[];
   /** English definition. */
@@ -57,6 +59,7 @@ export interface Suggestion {
   type: WordType;
   article: string | null;
   plural: string | null;
+  counterpart: string | null;
   translation: string | null;
   definition: string | null;
   /** The word typed was its English translation, not the word itself. */
@@ -119,6 +122,7 @@ function suggestionOf(match: Match): Suggestion {
     type: SENSE_TYPES[sense.t],
     article: sense.a ?? null,
     plural: sense.p ?? null,
+    counterpart: sense.f ?? null,
     translation: sense.g?.join(', ') ?? null,
     definition: sense.d ?? null,
     translated: match.via === 1,
@@ -179,6 +183,7 @@ export function fillDraft(language: Language, draft: Draft, suggestion: Suggesti
     type: suggestion.type,
     article: draft.article ?? (hasArticle(language, suggestion.type) ? suggestion.article : null),
     plural: draft.plural || suggestion.plural || '',
+    counterpart: draft.counterpart || (hasCounterpart(language, suggestion.type) ? (suggestion.counterpart ?? '') : ''),
     translation: draft.translation || (LANGUAGES[language].translated ? (suggestion.translation ?? '') : ''),
     definition: draft.definition || suggestion.definition || '',
   };

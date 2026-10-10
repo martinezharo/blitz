@@ -18,6 +18,7 @@ const word = (id: string, updatedAt: number, term = 'Bank'): WireWord => ({
   term,
   article: 'die',
   plural: null,
+  counterpart: null,
   translation: 'bench',
   definition: null,
   photo: null,

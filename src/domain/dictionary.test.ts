@@ -70,6 +70,13 @@ describe('fillDraft', () => {
     expect(draft).toMatchObject({ translation: 'sofa', plural: 'Bänke', article: 'die' });
   });
 
+  it('fills the counterpart of a German noun', () => {
+    const teacher: DictEntry = { w: 'Lehrer', r: 900, s: [{ t: 'n', a: 'der', p: 'Lehrer', f: 'Lehrerin', g: ['teacher'] }] };
+    const [found] = suggest('lehrer', [[teacher]]);
+    expect(fillDraft('de', emptyDraft('Lehrer'), found!).counterpart).toBe('Lehrerin');
+    expect(fillDraft('de', { ...emptyDraft('Lehrer'), counterpart: 'Lehrende' }, found!).counterpart).toBe('Lehrende');
+  });
+
   it('leaves a draft alone when it is another type of word', () => {
     const verb = { ...emptyDraft('Bank'), type: 'verb' as const };
     expect(fillDraft('de', verb, second!)).toBe(verb);

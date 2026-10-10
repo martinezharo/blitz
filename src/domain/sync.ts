@@ -76,6 +76,7 @@ function parseWireWord(value: unknown): WireWord | null {
     isText(word.term, 200) &&
     (word.article === null || (typeof word.article === 'string' && !!articles?.includes(word.article))) &&
     isOptionalText(word.plural, 200) &&
+    (word.counterpart === undefined || isOptionalText(word.counterpart, 200)) &&
     isOptionalText(word.translation, 500) &&
     isOptionalText(word.definition, 2000) &&
     (word.photo === null || (typeof word.photo === 'string' && PHOTO_KEY.test(word.photo))) &&
@@ -95,6 +96,7 @@ function parseWireWord(value: unknown): WireWord | null {
     term: word.term as string,
     article: word.article as string | null,
     plural: word.plural as string | null,
+    counterpart: (word.counterpart as string | null | undefined) ?? null,
     translation: word.translation as string | null,
     definition: word.definition as string | null,
     photo: word.photo as string | null,

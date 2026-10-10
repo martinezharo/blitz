@@ -215,7 +215,7 @@ interface Result {
 const articleKeys = (answer: Answer) => (answer.kind === 'choice' ? ['a', 's', 'd'] : ['1', '2', '3']);
 
 function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionProps) {
-  const { word, clue, gender, answer } = exercise;
+  const { sex, clue, gender, answer } = exercise;
   const articles = LANGUAGES[language].articles ?? [];
   const [article, setArticle] = useState('');
   const [term, setTerm] = useState('');
@@ -230,7 +230,7 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
 
   const built =
     answer.kind === 'letters'
-      ? fillLetters(word.term, answer.given, slots.map((index) => (index === null ? '' : answer.tiles[index]!)))
+      ? fillLetters(exercise.term, answer.given, slots.map((index) => (index === null ? '' : answer.tiles[index]!)))
       : term;
   const ready =
     (gender === null || gender === 'shown' || article.trim() !== '') &&
@@ -322,7 +322,7 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
     return () => window.removeEventListener('keydown', listener);
   }, []);
 
-  const solution = `${word.article ? `${word.article} ` : ''}${word.term}`;
+  const solution = `${exercise.article ? `${exercise.article} ` : ''}${exercise.term}`;
 
   return (
     <form
@@ -339,6 +339,11 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
         </p>
 
         <div className={styles.clue}>
+          {sex && (
+            <span className={styles.sex} data-article={exercise.article ?? undefined}>
+              {sex === 'female' ? '♀ Female' : '♂ Male'}
+            </span>
+          )}
           {clue.kind === 'photo' ? (
             photo && <img src={photo} alt="" />
           ) : (
@@ -393,7 +398,7 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
           {answer.kind === 'letters' && (
             <LetterBoard
               language={language}
-              term={word.term}
+              term={exercise.term}
               given={answer.given}
               tiles={answer.tiles}
               slots={slots}

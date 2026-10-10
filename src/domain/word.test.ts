@@ -48,6 +48,12 @@ describe('wordFields', () => {
     expect(fields.plural).toBeNull();
   });
 
+  it('keeps the counterpart of a German noun only', () => {
+    expect(wordFields('de', { ...noun, counterpart: ' Lehrerin ' }).counterpart).toBe('Lehrerin');
+    expect(wordFields('de', { ...noun, type: 'verb', counterpart: 'Lehrerin' }).counterpart).toBeNull();
+    expect(wordFields('en', { ...noun, definition: 'A teacher', counterpart: 'teacheress' }).counterpart).toBeNull();
+  });
+
   it('stores empty optional text as null', () => {
     expect(wordFields('de', { ...noun, plural: '  ' }).plural).toBeNull();
   });
@@ -62,6 +68,12 @@ describe('wordSummary', () => {
 
   it('prefers the translation and adds the plural', () => {
     expect(wordSummary(word)).toBe('bench · pl. Bänke');
+  });
+
+  it('adds the counterpart, with its article', () => {
+    expect(wordSummary({ ...word, article: 'der', plural: 'Lehrer', counterpart: 'Lehrerin', translation: 'teacher' })).toBe(
+      'teacher · pl. Lehrer · die Lehrerin',
+    );
   });
 
   it('falls back to the definition', () => {
