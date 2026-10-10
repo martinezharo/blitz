@@ -69,6 +69,7 @@ export function Composer({ language, onAdd }: { language: Language; onAdd: (word
     } else if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && suggestions.length > 0) {
       event.preventDefault();
       setHidden(false);
+      setFocused(true);
       // One stop past each end is "nothing chosen", back to what was typed.
       const stops = suggestions.length + 1;
       const step = event.key === 'ArrowDown' ? 1 : -1;
@@ -100,6 +101,10 @@ export function Composer({ language, onAdd }: { language: Language; onAdd: (word
         onChange={(event) => {
           setTerm(event.target.value);
           setHidden(false);
+          // Typing means it has focus, even if the focus event was missed: a
+          // closing sheet hands focus back while React is committing, and
+          // React drops events fired then.
+          setFocused(true);
         }}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
