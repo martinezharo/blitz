@@ -21,12 +21,14 @@ export interface NewWord {
  *
  * As you type, the dictionary offers words: the ones that start like it and,
  * for German, the ones that translate it, so either language finds the word.
- * Picking one opens the sheet already filled in.
+ * Picking one opens the sheet already filled in. Under them, or alone when the
+ * dictionary has nothing, a last option adds what was typed as a custom word.
  */
 export function Composer({ language, onAdd }: { language: Language; onAdd: (word: NewWord) => void }) {
   const [term, setTerm] = useState('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   // -1: nothing chosen, so Enter takes what was typed.
+  // suggestions.length: the custom option under them, which also takes what was typed.
   const [highlighted, setHighlighted] = useState(-1);
   const [focused, setFocused] = useState(false);
   const [hidden, setHidden] = useState(false);
@@ -36,7 +38,8 @@ export function Composer({ language, onAdd }: { language: Language; onAdd: (word
   const name = LANGUAGES[language].name;
   const label = `Add ${/^[aeiou]/i.test(name) ? 'an' : 'a'} ${name} word`;
   const ready = term.trim() !== '';
-  const open = focused && !hidden && suggestions.length > 0;
+  const open = focused && !hidden && ready;
+  const custom = suggestions.length;
 
   useEffect(() => {
     let current = true;
@@ -66,12 +69,12 @@ export function Composer({ language, onAdd }: { language: Language; onAdd: (word
     if (event.key === 'Escape' && open) {
       event.preventDefault();
       setHidden(true);
-    } else if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && suggestions.length > 0) {
+    } else if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && ready) {
       event.preventDefault();
       setHidden(false);
       setFocused(true);
       // One stop past each end is "nothing chosen", back to what was typed.
-      const stops = suggestions.length + 1;
+      const stops = custom + 2;
       const step = event.key === 'ArrowDown' ? 1 : -1;
       setHighlighted((index) => ((index + 1 + step + stops) % stops) - 1);
     }
@@ -153,6 +156,19 @@ export function Composer({ language, onAdd }: { language: Language; onAdd: (word
               <span className={styles.meaning}>{suggestion.translation ?? suggestion.definition}</span>
             </li>
           ))}
+          <li
+            id={`${listId}${custom}`}
+            className={`${styles.suggestion} ${styles.custom}`}
+            role="option"
+            aria-selected={highlighted === custom}
+            onPointerEnter={() => setHighlighted(custom)}
+            onClick={() => openSheet({ term: term.trim() })}
+          >
+            <Plus className={styles.customIcon} aria-hidden="true" />
+            <span className={styles.customLabel}>
+              Add <strong>{term.trim()}</strong> as a custom word
+            </span>
+          </li>
         </ul>
       </div>
     </form>
