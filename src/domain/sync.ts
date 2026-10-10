@@ -96,7 +96,8 @@ function parseWireWord(value: unknown): WireWord | null {
     term: word.term as string,
     article: word.article as string | null,
     plural: word.plural as string | null,
-    counterpart: (word.counterpart as string | null | undefined) ?? null,
+    // Absent on words saved before it existed, so devices still fill it in.
+    ...(word.counterpart !== undefined && { counterpart: word.counterpart as string | null }),
     translation: word.translation as string | null,
     definition: word.definition as string | null,
     photo: word.photo as string | null,

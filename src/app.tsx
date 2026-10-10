@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAccount } from './data/account.ts';
 import { useLanguage, useSounds, useTheme } from './data/preferences.ts';
-import { useWords } from './data/words.ts';
+import { fillCounterparts, useWords } from './data/words.ts';
 import type { Word } from './domain/word.ts';
 import styles from './app.module.css';
 import { AccountBadge } from './features/account/account-badge.tsx';
@@ -50,6 +50,10 @@ export function App() {
   const [soundsOn, setSoundsOn] = useSounds();
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [practicing, setPracticing] = useState(false);
+
+  useEffect(() => {
+    if (words) void fillCounterparts(words);
+  }, [words]);
 
   /**
    * The sheet settles into the word's row; a new word's row may take a moment

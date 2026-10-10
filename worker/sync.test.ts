@@ -18,7 +18,6 @@ const word = (id: string, updatedAt: number, term = 'Bank'): WireWord => ({
   term,
   article: 'die',
   plural: null,
-  counterpart: null,
   translation: 'bench',
   definition: null,
   photo: null,
@@ -73,6 +72,16 @@ describe('sync', () => {
     await sync(as, 0, [change(wordId, 10, 'old')]);
     const { changes } = await sync(as, 0);
     expect(changes).toEqual([change(wordId, 20, 'new')]);
+  });
+
+  it('keeps a counterpart, and leaves it absent on words that never had one', async () => {
+    const as = server.as(await server.signUp('ada'));
+    const [teacher, older] = [id(), id()];
+    const withCounterpart: Change = { id: teacher, updatedAt: 5, word: { ...word(teacher, 5, 'Lehrer'), article: 'der', counterpart: 'Lehrerin' } };
+    await sync(as, 0, [withCounterpart, change(older, 5)]);
+    const { changes } = await sync(as, 0);
+    expect(changes.find((found) => found.id === teacher)?.word?.counterpart).toBe('Lehrerin');
+    expect(changes.find((found) => found.id === older)?.word).not.toHaveProperty('counterpart');
   });
 
   it('passes deletions on', async () => {
