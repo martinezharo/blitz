@@ -73,6 +73,35 @@ function sound(build: (ctx: AudioContext, out: AudioNode, now: number) => void) 
   }
 }
 
+let voice: AudioBufferSourceNode | null = null;
+
+export function soundsOn(): boolean {
+  return enabled;
+}
+
+/**
+ * Plays a spoken word (see speech/), cutting off the one before. Straight to
+ * the speakers rather than through the effects' limiter, which would squash
+ * it. Follows the same switch: with sounds off, nothing is said either.
+ */
+export function playVoice(samples: Float32Array<ArrayBuffer>, sampleRate: number) {
+  if (typeof document !== 'undefined' && document.hidden) return;
+  const ctx = audio();
+  if (!ctx || samples.length === 0) return;
+  try {
+    const buffer = ctx.createBuffer(1, samples.length, sampleRate);
+    buffer.copyToChannel(samples, 0);
+    voice?.stop();
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start();
+    voice = source;
+  } catch {
+    // A missed word is never worth an error.
+  }
+}
+
 interface Tone {
   freq: number;
   /** Where the pitch glides to, over `glide` seconds. */
