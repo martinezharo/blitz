@@ -121,7 +121,8 @@
 }
 
 .clue img {
-  width: min(100%, 13rem);
+  /* Shrinks on short screens so the answers still fit without scrolling. */
+  width: min(100%, 13rem, 26dvh);
   aspect-ratio: 1;
   justify-self: center;
   border-radius: var(--radius-tail-lg);
@@ -140,6 +141,48 @@
   font-size: var(--text-xl);
   font-weight: var(--weight-strong);
   line-height: 1.35;
+}
+
+/* Short screens, like small phones: less air around the clue, for the answers. */
+@media (max-height: 44rem) {
+  .body {
+    padding-block: 1.1rem;
+  }
+
+  .clue {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+  }
+
+  .clue img {
+    width: min(100%, 13rem, 20dvh);
+  }
+}
+
+/* With a photo on a wide screen, the photo and the answers sit side by side. */
+@media (min-width: 60rem) {
+  .session:has(.question[data-split]) {
+    --page-column: 56rem;
+  }
+
+  .question[data-split] .body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 0 2.5rem;
+  }
+
+  .question[data-split] .prompt {
+    grid-column: 1 / -1;
+  }
+
+  .question[data-split] .clue {
+    margin-bottom: 0;
+  }
+
+  .question[data-split] .clue img {
+    width: min(100%, 20rem, 45dvh);
+  }
 }
 
 [data-article='der'] { --gender: var(--der); }

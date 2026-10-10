@@ -325,7 +325,14 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
   const solution = `${word.article ? `${word.article} ` : ''}${word.term}`;
 
   return (
-    <form ref={form} className={styles.question} onSubmit={check} tabIndex={-1} noValidate>
+    <form
+      ref={form}
+      className={styles.question}
+      onSubmit={check}
+      tabIndex={-1}
+      noValidate
+      data-split={clue.kind === 'photo' || undefined}
+    >
       <div className={styles.body}>
         <p className={styles.prompt}>
           {gender === 'pick' || gender === 'write' ? 'Which word is it, with its article?' : 'Which word is it?'}
@@ -344,97 +351,99 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
           )}
         </div>
 
-        {gender === 'pick' && (
-          <div className={styles.articles} role="group" aria-label="Article">
-            {articles.map((option, index) => (
-              <button
-                key={option}
-                type="button"
-                className={styles.article}
-                data-article={option}
-                aria-pressed={article === option}
-                disabled={locked}
-                onClick={() => pickArticle(option)}
-              >
-                {option}
-                {articleKeys(answer)[index] && <kbd className={styles.keyHint}>{articleKeys(answer)[index]}</kbd>}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className={styles.answer}>
+          {gender === 'pick' && (
+            <div className={styles.articles} role="group" aria-label="Article">
+              {articles.map((option, index) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={styles.article}
+                  data-article={option}
+                  aria-pressed={article === option}
+                  disabled={locked}
+                  onClick={() => pickArticle(option)}
+                >
+                  {option}
+                  {articleKeys(answer)[index] && <kbd className={styles.keyHint}>{articleKeys(answer)[index]}</kbd>}
+                </button>
+              ))}
+            </div>
+          )}
 
-        {answer.kind === 'choice' && (
-          <div className={styles.options} data-many={answer.options.length > 4 || undefined}>
-            {answer.options.map((option, index) => (
-              <button
-                key={option}
-                type="button"
-                className={styles.option}
-                aria-pressed={term === option}
-                disabled={locked}
-                lang={language}
-                onClick={() => pickTerm(option)}
-              >
-                {option}
-                {index < 9 && <kbd className={styles.keyHint}>{index + 1}</kbd>}
-              </button>
-            ))}
-          </div>
-        )}
+          {answer.kind === 'choice' && (
+            <div className={styles.options} data-many={answer.options.length > 4 || undefined}>
+              {answer.options.map((option, index) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={styles.option}
+                  aria-pressed={term === option}
+                  disabled={locked}
+                  lang={language}
+                  onClick={() => pickTerm(option)}
+                >
+                  {option}
+                  {index < 9 && <kbd className={styles.keyHint}>{index + 1}</kbd>}
+                </button>
+              ))}
+            </div>
+          )}
 
-        {answer.kind === 'letters' && (
-          <LetterBoard
-            language={language}
-            term={word.term}
-            given={answer.given}
-            tiles={answer.tiles}
-            slots={slots}
-            onChange={setSlots}
-            locked={locked}
-            wrong={result?.correct === false}
-          />
-        )}
+          {answer.kind === 'letters' && (
+            <LetterBoard
+              language={language}
+              term={word.term}
+              given={answer.given}
+              tiles={answer.tiles}
+              slots={slots}
+              onChange={setSlots}
+              locked={locked}
+              wrong={result?.correct === false}
+            />
+          )}
 
-        {answer.kind === 'write' && (
-          <div className={styles.write}>
-            {gender === 'write' && (
-              <input
-                className={`${styles.field} ${styles.articleField}`}
-                value={article}
-                onChange={(event) => setArticle(event.target.value)}
-                onKeyDown={(event) => {
-                  // On to the word, rather than checking an answer that has none yet.
-                  if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
-                  event.preventDefault();
-                  if (article.trim() !== '') termField.current?.focus();
-                }}
-                placeholder="article"
-                aria-label="Article"
-                autoComplete="off"
-                autoCapitalize="off"
-                spellCheck={false}
-                lang={language}
-                readOnly={locked}
-              />
-            )}
-            <label className={styles.field}>
-              <span className={styles.hint} lang={language}>
-                {answer.hint}
-              </span>
-              <input
-                ref={termField}
-                value={term}
-                onChange={(event) => setTerm(event.target.value)}
-                aria-label={`The word, starting with ${answer.hint}`}
-                autoComplete="off"
-                autoCapitalize="off"
-                spellCheck={false}
-                lang={language}
-                readOnly={locked}
-              />
-            </label>
-          </div>
-        )}
+          {answer.kind === 'write' && (
+            <div className={styles.write}>
+              {gender === 'write' && (
+                <input
+                  className={`${styles.field} ${styles.articleField}`}
+                  value={article}
+                  onChange={(event) => setArticle(event.target.value)}
+                  onKeyDown={(event) => {
+                    // On to the word, rather than checking an answer that has none yet.
+                    if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
+                    event.preventDefault();
+                    if (article.trim() !== '') termField.current?.focus();
+                  }}
+                  placeholder="article"
+                  aria-label="Article"
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  lang={language}
+                  readOnly={locked}
+                />
+              )}
+              <label className={styles.field}>
+                <span className={styles.hint} lang={language}>
+                  {answer.hint}
+                </span>
+                <input
+                  ref={termField}
+                  value={term}
+                  onChange={(event) => setTerm(event.target.value)}
+                  aria-label={`The word, starting with ${answer.hint}`}
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  lang={language}
+                  readOnly={locked}
+                />
+              </label>
+            </div>
+          )}
+        </div>
       </div>
 
       <footer className={styles.foot} data-result={result ? (result.correct ? 'right' : 'wrong') : undefined}>
