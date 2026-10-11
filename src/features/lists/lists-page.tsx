@@ -131,7 +131,7 @@ function ListGrid({ language, words, onOpen }: { language: Language; words: Word
               return (
                 <li key={list.id}>
                   <button type="button" className={styles.card} style={listTint(list.tint)} onClick={() => onOpen(list)}>
-                    <span className={styles.icon} aria-hidden="true">
+                    <span className={styles.art} aria-hidden="true">
                       <ListIcon list={list} />
                     </span>
                     <strong>{list.name}</strong>
