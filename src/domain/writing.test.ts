@@ -98,6 +98,9 @@ describe('sentenceFixes', () => {
     'Für den 1. Preis hat er ein Geschenk bekommt.',
     'Bei der 125. Vorstellung hat er ein Geschenk bekommt.',
     'Nach seiner erfolgreichen 3. Probe hat er ein Geschenk bekommt.',
+    'Sie bekam ein 2. Kind und hat ein Geschenk bekommt.',
+    'In einer 100. Folge hat er ein Geschenk bekommt.',
+    'Bei einem 3. Versuch hat er ein Geschenk bekommt.',
   ])('keeps the full sentence around an ordinal: %s', (written) => {
     const text = `${written} Das war schön.`;
     const { marks } = markMistakes(text, { language: 'de', mistakes: [mistake('bekommt', 'bekommen')] });
