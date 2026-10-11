@@ -137,6 +137,12 @@ const ABBREVIATIONS = new Set([
   'e.g', 'i.e', 'mr', 'mrs', 'ms', 'st', 'vs', 'approx', 'no',
 ]);
 
+/** Words a German ordinal usually stands before: 1. Januar, 2. Mal, 3. Stock. */
+const AFTER_ORDINAL = /^(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember|mal|platz|stock|klasse|jahrhundert|geburtstag|tag|woche|stunde|kapitel)\b/i;
+
+/** Whether a number and the word after it read as an ordinal, not a number that ends a sentence (Das war 1989.). */
+const ordinal = (number: string, next: string) => /^\d{1,2}$/.test(number) && AFTER_ORDINAL.test(next);
+
 /**
  * Where each sentence of the text starts and ends: up to a line break, or a
  * . ! ? followed by a space or the end, with the space after. A full stop
@@ -156,13 +162,14 @@ function sentences(text: string): [number, number][] {
       while (after < text.length && /[.!?"'»“”)]/.test(text[after]!)) after++;
       const word = text.slice(start, at).match(/(\S+)$/)?.[1]?.toLowerCase() ?? '';
       const bare = word.replace(/^[^\p{L}\p{N}]+/u, '');
-      const next = text.slice(after).match(/^\s*(\S)/)?.[1] ?? '';
+      const nextWord = text.slice(after).match(/^\s*(\S+)/)?.[1] ?? '';
+      const next = nextWord[0] ?? '';
       // After a short form, a lone letter (z. B., d. h.) or a number (1. Januar), or
       // before a word in lower case, a full stop is not the end.
       const short =
         char === '.' &&
         after === at + 1 &&
-        (ABBREVIATIONS.has(bare) || /^\p{L}$/u.test(bare) || /^\d+$/.test(bare) || /\p{Ll}/u.test(next));
+        (ABBREVIATIONS.has(bare) || /^\p{L}$/u.test(bare) || ordinal(bare, nextWord) || /\p{Ll}/u.test(next));
       if ((after === text.length || /\s/.test(text[after]!)) && !short) {
         end = after;
         while (end < text.length && /[ \t]/.test(text[end]!)) end++;

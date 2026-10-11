@@ -91,6 +91,12 @@ describe('sentenceFixes', () => {
     expect(sentenceFixes(text, marks).map((fix) => fix.written)).toEqual(['Am 1. Januar hat es z. B. viel geschneit und wir hat gespielt.']);
   });
 
+  it('still ends a sentence at a number that closes it', () => {
+    const text = 'Das war 1989. Damals wir hatten kein Handy.';
+    const { marks } = markMistakes(text, { language: 'de', mistakes: [mistake('Damals wir hatten', 'Damals hatten wir')] });
+    expect(sentenceFixes(text, marks).map((fix) => fix.written)).toEqual(['Damals wir hatten kein Handy.']);
+  });
+
   it('keeps a mark that runs across two sentences whole', () => {
     const text = 'Ich bin müde. weil ich spät ins Bett ging.';
     const { marks } = markMistakes(text, { language: 'de', mistakes: [mistake('müde. weil', 'müde, weil')] });
