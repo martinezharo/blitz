@@ -42,7 +42,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
-  // Other origins (voices) manage their own storage; /api is live data.
+  // Voices manage their own storage; the rest of /api is live data.
   if (request.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/')) return;
 
   if (request.mode === 'navigate') event.respondWith(openPage(request));

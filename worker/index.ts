@@ -4,12 +4,16 @@ import { beginLocalSignIn, beginProductionSignIn, exchangeTicket, finishLocalSig
 import type { Env } from './env.ts';
 import { problem, sameOrigin } from './http.ts';
 import { getPhoto, putPhoto, sync } from './sync.ts';
+import { voiceModel } from './voices.ts';
 
 /** Only /api reaches this script; everything else is served from the static assets. */
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx?: ExecutionContext) {
     const { pathname } = new URL(request.url);
     const method = request.method;
+
+    // Public and served locally even when account requests use production.
+    if (pathname.startsWith('/api/voices/')) return voiceModel(request, ctx);
 
     if (method === 'POST' && pathname === '/api/auth/dev/exchange' && !env.DEVELOPMENT_UPSTREAM) {
       if (request.headers.has('Origin')) return problem(403, 'Browser exchange forbidden');

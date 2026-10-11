@@ -5,7 +5,7 @@
  */
 import * as ort from 'onnxruntime-web/wasm';
 import ortWasm from 'onnxruntime-web/ort-wasm-simd-threaded.wasm?url';
-import createPiperPhonemize, { type PiperPhonemize } from './phonemizer/piper_phonemize.js';
+import createPiperPhonemize from './phonemizer/piper_phonemize.js';
 import phonemizeData from './phonemizer/piper_phonemize.data?url';
 import phonemizeWasm from './phonemizer/piper_phonemize.wasm?url';
 import type { Language } from '../../domain/word.ts';
@@ -19,6 +19,14 @@ ort.env.wasm.wasmPaths = { wasm: new URL(ortWasm, self.location.href).href };
 const post = (message: FromSpeech, transfer: Transferable[] = []) => self.postMessage(message, { transfer });
 
 const sessions = new Map<Language, Promise<ort.InferenceSession>>();
+const failed = new Set<Language>();
+
+function fail(language: Language, error: unknown) {
+  if (failed.has(language)) return;
+  failed.add(language);
+  console.warn('Voice failed', error);
+  post({ type: 'failed', language });
+}
 
 function session(language: Language): Promise<ort.InferenceSession> {
   let pending = sessions.get(language);
@@ -28,10 +36,8 @@ function session(language: Language): Promise<ort.InferenceSession> {
     pending.then(
       () => post({ type: 'ready', language }),
       (error: unknown) => {
-        // Forgotten, so the next lesson tries again.
-        sessions.delete(language);
-        console.warn('Voice failed', error);
-        post({ type: 'failed', language });
+        // Keep the rejected session: queued words must not restart downloads.
+        fail(language, error);
       },
     );
   }
@@ -44,6 +50,14 @@ async function download(language: Language): Promise<Uint8Array> {
   const cache = await caches.open(VOICE_CACHE);
   const stored = await cache.match(voice.url);
   if (stored) return new Uint8Array(await stored.arrayBuffer());
+  // Preserve models already downloaded before the same-origin endpoint.
+  const legacy = await cache.match(voice.sourceUrl);
+  if (legacy) {
+    await cache.put(voice.url, legacy.clone());
+    await cache.delete(voice.sourceUrl);
+    await forgetOtherVoices(cache);
+    return new Uint8Array(await legacy.arrayBuffer());
+  }
 
   post({ type: 'progress', language, loaded: 0, total: voice.bytes });
   const response = await fetch(voice.url);
@@ -77,26 +91,23 @@ async function hex(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
 
 /** Voices the app no longer uses, and caches of an older layout, are dropped so they do not take up room. */
 async function forgetOtherVoices(cache: Cache) {
-  const wanted = new Set(Object.values(VOICES).map((voice) => voice.url));
+  const wanted = new Set(Object.values(VOICES).flatMap((voice) => [new URL(voice.url, self.location.href).href, voice.sourceUrl]));
   for (const request of await cache.keys()) if (!wanted.has(request.url)) await cache.delete(request);
   for (const name of await caches.keys()) if (name.startsWith('blitz-voices') && name !== VOICE_CACHE) await caches.delete(name);
 }
 
-let phonemizer: Promise<{ module: PiperPhonemize; lines: string[] }> | null = null;
+let phonemizer: Promise<{ wasm: ArrayBuffer; data: ArrayBuffer }> | null = null;
 
 function loadPhonemizer() {
   phonemizer ??= (async () => {
     const [wasm, data] = await Promise.all(
-      [phonemizeWasm, phonemizeData].map((url) => fetch(url).then((response) => response.arrayBuffer())),
+      [phonemizeWasm, phonemizeData].map(async (url) => {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Phonemizer download failed: ${response.status}`);
+        return response.arrayBuffer();
+      }),
     );
-    const lines: string[] = [];
-    const module = await createPiperPhonemize({
-      wasmBinary: wasm!,
-      getPreloadedPackage: () => data!,
-      print: (line) => lines.push(line),
-      printErr: (line) => console.warn('eSpeak:', line),
-    });
-    return { module, lines };
+    return { wasm: wasm!, data: data! };
   })();
   phonemizer.catch(() => (phonemizer = null));
   return phonemizer;
@@ -104,15 +115,25 @@ function loadPhonemizer() {
 
 /** The model's input for a text: one phoneme id list, sentences joined. */
 async function phonemeIds(language: Language, text: string): Promise<number[]> {
-  const { module, lines } = await loadPhonemizer();
-  lines.length = 0;
+  const { wasm, data } = await loadPhonemizer();
+  // callMain repeatedly initializes eSpeak; reusing that runtime eventually
+  // corrupts its memory. Share the files, but give each call a fresh runtime.
+  const lines: string[] = [];
+  const module = await createPiperPhonemize({
+    wasmBinary: wasm,
+    getPreloadedPackage: () => data,
+    print: (line) => lines.push(line),
+    printErr: (line) => console.warn('eSpeak:', line),
+  });
   module.callMain(['-l', VOICES[language].espeak, '--input', JSON.stringify([{ text }]), '--espeak_data', '/espeak-ng-data']);
   return lines.flatMap((line) => (JSON.parse(line) as { phoneme_ids: number[] }).phoneme_ids);
 }
 
 async function synthesise(language: Language, text: string): Promise<Float32Array<ArrayBuffer>> {
   const voice = VOICES[language];
-  const [model, ids] = await Promise.all([session(language), phonemeIds(language, text)]);
+  // A failed download must not keep starting phonemization for queued words.
+  const model = await session(language);
+  const ids = await phonemeIds(language, text);
   if (ids.length === 0) return new Float32Array(0);
   const { output } = await model.run({
     input: new ort.Tensor('int64', BigInt64Array.from(ids, BigInt), [1, ids.length]),
@@ -149,11 +170,15 @@ async function work() {
   busy = true;
   while (queue.length > 0) {
     const { id, language, text } = queue.shift()!;
+    if (failed.has(language)) {
+      post({ type: 'audio', id, samples: null, sampleRate: 0 });
+      continue;
+    }
     try {
       const samples = await synthesise(language, text);
       post({ type: 'audio', id, samples, sampleRate: VOICES[language].sampleRate }, [samples.buffer]);
     } catch (error) {
-      console.warn('Speech failed', error);
+      fail(language, error);
       post({ type: 'audio', id, samples: null, sampleRate: 0 });
     }
   }
@@ -163,6 +188,11 @@ async function work() {
 self.onmessage = (event: MessageEvent<ToSpeech>) => {
   const message = event.data;
   if (message.type === 'prepare') {
+    if (failed.delete(message.language)) {
+      const previous = sessions.get(message.language);
+      sessions.delete(message.language);
+      void previous?.then((model) => model.release()).catch(() => {});
+    }
     void session(message.language).catch(() => {});
     void loadPhonemizer().catch(() => {});
   } else if (message.type === 'say') {
