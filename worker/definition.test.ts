@@ -203,3 +203,13 @@ describe('/api/definition', () => {
     await server.env.DB.prepare("DELETE FROM definition_usage WHERE scope = 'all'").run();
   });
 });
+
+describe('/api/definition without its tables', () => {
+  it('answers 503 instead of crashing, before the migration has been applied', async () => {
+    await server.env.DB.prepare('DROP TABLE definition_usage').run();
+    await server.env.DB.prepare('DROP TABLE definitions').run();
+    const token = await server.signUp('nora');
+    const response = await ask(server.as(token), german('Zange', 'die', 'pliers'));
+    expect(response.status).toBe(503);
+  });
+});

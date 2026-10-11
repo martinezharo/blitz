@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Akin's signature shape: rounded corners with one pinched tail. -->
+  <path fill="#e84b1b" d="M180 0H332A180 180 0 0 1 512 180V332A180 180 0 0 1 332 512H28A28 28 0 0 1 0 484V180A180 180 0 0 1 180 0Z"/>
+  <path fill="#fefefd" d="M290 88L170 286H252L218 424L352 226H266Z"/>
+</svg>

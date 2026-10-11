@@ -1,4 +1,4 @@
-import { ArrowRight, Cloud, ShieldCheck, Smartphone, Sparkles, X } from 'lucide-react';
+import { ArrowRight, Cloud, ShieldCheck, Smartphone, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import styles from './account.module.css';
 
@@ -45,9 +45,7 @@ export function AuthModal({ error, onSignIn, onDismiss }: { error: string | null
         <button className={styles.close} type="button" onClick={onDismiss} aria-label="Close">
           <X aria-hidden="true" />
         </button>
-        <div className={styles.authMark} aria-hidden="true">
-          <Sparkles />
-        </div>
+        <img className={styles.authMark} src="/logo.svg" alt="" />
         <p className={styles.eyebrow}>Make it yours</p>
         <h2 className={styles.authTitle} id="auth-title">
           Take your words everywhere.
