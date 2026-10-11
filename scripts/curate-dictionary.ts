@@ -17,7 +17,7 @@
  * ones only where they are better. `--only synonym` repairs just the problems
  * that name that text, here the ones that are only another word for the word.
  *
- * Then `node scripts/apply-curated.ts` puts them into public/dict.
+ * Then `pnpm dev` or `pnpm build` makes public/dict from them (or `pnpm curated`).
  */
 import { spawn } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -47,7 +47,7 @@ const { values: args } = parseArgs({
 const COUNT = Number(args.count);
 const BATCH = Number(args.batch);
 const CONCURRENCY = Number(args.concurrency);
-const DICT = resolve('public/dict');
+const DICT = resolve('data/dictionary');
 const LANGUAGES: CuratedLanguage[] = args.language === 'both' ? ['de', 'en'] : [args.language as CuratedLanguage];
 /** Said by the CLI when the plan's allowance is spent. */
 const OUT_OF_QUOTA = /usage limit|rate limit|quota|too many requests|\b429\b|try again (?:in|at|later)/i;

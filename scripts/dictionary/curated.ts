@@ -1,3 +1,5 @@
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { checkDefinition } from '../../src/domain/definition-style.ts';
 import { type DictEntry, type DictSense, normalize, type ReverseEntry, SENSE_TYPE_OF } from '../../src/domain/dictionary.ts';
 import { LANGUAGES, WORD_TYPES, type WordType } from '../../src/domain/word.ts';
@@ -140,7 +142,9 @@ export function reverseEntriesOf(entry: DictEntry, isWord: (key: string) => bool
 
 // ---- The committed files: scripts/dictionary/curated/{de,en}.json
 
-const CURATED_DIR = new URL('./curated/', import.meta.url);
+// Relative to where it runs (the repository root, for the scripts, vite and the tests): this is also
+// imported by vite.config.ts, whose bundling would point `import.meta.url` at the config file.
+const CURATED_DIR = pathToFileURL(`${resolve('scripts/dictionary/curated')}/`);
 
 /** Meanings by word, with the empty fields left out to keep the files small. */
 export type CuratedFile = Record<string, Partial<CuratedSense>[]>;

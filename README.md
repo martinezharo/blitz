@@ -31,14 +31,23 @@ pnpm deploy   # build, migrate D1 and publish to Cloudflare Workers
 
 ### Dictionary
 
-Typing a word suggests entries from `public/dict/`, static JSON built from
-[Wiktionary](https://en.wiktionary.org) (via [kaikki.org](https://kaikki.org),
-CC BY-SA) and ranked with OpenSubtitles word frequencies. A German noun
-for a person or animal brings its form for the other sex (Lehrer, Lehrerin),
-which practice asks for half the time. It is committed, so
-nothing runs on deploy. To refresh it, run `pnpm dictionary` (downloads about
-4.5 GB into `.cache/dictionary` the first time). German is searched by the
-German word or its English translation; English by the English word.
+Typing a word suggests entries from `/dict/`, static JSON in `public/dict/`
+made from two things that are in git:
+
+- `data/dictionary/`, the base built from
+  [Wiktionary](https://en.wiktionary.org) (via [kaikki.org](https://kaikki.org),
+  CC BY-SA) and ranked with OpenSubtitles word frequencies. A German noun for a
+  person or animal brings its form for the other sex (Lehrer, Lehrerin), which
+  practice asks for half the time. To refresh it, run `pnpm dictionary`
+  (downloads about 4.5 GB into `.cache/dictionary` the first time).
+- `scripts/dictionary/curated/{de,en}.json`, the meanings a model wrote for the
+  most common words (below), put over the base.
+
+`public/dict/` itself is not versioned: `vite dev` and `vite build` make it when
+it is missing or out of date (a couple of seconds), so curating more words
+changes one JSON file instead of hundreds of dictionary files. `pnpm curated`
+makes it by hand. German is searched by the German word or its English
+translation; English by the English word.
 
 #### Definitions
 
@@ -49,7 +58,7 @@ with its own short translations and a definition under 70 characters:
 
 ```sh
 pnpm curate --count 4000   # node scripts/curate-dictionary.ts
-pnpm curated               # node scripts/apply-curated.ts
+pnpm curated               # node scripts/apply-curated.ts: public/dict from the base and these
 ```
 
 `curate` drives the Codex CLI (`codex exec`, so it runs on a ChatGPT
@@ -60,8 +69,9 @@ The instructions it gives the model are in `scripts/dictionary/curate-prompt.ts`
 the rules for a definition, shared with the Worker's, in `src/domain/definition-style.ts`.
 `pnpm curate -- --fix` sends definitions that use the word they define, or run long,
 back to be rewritten. After curating, run `pnpm lists` too.
-`curated` puts the result into `public/dict` (marked `c: 1`) without building
-the dictionary again, and `pnpm dictionary` applies the same files when it does.
+Curated meanings are marked `c: 1` in the dictionary the app serves; `pnpm dev` and
+`pnpm build` apply them by themselves (`pnpm curated` does it by hand, and
+`--force` makes it again).
 
 Every other meaning gets its definition from `GET /api/definition`: the first
 time someone signed in picks it, the Worker asks Gemma 4 (`@cf/google/gemma-4-26b-a4b-it`,

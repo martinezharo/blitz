@@ -1,6 +1,8 @@
 import { cloudflare } from '@cloudflare/vite-plugin';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
+import { generateDictionary } from './scripts/dictionary/generate.ts';
 
 /**
  * Sends plain-HTTP visits on the tailnet IP to the same server's HTTPS
@@ -38,9 +40,24 @@ function secureOrigin(): Plugin {
   };
 }
 
+/**
+ * The dictionary the app serves (public/dict) is not in git: it is made from the
+ * base built from Wiktionary (data/dictionary) with the curated meanings put over
+ * it. Made when it is missing or out of date, before anything is served or
+ * copied from public/, so dev, build and the Cloudflare build all have it.
+ */
+function dictionary(): Plugin {
+  return {
+    name: 'blitz:dictionary',
+    async buildStart() {
+      await generateDictionary(resolve('data/dictionary'), resolve('public/dict'));
+    },
+  };
+}
+
 export default defineConfig({
   // The Worker (/api) runs inside the dev server, on local D1 and R2.
-  plugins: [secureOrigin(), react(), cloudflare()],
+  plugins: [dictionary(), secureOrigin(), react(), cloudflare()],
   server: {
     // The dev box publishes this server over HTTPS on its Tailscale hostname,
     // the secure origin development sign-in needs. Vite rejects Host headers it

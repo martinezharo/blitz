@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 /**
  * The dictionary is a folder per kind (de, en, de-rev) of small JSON files, one
- * per two first letters of the word: public/dict/de/sc.json. These read and
+ * per two first letters of the word: de/sc.json. These read and
  * write them for the scripts that change the dictionary in place.
  */
 

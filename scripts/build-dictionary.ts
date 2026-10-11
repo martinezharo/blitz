@@ -1,5 +1,7 @@
 /**
- * Builds the dictionary the new-word line suggests from: `public/dict/**`.
+ * Builds the base of the dictionary the new-word line suggests from:
+ * `data/dictionary/**`. What the app serves, `public/dict`, is this with the
+ * curated meanings put over it (scripts/dictionary/generate.ts), made by vite.
  *
  *   node scripts/build-dictionary.ts [--cache <dir>] [--out <dir>] [--min-count <n>]
  *
@@ -19,13 +21,13 @@ import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { parseArgs } from 'node:util';
 import { type DictEntry, type DictKind, type DictSense, normalize, type ReverseEntry, shardKey } from '../src/domain/dictionary.ts';
-import { applyCurated, readCurated, REVERSE_PER_KEY } from './dictionary/curated.ts';
+import { REVERSE_PER_KEY } from './dictionary/curated.ts';
 import { englishDefinition, englishSenses, germanSense, MAX_ENGLISH_SENSES, MAX_GERMAN_SENSES, type RawEntry, reverseKeys } from './dictionary/extract.ts';
 
 const { values: args } = parseArgs({
   options: {
     cache: { type: 'string', default: '.cache/dictionary' },
-    out: { type: 'string', default: 'public/dict' },
+    out: { type: 'string', default: 'data/dictionary' },
     'min-count': { type: 'string', default: '12' },
   },
 });
@@ -158,17 +160,6 @@ async function main() {
     }
   }
   console.log(`German meanings defined from their translation: ${defined}`);
-
-  // Words whose meanings a model wrote (scripts/curate-dictionary.ts) keep those,
-  // not what Wiktionary says, and are what the reverse dictionary below is built from.
-  for (const [language, entries] of [['de', german], ['en', english]] as const) {
-    const curated = await readCurated(language);
-    for (const [term, senses] of curated) {
-      const entry = entries.get(term);
-      if (entry) entries.set(term, applyCurated(language, entry, { term, senses }));
-    }
-    console.log(`${language}: ${curated.size} words with curated meanings`);
-  }
 
   const reverse = new Map<string, ReverseEntry[]>();
   for (const entry of german.values()) {

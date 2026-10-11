@@ -6,3 +6,6 @@ dist
 .shots
 .dev.vars
 .cache
+
+# Generated from data/dictionary and scripts/dictionary/curated at build time
+public/dict
