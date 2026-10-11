@@ -13,9 +13,9 @@
     "test": "vitest run",
     "dictionary": "node scripts/build-dictionary.ts",
     "deploy": "pnpm build && wrangler d1 migrations apply blitz --remote && wrangler deploy",
-    "lists": "node scripts/refresh-lists.ts",
     "curate": "node scripts/curate-dictionary.ts",
-    "curated": "node scripts/apply-curated.ts"
+    "curated": "node scripts/apply-curated.ts",
+    "list:new": "node scripts/new-list.ts"
   },
   "dependencies": {
     "@fontsource-variable/nunito": "^5.3.0",

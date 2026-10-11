@@ -1,0 +1,19 @@
+{
+  "name": "Household",
+  "icon": "lamp",
+  "order": 5,
+  "words": [
+    "Tisch",
+    "Stuhl",
+    "Bett",
+    "Sofa",
+    "Schrank",
+    "Lampe",
+    "Tür",
+    "Fenster",
+    "Spiegel",
+    "Teppich",
+    "Kühlschrank",
+    "Waschmaschine"
+  ]
+}

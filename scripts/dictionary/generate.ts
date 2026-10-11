@@ -96,7 +96,7 @@ async function inputsHash(): Promise<string> {
  * Makes `out` from `base` and the curated meanings, unless it is already what
  * they would give (it says so in a stamp file). Returns whether it did anything.
  */
-export async function generateDictionary(base: string, out: string, { force = false, log = true } = {}): Promise<boolean> {
+export async function generateDictionary(base: string, out: string, { force = false } = {}): Promise<boolean> {
   const hash = await inputsHash();
   const stamped = await readFile(join(out, STAMP), 'utf8').catch(() => '');
   if (!force && stamped === hash) return false;
@@ -108,6 +108,5 @@ export async function generateDictionary(base: string, out: string, { force = fa
   await applyIn(out, 'en');
   await reapplyReverse(out, touched);
   await writeFile(join(out, STAMP), hash);
-  if (log) console.log(`dictionary: ${out} made from ${base}`);
   return true;
 }

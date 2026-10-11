@@ -1,0 +1,26 @@
+{
+  "name": "Body",
+  "icon": "person-standing",
+  "tint": "blue",
+  "order": 3,
+  "words": [
+    "Kopf",
+    "Gesicht",
+    "Auge",
+    "Ohr",
+    "Nase",
+    "Mund",
+    "Zahn",
+    "Hals",
+    "Schulter",
+    "Arm",
+    "Hand",
+    "Finger",
+    "Bauch",
+    "Rücken",
+    "Bein",
+    "Knie",
+    "Fuß",
+    "Herz"
+  ]
+}

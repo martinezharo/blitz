@@ -7,5 +7,6 @@ dist
 .dev.vars
 .cache
 
-# Generated from data/dictionary and scripts/dictionary/curated at build time
+# Made at build time from data/dictionary, data/lists and scripts/dictionary/curated
 public/dict
+public/lists

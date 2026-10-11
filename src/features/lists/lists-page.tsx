@@ -1,12 +1,12 @@
-import { Check, ChevronLeft, LoaderCircle, Plus, X } from 'lucide-react';
+import { Check, ChevronLeft, LoaderCircle, Plus, RotateCw, X } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { loadList, useListIndex } from '../../data/lists.ts';
 import { addWords } from '../../data/words.ts';
 import { fillDraft, type Suggestion } from '../../domain/dictionary.ts';
-import { knownWords, type WordList } from '../../domain/lists.ts';
-import { WORD_LISTS } from '../../domain/lists-catalogue.ts';
+import { knownWords, type ListSummary, savedKeys, suggestionOf } from '../../domain/lists.ts';
 import { emptyDraft, LANGUAGES, type Language, type Word, wordSummary } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
-import { listIcon, listTint } from './list-looks.ts';
+import { ListIcon, listTint } from './list-look.tsx';
 import styles from './lists-page.module.css';
 
 interface ListsPageProps {
@@ -19,7 +19,7 @@ interface ListsPageProps {
 /** The ready-made lists, full screen: pick a list, untick what you do not want, add the rest. */
 export function ListsPage({ language, words, onClose }: ListsPageProps) {
   const ref = useRef<HTMLDialogElement>(null);
-  const [open, setOpen] = useState<WordList | null>(null);
+  const [open, setOpen] = useState<ListSummary | null>(null);
   const spec = LANGUAGES[language];
 
   useLayoutEffect(() => {
@@ -105,68 +105,122 @@ export function ListsPage({ language, words, onClose }: ListsPageProps) {
   );
 }
 
-function ListGrid({ language, words, onOpen }: { language: Language; words: Word[]; onOpen: (list: WordList) => void }) {
+function ListGrid({ language, words, onOpen }: { language: Language; words: Word[]; onOpen: (list: ListSummary) => void }) {
+  const { lists, retry } = useListIndex();
   return (
     <div className={styles.body}>
       <div className={styles.column}>
         <h2 className={styles.title}>Word lists</h2>
         <p className={styles.lede}>Pick a list, untick what you do not want, and add the rest.</p>
-        <ul className={styles.grid}>
-          {WORD_LISTS.map((list) => {
-            const Icon = listIcon(list.id);
-            const items = list.words[language];
-            const have = knownWords(items, words).size;
-            const all = have === items.length;
-            return (
-              <li key={list.id}>
-                <button type="button" className={styles.card} style={listTint(list.id)} onClick={() => onOpen(list)}>
-                  <span className={styles.icon} aria-hidden="true">
-                    <Icon />
-                  </span>
-                  <strong>{list.name}</strong>
-                  <span className={styles.sample} lang={language}>
-                    {items
-                      .slice(0, 3)
-                      .map((item) => item.term)
-                      .join(', ')}
-                    …
-                  </span>
-                  <span className={styles.count} data-done={all || undefined}>
-                    {all ? (
-                      <>
-                        <Check aria-hidden="true" />
-                        All added
-                      </>
-                    ) : have > 0 ? (
-                      `${have} of ${items.length} added`
-                    ) : (
-                      `${items.length} words`
-                    )}
-                  </span>
-                </button>
+        {lists === 'failed' ? (
+          <Failed what="the lists" onRetry={retry} />
+        ) : lists === null ? (
+          <ul className={styles.grid} aria-busy="true" aria-label="Loading the lists">
+            {[0, 1, 2, 3].map((key) => (
+              <li key={key}>
+                <span className={`${styles.card} ${styles.placeholder}`} />
               </li>
-            );
-          })}
-        </ul>
+            ))}
+          </ul>
+        ) : (
+          <ul className={styles.grid}>
+            {lists.map((list) => {
+              const side = list[language];
+              const have = savedKeys(side.keys, words).size;
+              const all = have === side.count;
+              return (
+                <li key={list.id}>
+                  <button type="button" className={styles.card} style={listTint(list.tint)} onClick={() => onOpen(list)}>
+                    <span className={styles.icon} aria-hidden="true">
+                      <ListIcon list={list} />
+                    </span>
+                    <strong>{list.name}</strong>
+                    <span className={styles.sample} lang={language}>
+                      {side.sample.join(', ')}
+                      {side.count > side.sample.length && '…'}
+                    </span>
+                    <span className={styles.count} data-done={all || undefined}>
+                      {all ? (
+                        <>
+                          <Check aria-hidden="true" />
+                          All added
+                        </>
+                      ) : have > 0 ? (
+                        `${have} of ${side.count} added`
+                      ) : (
+                        `${side.count} words`
+                      )}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </div>
   );
 }
 
-function ListDetail({
-  list,
-  language,
-  words,
-  onDone,
-}: {
-  list: WordList;
-  language: Language;
-  words: Word[];
-  onDone: () => void;
-}) {
-  const items = list.words[language];
-  const Icon = listIcon(list.id);
-  // Taken when the list opens: words added from it do not turn into "known"
+function Failed({ what, onRetry }: { what: string; onRetry: () => void }) {
+  return (
+    <div className={styles.failed} role="alert">
+      <p>Could not load {what}. Check the connection.</p>
+      <button type="button" onClick={onRetry}>
+        <RotateCw aria-hidden="true" />
+        Try again
+      </button>
+    </div>
+  );
+}
+
+function ListDetail({ list, language, words, onDone }: { list: ListSummary; language: Language; words: Word[]; onDone: () => void }) {
+  const [items, setItems] = useState<Suggestion[] | null | 'failed'>(null);
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    let current = true;
+    setItems(null);
+    loadList(list.id).then(
+      (loaded) => current && setItems(loaded[language].map(suggestionOf)),
+      () => current && setItems('failed'),
+    );
+    return () => {
+      current = false;
+    };
+  }, [list.id, language, attempt]);
+
+  return (
+    <>
+      <div className={styles.body}>
+        <div className={styles.column}>
+          <div className={styles.detailHead} style={listTint(list.tint)}>
+            <span className={styles.icon} aria-hidden="true">
+              <ListIcon list={list} />
+            </span>
+            <div>
+              <h2 className={styles.title}>{list.name}</h2>
+              <p className={styles.lede}>{list[language].count} words</p>
+            </div>
+          </div>
+          {items === 'failed' ? (
+            <Failed what={`${list.name}`} onRetry={() => setAttempt((count) => count + 1)} />
+          ) : items === null ? (
+            <div className={styles.loading} aria-busy="true">
+              <LoaderCircle className={styles.spin} aria-label="Loading the words" />
+            </div>
+          ) : (
+            <ListChoice items={items} language={language} words={words} onDone={onDone} />
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** The words of an open list, to untick, and the button that adds the rest. */
+function ListChoice({ items, language, words, onDone }: { items: Suggestion[]; language: Language; words: Word[]; onDone: () => void }) {
+  // Taken when the words arrive: words added from the list do not turn into "known"
   // under the person's fingers.
   const [known] = useState(() => knownWords(items, words));
   const available = items.filter((item) => !known.has(item));
@@ -201,69 +255,47 @@ function ListDetail({
 
   return (
     <>
-      <div className={styles.body}>
-        <div className={styles.column}>
-          <div className={styles.detailHead} style={listTint(list.id)}>
-            <span className={styles.icon} aria-hidden="true">
-              <Icon />
-            </span>
-            <div>
-              <h2 className={styles.title}>{list.name}</h2>
-              <p className={styles.lede}>
-                {items.length} words
-                {known.size > 0 && ` · ${known.size} already in your list`}
-              </p>
-            </div>
-          </div>
-
-          {available.length > 0 && (
-            <div className={styles.toolbar}>
-              <span>
-                {picked.size} of {available.length} selected
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  sounds.toggle(!everyOne);
-                  setPicked(everyOne ? new Set() : new Set(available));
-                }}
-              >
-                {everyOne ? 'Select none' : 'Select all'}
-              </button>
-            </div>
-          )}
-
-          <ul className={styles.rows}>
-            {items.map((item) => {
-              const have = known.has(item);
-              return (
-                <li key={`${item.article ?? ''} ${item.term}`}>
-                  <label className={styles.row} data-article={item.article} data-known={have || undefined}>
-                    <input
-                      type="checkbox"
-                      className="sr-only"
-                      checked={picked.has(item)}
-                      disabled={have || adding}
-                      onChange={() => toggle(item)}
-                    />
-                    <span className={styles.box} aria-hidden="true">
-                      <Check />
-                    </span>
-                    <span className={styles.text}>
-                      <span className={styles.term} lang={language}>
-                        {item.article && <span className={styles.article}>{item.article} </span>}
-                        {item.term}
-                      </span>
-                      <span className={styles.summary}>{wordSummary(item)}</span>
-                    </span>
-                    {have && <span className={styles.have}>In your list</span>}
-                  </label>
-                </li>
-              );
-            })}
-          </ul>
+      {known.size > 0 && <p className={styles.known}>{known.size} already in your list</p>}
+      {available.length > 0 && (
+        <div className={styles.toolbar}>
+          <span>
+            {picked.size} of {available.length} selected
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              sounds.toggle(!everyOne);
+              setPicked(everyOne ? new Set() : new Set(available));
+            }}
+          >
+            {everyOne ? 'Select none' : 'Select all'}
+          </button>
         </div>
-      </div>
+      )}
+
+      <ul className={styles.rows}>
+        {items.map((item) => {
+          const have = known.has(item);
+          return (
+            <li key={`${item.article ?? ''} ${item.term}`}>
+              <label className={styles.row} data-article={item.article} data-known={have || undefined}>
+                <input type="checkbox" className="sr-only" checked={picked.has(item)} disabled={have || adding} onChange={() => toggle(item)} />
+                <span className={styles.box} aria-hidden="true">
+                  <Check />
+                </span>
+                <span className={styles.text}>
+                  <span className={styles.term} lang={language}>
+                    {item.article && <span className={styles.article}>{item.article} </span>}
+                    {item.term}
+                  </span>
+                  <span className={styles.summary}>{wordSummary(item)}</span>
+                </span>
+                {have && <span className={styles.have}>In your list</span>}
+              </label>
+            </li>
+          );
+        })}
+      </ul>
 
       <div className={styles.dock}>
         <button type="button" className={styles.cta} aria-disabled={picked.size === 0 || adding} onClick={add}>

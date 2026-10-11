@@ -1,0 +1,24 @@
+{
+  "name": "Food",
+  "icon": "apple",
+  "tint": "orange",
+  "order": 1,
+  "words": [
+    "Apfel",
+    "Banane",
+    "Orange",
+    "Erdbeere",
+    "Kartoffel",
+    "Tomate",
+    "Zwiebel",
+    "Brot",
+    "Käse",
+    "Ei",
+    "Milch",
+    "Butter",
+    "Reis",
+    "Fleisch",
+    "Fisch",
+    "Kuchen"
+  ]
+}

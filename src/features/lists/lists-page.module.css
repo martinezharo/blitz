@@ -450,3 +450,64 @@
     transform: rotate(360deg);
   }
 }
+
+/* While the lists or the words of one are on their way. */
+.placeholder {
+  display: block;
+  background: var(--icon-background);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.loading {
+  display: grid;
+  place-items: center;
+  padding: 4rem 0;
+  color: var(--muted);
+}
+
+.loading svg {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.failed {
+  display: grid;
+  justify-items: start;
+  gap: 0.9rem;
+  margin-top: 2rem;
+  color: var(--muted);
+}
+
+.failed p {
+  margin: 0;
+}
+
+.failed button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.95rem;
+  border: 0;
+  border-radius: var(--radius-tail-pill);
+  background: var(--icon-background);
+  color: var(--foreground);
+  font-weight: var(--weight-strong);
+  cursor: pointer;
+}
+
+.failed button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.known {
+  margin: 0.9rem 0 0;
+  color: var(--muted);
+  font-size: var(--text-md);
+}

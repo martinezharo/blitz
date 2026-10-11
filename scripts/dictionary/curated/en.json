@@ -12054,5 +12054,6 @@
 "benign":[{"type":"adjective","definition":"Kind and gentle"},{"type":"adjective","definition":"Not harmful or dangerous"}],
 "charmer":[{"type":"noun","definition":"A person who easily wins others' liking with a warm manner"}],
 "aligned":[{"type":"adjective","definition":"Arranged in a straight line or in the right position"},{"type":"adjective","definition":"In agreement with a person, group, or goal"}],
-"topped":[{"type":"adjective","definition":"Having something placed or spread over the top"},{"type":"adjective","definition":"Having reached a higher amount or level than something else"}]
+"topped":[{"type":"adjective","definition":"Having something placed or spread over the top"},{"type":"adjective","definition":"Having reached a higher amount or level than something else"}],
+"washing machine":[{"type":"noun","definition":"A machine that washes clothes"}]
 }

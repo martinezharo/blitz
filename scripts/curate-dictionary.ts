@@ -19,16 +19,14 @@
  *
  * Then `pnpm dev` or `pnpm build` makes public/dict from them (or `pnpm curated`).
  */
-import { spawn } from 'node:child_process';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { LIST_CONCEPTS } from '../src/domain/lists-concepts.ts';
 import { type DictEntry, SENSE_TYPES } from '../src/domain/dictionary.ts';
 import { definitionProblems } from '../src/domain/definition-style.ts';
 import { type CuratedLanguage, type CuratedSense, cleanWord, readCurated, writeCurated } from './dictionary/curated.ts';
 import { ANSWER_SCHEMA, PROMPTS, REVISION } from './dictionary/curate-prompt.ts';
+import { askModel } from './dictionary/codex.ts';
+import { listTerms, readSources } from './dictionary/lists.ts';
 import { readEntries } from './dictionary/shards.ts';
 
 const { values: args } = parseArgs({
@@ -76,7 +74,9 @@ async function candidates(language: CuratedLanguage): Promise<Candidate[]> {
   }
   const entries = await readEntries<DictEntry>(DICT, language);
   const byTerm = new Map(entries.map((entry) => [entry.w, entry]));
-  const listed = new Set(LIST_CONCEPTS.flatMap((list) => list.concepts.map((concept) => (language === 'de' ? concept.de : concept.en))));
+  // The words of the lists: the German ones as written, the English ones as the German
+  // words give them, which needs those written first (German is done before English).
+  const listed = new Set(listTerms((await readSources()).values(), await readCurated('de'))[language]);
   const wanted = (entry: DictEntry) => !done.has(entry.w) && (entry.s.length === 0 || !entry.s.every((sense) => sense.c === 1));
   // A word of the lists the dictionary does not have is written too, from the word alone.
   const first = [...listed].map((term) => byTerm.get(term) ?? { w: term, r: 0, s: [] }).filter(wanted);
@@ -114,39 +114,16 @@ let strikes = 0;
 
 /** One run of the model over some words. Returns what it wrote, as raw data. */
 async function ask(language: CuratedLanguage, batch: Candidate[], label: string): Promise<unknown[]> {
-  const dir = join(tmpdir(), 'blitz-curate');
-  await mkdir(dir, { recursive: true });
-  const schema = join(dir, 'schema.json');
-  const out = join(dir, `${process.pid}-${label}.json`);
-  await writeFile(schema, JSON.stringify(ANSWER_SCHEMA));
   const prompt = `${PROMPTS[language]}${args.fix ? `\n\n${REVISION}` : ''}\n\nINPUT:\n${JSON.stringify({ language, words: batch.map((candidate) => inputOf(language, candidate)) })}`;
-
-  const log: string[] = [];
-  await new Promise<void>((done, fail) => {
-    // Run away from the repository: the model has nothing to read or change here.
-    const child = spawn(
-      'codex',
-      ['exec', '-m', args.model!, '-c', `model_reasoning_effort="${args.effort}"`, '-s', 'read-only', '--skip-git-repo-check', '--ephemeral', '--output-schema', schema, '-o', out, '-'],
-      { cwd: dir, stdio: ['pipe', 'pipe', 'pipe'] },
-    );
-    const timer = setTimeout(() => child.kill('SIGKILL'), 20 * 60_000);
-    child.stdout.on('data', (chunk) => log.push(String(chunk)));
-    child.stderr.on('data', (chunk) => log.push(String(chunk)));
-    child.on('error', fail);
-    child.on('close', (code) => {
-      clearTimeout(timer);
-      if (code === 0) return done();
-      fail(new Error(log.join('').slice(-600) || `codex exited with ${code}`));
-    });
-    child.stdin.end(prompt);
-  }).catch((error: Error) => {
+  try {
+    const answer = (await askModel(prompt, ANSWER_SCHEMA, { model: args.model, effort: args.effort, label })) as { words?: unknown[] };
+    strikes = 0;
+    return answer.words ?? [];
+  } catch (error) {
     // One odd message is not the end of the allowance; several in a row, with no batch between, are.
-    if (OUT_OF_QUOTA.test(error.message) && ++strikes >= STRIKES_TO_STOP) stopped = true;
+    if (OUT_OF_QUOTA.test((error as Error).message) && ++strikes >= STRIKES_TO_STOP) stopped = true;
     throw error;
-  });
-  strikes = 0;
-  const answer = JSON.parse(await readFile(out, 'utf8')) as { words?: unknown[] };
-  return answer.words ?? [];
+  }
 }
 
 interface Written {

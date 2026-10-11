@@ -1,7 +1,7 @@
 import { ArrowRight, ListPlus } from 'lucide-react';
-import { WORD_LISTS } from '../../domain/lists-catalogue.ts';
+import { useListIndex } from '../../data/lists.ts';
 import styles from './lists-entry.module.css';
-import { listIcon, listTint } from './list-looks.ts';
+import { ListIcon, listTint } from './list-look.tsx';
 
 /** A quiet line under the composer, for when you would rather not type every word. */
 export function ListsPill({ onOpen }: { onOpen: () => void }) {
@@ -14,23 +14,28 @@ export function ListsPill({ onOpen }: { onOpen: () => void }) {
   );
 }
 
+/** How many lists the card shows the pictures and names of. */
+const SHOWN = 4;
+
 /** The same way in, made bigger for a language with no words yet. */
 export function ListsInvite({ onOpen }: { onOpen: () => void }) {
+  const { lists } = useListIndex();
+  const shown = Array.isArray(lists) ? lists.slice(0, SHOWN) : [];
+
   return (
     <button type="button" className={styles.invite} onClick={onOpen}>
-      <span className={styles.chips} aria-hidden="true">
-        {WORD_LISTS.map((list) => {
-          const Icon = listIcon(list.id);
-          return (
-            <span key={list.id} className={styles.chip} style={listTint(list.id)}>
-              <Icon />
+      {shown.length > 0 && (
+        <span className={styles.chips} aria-hidden="true">
+          {shown.map((list) => (
+            <span key={list.id} className={styles.chip} style={listTint(list.tint)}>
+              <ListIcon list={list} />
             </span>
-          );
-        })}
-      </span>
+          ))}
+        </span>
+      )}
       <span className={styles.inviteText}>
         <strong>Start from a list</strong>
-        <small>{WORD_LISTS.map((list) => list.name).join(', ')}</small>
+        {shown.length > 0 && <small>{shown.map((list) => list.name).join(', ')}</small>}
       </span>
       <ArrowRight className={styles.arrow} aria-hidden="true" />
     </button>
