@@ -3,7 +3,7 @@
  * sense at a time, and saves them in scripts/dictionary/curated/{de,en}.json.
  *
  *   node scripts/curate-dictionary.ts [--language de|en|both] [--count 3000]
- *     [--batch 60] [--concurrency 4] [--model gpt-6-luna] [--effort low]
+ *     [--batch 60] [--concurrency 4] [--model gpt-6-luna] [--effort low] [--fix]
  *
  * The model is driven through the Codex CLI (`codex exec`), so it runs on a
  * ChatGPT subscription rather than on an API key. Words are taken in order of
@@ -11,6 +11,10 @@
  * can be stopped at any point, and started again where it left off, since the
  * words already written are skipped. It stops by itself when the subscription
  * says it has had enough.
+ *
+ * With --fix it writes nothing new: it sends the definitions that use the word
+ * they define, or run long, back to the model to be rewritten, and keeps the new
+ * ones only where they are better.
  *
  * Then `node scripts/apply-curated.ts` puts them into public/dict.
  */
@@ -21,8 +25,8 @@ import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { LIST_CONCEPTS } from '../src/domain/lists-concepts.ts';
 import type { DictEntry } from '../src/domain/dictionary.ts';
-import { type CuratedLanguage, type CuratedSense, cleanWord, readCurated, writeCurated } from './dictionary/curated.ts';
-import { ANSWER_SCHEMA, PROMPTS } from './dictionary/curate-prompt.ts';
+import { type CuratedLanguage, type CuratedSense, cleanWord, definitionProblems, readCurated, writeCurated } from './dictionary/curated.ts';
+import { ANSWER_SCHEMA, PROMPTS, REVISION } from './dictionary/curate-prompt.ts';
 
 const { values: args } = parseArgs({
   options: {
@@ -32,6 +36,7 @@ const { values: args } = parseArgs({
     concurrency: { type: 'string', default: '4' },
     model: { type: 'string', default: 'gpt-6-luna' },
     effort: { type: 'string', default: 'low' },
+    fix: { type: 'boolean', default: false },
   },
 });
 
@@ -50,7 +55,12 @@ interface Candidate {
   term: string;
   rank: number;
   entry: DictEntry;
+  /** With --fix: what was written for the word before. */
+  current?: CuratedSense[];
 }
+
+/** The problems of each meaning of a word that has been written, in order. */
+const problemsOf = (term: string, senses: readonly CuratedSense[]) => senses.map((sense) => definitionProblems(term, sense.translations, sense.definition));
 
 async function loadEntries(language: CuratedLanguage): Promise<DictEntry[]> {
   const dir = join(DICT, language);
@@ -61,8 +71,13 @@ async function loadEntries(language: CuratedLanguage): Promise<DictEntry[]> {
 
 /** The words to write, the ones of the lists first, then by how common they are. Words written already are left out. */
 async function candidates(language: CuratedLanguage): Promise<Candidate[]> {
-  const entries = await loadEntries(language);
   const done = await readCurated(language);
+  if (args.fix) {
+    return [...done]
+      .filter(([term, senses]) => problemsOf(term, senses).some((problems) => problems.length > 0))
+      .map(([term, senses]) => ({ term, rank: 0, entry: { w: term, r: 0, s: [] }, current: senses }));
+  }
+  const entries = await loadEntries(language);
   const byTerm = new Map(entries.map((entry) => [entry.w, entry]));
   const listed = new Set(LIST_CONCEPTS.flatMap((list) => list.concepts.map((concept) => (language === 'de' ? concept.de.term : concept.en))));
   const wanted = (entry: DictEntry) => !done.has(entry.w) && (entry.s.length === 0 || !entry.s.every((sense) => sense.c === 1));
@@ -78,6 +93,13 @@ async function candidates(language: CuratedLanguage): Promise<Candidate[]> {
 }
 
 function inputOf(language: CuratedLanguage, candidate: Candidate) {
+  if (candidate.current) {
+    const problems = problemsOf(candidate.term, candidate.current);
+    return {
+      term: candidate.term,
+      current: candidate.current.map((sense, index) => ({ ...sense, ...(problems[index]!.length ? { problem: problems[index]!.join('; ') } : {}) })),
+    };
+  }
   const dictionary =
     language === 'de'
       ? candidate.entry.s.map((sense) => ({
@@ -100,7 +122,7 @@ async function ask(language: CuratedLanguage, batch: Candidate[], label: string)
   const schema = join(dir, 'schema.json');
   const out = join(dir, `${process.pid}-${label}.json`);
   await writeFile(schema, JSON.stringify(ANSWER_SCHEMA));
-  const prompt = `${PROMPTS[language]}\n\nINPUT:\n${JSON.stringify({ language, words: batch.map((candidate) => inputOf(language, candidate)) })}`;
+  const prompt = `${PROMPTS[language]}${args.fix ? `\n\n${REVISION}` : ''}\n\nINPUT:\n${JSON.stringify({ language, words: batch.map((candidate) => inputOf(language, candidate)) })}`;
 
   const log: string[] = [];
   await new Promise<void>((done, fail) => {
@@ -147,6 +169,10 @@ async function curate(language: CuratedLanguage, batch: Candidate[], label: stri
       for (const raw of answers) {
         const cleaned = cleanWord(language, raw);
         if (!('word' in cleaned) || !wanted.has(cleaned.word.term) || got.has(cleaned.word.term)) continue;
+        // A repair is kept only if it leaves fewer problems than the definitions it replaces.
+        const before = pending.find((candidate) => candidate.term === cleaned.word.term)?.current;
+        const count = (term: string, senses: readonly CuratedSense[]) => problemsOf(term, senses).flat().length;
+        if (before && count(cleaned.word.term, cleaned.word.senses) >= count(cleaned.word.term, before)) continue;
         got.add(cleaned.word.term);
         done.push(cleaned.word);
       }
