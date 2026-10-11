@@ -186,3 +186,29 @@
 
 .credit { margin: 1.1rem 0 0; color: var(--muted); font-size: var(--text-sm); font-weight: var(--weight-body); line-height: 1.3; }
 .credit a { color: inherit; text-underline-offset: 0.15em; }
+
+/* Where the browser can prompt, wide screens have the corner button instead. */
+@media (min-width: 48rem) {
+  .install[data-mode='native'] { display: none; }
+}
+
+.installButton {
+  display: flex;
+  height: 2.2rem;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.95rem 0 0.8rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: var(--text-md);
+  font-weight: var(--weight-black);
+  cursor: pointer;
+  transition: transform var(--motion-spring);
+}
+
+.installButton svg { width: 0.95rem; stroke-width: 2.8; }
+.installButton:active { transform: scale(0.95); }
+.installButton:focus-visible { outline: var(--focus-ring); outline-offset: 3px; }
+.installHint { width: 1.1rem; color: var(--muted); }

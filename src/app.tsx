@@ -6,6 +6,7 @@ import type { Word } from './domain/word.ts';
 import styles from './app.module.css';
 import { AccountBadge } from './features/account/account-badge.tsx';
 import { AuthModal } from './features/account/auth-modal.tsx';
+import { InstallButton } from './features/account/install.tsx';
 import { LanguageMenu } from './features/language/language-menu.tsx';
 import { PreferencesModal } from './features/preferences/preferences-modal.tsx';
 import { PracticeDock } from './features/practice/practice-dock.tsx';
@@ -84,6 +85,7 @@ export function App() {
         <LanguageMenu language={language} onChange={setLanguage} />
       </div>
       <div className={styles.cornerEnd}>
+        <InstallButton />
         <AccountBadge
           state={account}
           onSignIn={() => {
@@ -129,6 +131,8 @@ export function App() {
         <PreferencesModal
           theme={theme}
           onThemeChange={setTheme}
+          // Guests have no account menu to hold it, so it lives here.
+          showInstall={account.status === 'guest'}
           soundsOn={soundsOn}
           onSoundsChange={setSoundsOn}
           onDismiss={() => setPreferencesOpen(false)}

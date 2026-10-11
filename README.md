@@ -8,6 +8,20 @@ Words live in this browser's IndexedDB first, so the app works offline and
 without an account. Signing in with Google syncs them, pictures included, to
 every other device signed in to the same account.
 
+## Install
+
+Blitz is an installable web app. Where the browser offers it, an install
+button sits left of the account menu on wide screens, and inside the account
+menu on narrow ones (guests find it in Preferences). iPhones and iPads have no
+install prompt, so the menu says to use Share, then Add to Home Screen. A
+service worker (`src/shared/sw.js`, emitted as `/sw.js` by the build) keeps the
+app shell, fonts and speech runtime on the device, so Blitz opens offline; it
+is only registered in production builds. A new build takes over once every
+open window is closed.
+
+The logo is `public/logo.svg`. The PNG icons in `public/icons/` come from it:
+run `CHROMIUM=/path/to/chromium node scripts/build-icons.ts` after changing it.
+
 ## Development
 
 ```sh

@@ -4,6 +4,7 @@ import type { AccountState } from '../../data/account.ts';
 import { type SyncStatus, syncNow, useSyncState } from '../../data/sync.ts';
 import type { Account } from '../../domain/sync.ts';
 import styles from './account.module.css';
+import { InstallOption } from './install.tsx';
 
 const STATUS: Record<SyncStatus, string> = {
   off: 'Sync is off on this connection',
@@ -92,6 +93,7 @@ function AccountMenu({
             Sync now
           </button>
         )}
+        <InstallOption onChosen={() => menu.current?.hidePopover()} />
         <button
           type="button"
           className={styles.menuOption}

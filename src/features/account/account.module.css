@@ -107,6 +107,14 @@
 .menuOption:disabled { opacity: 0.6; cursor: wait; }
 .menuOption svg { width: 1.1rem; height: 1.1rem; color: var(--muted); }
 
+/* Install: a corner button on wide screens, an option in the menu on narrow ones. */
+.installBadge > svg { color: var(--accent); }
+.desktopOnly { display: none; }
+@media (min-width: 48rem) {
+  .desktopOnly { display: flex; }
+  .mobileOnly { display: none; }
+}
+
 .authDialog {
   position: fixed;
   z-index: 300;
@@ -159,19 +167,14 @@
 .close svg { width: 1.05rem; }
 
 .authMark {
-  display: grid;
+  display: block;
   width: 3.25rem;
   height: 3.25rem;
-  place-items: center;
   margin-bottom: 1.2rem;
   border-radius: var(--radius-tail-md);
-  background: var(--accent);
   box-shadow: 0.3rem 0.32rem 0 var(--selection);
-  color: var(--accent-ink);
   transform: rotate(-4deg);
 }
-
-.authMark svg { width: 1.5rem; }
 .eyebrow { margin: 0 0 0.4rem; color: var(--accent); font-size: var(--text-sm); font-weight: var(--weight-black); letter-spacing: 0.12em; text-transform: uppercase; }
 .authTitle { max-width: 19rem; margin: 0; font-size: clamp(1.85rem, 8vw, 2.6rem); letter-spacing: -0.055em; line-height: 0.98; text-wrap: balance; }
 .authCopy { margin: 0.9rem 0 1.35rem; color: var(--muted); font-size: var(--text-lg); font-weight: var(--weight-body); line-height: 1.5; text-wrap: pretty; }
