@@ -1,5 +1,6 @@
-import { Monitor, Moon, Settings2, Sun, X } from 'lucide-react';
+import { Download, Monitor, Moon, Settings2, Share, Sun, X } from 'lucide-react';
 import { type ReactNode, useEffect, useRef } from 'react';
+import { install, useInstallMode } from '../../data/install.ts';
 import { THEMES, type Theme } from '../../data/preferences.ts';
 import { sounds } from '../../shared/sound.ts';
 import styles from './preferences.module.css';
@@ -22,12 +23,15 @@ function isLight(theme: Theme): boolean {
 export function PreferencesModal({
   theme,
   onThemeChange,
+  showInstall,
   soundsOn,
   onSoundsChange,
   onDismiss,
 }: {
   theme: Theme;
   onThemeChange: (theme: Theme) => void;
+  /** Offer to install the app, for people with no account menu to hold it. */
+  showInstall: boolean;
   soundsOn: boolean;
   onSoundsChange: (on: boolean) => void;
   onDismiss: () => void;
@@ -112,6 +116,8 @@ export function PreferencesModal({
           </button>
         </section>
 
+        {showInstall && <InstallSetting />}
+
         <p className={styles.credit}>
           Word suggestions come from{' '}
           <a href="https://en.wiktionary.org" target="_blank" rel="noreferrer">
@@ -121,5 +127,34 @@ export function PreferencesModal({
         </p>
       </div>
     </dialog>
+  );
+}
+
+/** Install for guests; on wide screens the corner button already does it. */
+function InstallSetting() {
+  const mode = useInstallMode();
+  if (!mode) return null;
+  return (
+    <section className={`${styles.setting} ${styles.inline} ${styles.install}`} data-mode={mode} aria-labelledby="install-label">
+      <div className={styles.settingCopy}>
+        <strong id="install-label">Install app</strong>
+        <small>{mode === 'native' ? 'Open Blitz from your home screen, even offline.' : 'Tap Share, then Add to Home Screen.'}</small>
+      </div>
+      {mode === 'native' ? (
+        <button
+          className={styles.installButton}
+          type="button"
+          onClick={() => {
+            sounds.open();
+            void install();
+          }}
+        >
+          <Download aria-hidden="true" />
+          Install
+        </button>
+      ) : (
+        <Share className={styles.installHint} aria-hidden="true" />
+      )}
+    </section>
   );
 }
