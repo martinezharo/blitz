@@ -183,6 +183,34 @@ button.voice:hover {
   object-fit: cover;
 }
 
+.listen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1.1rem;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-tail-lg);
+  background: var(--background);
+  font-size: var(--text-xl);
+  font-weight: 900;
+  cursor: pointer;
+  transition: border-color var(--motion-standard), transform var(--motion-spring);
+}
+
+.listen:hover {
+  border-color: var(--faint);
+}
+
+.listen:active {
+  transform: scale(0.97);
+}
+
+.listen svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
 /* Which form to give, for a word that has one for each sex. */
 .sex {
   justify-self: start;

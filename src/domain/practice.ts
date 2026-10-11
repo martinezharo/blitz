@@ -8,6 +8,10 @@ import { counterpartArticle, MAX_LEVEL, type Sex, sexOf, type Word } from './wor
  * miss drops it to level four again. Right answers in a row at the top level
  * are counted too: once there are more than five, the word is offered for the
  * archive, where it stops coming back.
+ *
+ * At the top level a word may also be asked by ear: its voice says the word
+ * and it has to be written. That needs a voice that is ready, so it is only
+ * mixed in with the other clues while there is one.
  */
 
 const LESSON_SIZE = 10;
@@ -70,7 +74,8 @@ export function pickLesson(words: Pick<Word, 'id' | 'level'>[], random: Random =
   return lesson;
 }
 
-export type Clue = { kind: 'photo'; photo: Blob } | { kind: 'translation' | 'definition'; text: string };
+/** The audio clue has no payload: the word to say is the exercise's own term. */
+export type Clue = { kind: 'photo'; photo: Blob } | { kind: 'translation' | 'definition'; text: string } | { kind: 'audio' };
 
 export type Gender = 'shown' | 'pick' | 'write' | null;
 
@@ -98,9 +103,14 @@ export interface Exercise {
 
 const CHOICES: Record<number, number> = { 1: 4, 2: 8 };
 
-export function buildExercise(word: Word, words: Word[], random: Random = Math.random): Exercise {
+/**
+ * `canHear` says whether a voice is ready to read the word aloud. Only then
+ * can a word at the top level be asked by ear: hear it, and write it.
+ */
+export function buildExercise(word: Word, words: Word[], random: Random = Math.random, canHear = false): Exercise {
   const level = levelOf(word);
   const clues: Clue[] = [];
+  if (canHear && level === MAX_LEVEL) clues.push({ kind: 'audio' });
   if (word.photo) clues.push({ kind: 'photo', photo: word.photo });
   if (word.translation) clues.push({ kind: 'translation', text: word.translation });
   if (word.definition) clues.push({ kind: 'definition', text: word.definition });

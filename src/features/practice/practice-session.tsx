@@ -4,7 +4,7 @@ import { recordAnswer, setArchived } from '../../data/words.ts';
 import { type Answer, buildExercise, type Exercise, fillLetters, isCorrect, offersArchive, pickLesson, STREAK_TO_ARCHIVE } from '../../domain/practice.ts';
 import { LANGUAGES, type Language, type Word } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
-import { downloadVoice, preloadSpeech, prepareVoice, speak, useVoice } from '../../shared/speech/speech.ts';
+import { canHear, downloadVoice, preloadSpeech, prepareVoice, speak, useVoice } from '../../shared/speech/speech.ts';
 import { useObjectUrl } from '../../shared/ui/use-object-url.ts';
 import { emptySlots, LetterBoard, type Slots } from './letter-board.tsx';
 import styles from './practice-session.module.css';
@@ -33,7 +33,7 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
     return local && local.updatedAt > word.updatedAt ? local : word;
   };
   const current = words.find((word) => word.id === lesson[step]);
-  const [exercise, setExercise] = useState<Exercise | null>(() => (current ? buildExercise(current, words) : null));
+  const [exercise, setExercise] = useState<Exercise | null>(() => (current ? buildExercise(current, words, Math.random, canHear(language)) : null));
 
   // A layout effect, so the dialog is open before the first question takes the
   // focus; opened later, it would hand the focus to the close button.
@@ -76,7 +76,7 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
     const word = fresh.find((candidate) => candidate.id === lesson[index]);
     if (!word) sounds.complete(right === asked);
     setStep(index);
-    setExercise(word ? buildExercise(word, fresh) : null);
+    setExercise(word ? buildExercise(word, fresh, Math.random, canHear(language)) : null);
   }
 
   const done = !exercise;
@@ -292,7 +292,17 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
 
   // Every word this question can say, made while it is being read, or as soon as the voice is there.
   const voice = useVoice(language).status;
-  useEffect(() => preloadSpeech(language, answer.kind === 'choice' ? answer.options : [solution]), [voice]);
+  useEffect(
+    () => preloadSpeech(language, answer.kind === 'choice' ? answer.options : clue.kind === 'audio' ? [exercise.term, solution] : [solution]),
+    [voice],
+  );
+
+  // An audio clue is heard as soon as the question shows, and again on demand.
+  // Only the word itself: the article is for the user to give.
+  const listen = () => void speak(language, exercise.term);
+  useEffect(() => {
+    if (clue.kind === 'audio') listen();
+  }, []);
 
   // Letters and writing are said once the answer is complete and right, and
   // only then: a wrong one stays silent.
@@ -396,7 +406,13 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
     >
       <div className={styles.body}>
         <p className={styles.prompt}>
-          {gender === 'pick' || gender === 'write' ? 'Which word is it, with its article?' : 'Which word is it?'}
+          {clue.kind === 'audio'
+            ? gender === 'write'
+              ? 'Write the word you hear, with its article'
+              : 'Write the word you hear'
+            : gender === 'pick' || gender === 'write'
+              ? 'Which word is it, with its article?'
+              : 'Which word is it?'}
         </p>
 
         <div className={styles.clue}>
@@ -408,6 +424,11 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
           )}
           {clue.kind === 'photo' ? (
             photo && <img src={photo} alt="" />
+          ) : clue.kind === 'audio' ? (
+            <button type="button" className={styles.listen} onClick={listen}>
+              <Volume2 aria-hidden="true" />
+              Listen again
+            </button>
           ) : (
             <>
               <span className={styles.clueLabel}>{clue.kind === 'translation' ? 'In English' : 'Meaning'}</span>

@@ -156,6 +156,12 @@ English is Cori (public domain), both "medium" voices from
 [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices) at a
 pinned revision (`src/shared/speech/voices.ts`).
 
+At the top level (5) a word can also be asked by ear: its voice says it, with a
+"Listen again" button, and you write it with its article. It is one of the
+word's clues, next to the photo, translation and meaning, and only comes up
+once that language's voice is ready, so never with sounds off or before the
+first download finishes.
+
 A voice is about 63 MB. It downloads in the background the first time a
 lesson in that language starts (a ring by the progress bar shows it), is
 checked against its hash and kept in Cache Storage, so after that it loads

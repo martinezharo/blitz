@@ -123,6 +123,11 @@ const usable = (language: Language) => {
   return soundsOn() && (status === 'downloading' || status === 'loading' || status === 'ready');
 };
 
+/** Whether the voice is awake and sounds are on: a word can be heard right now. */
+export function canHear(language: Language) {
+  return soundsOn() && stateOf(language).status === 'ready';
+}
+
 function clip(language: Language, text: string) {
   const key = `${language}\n${text}`;
   let entry = clips.get(key);

@@ -231,6 +231,30 @@ describe('exercises', () => {
     });
   });
 
+  describe('an audio clue', () => {
+    const top = (patch: Partial<Word> = {}) => word({ level: 5, term: 'Bahnhof', article: 'der', translation: 'station', ...patch });
+    const rolls = (...values: number[]) => () => values.shift() ?? 0;
+
+    it('is one of the top level clues when a voice is ready', () => {
+      const exercise = buildExercise(top(), words, rolls(0), true);
+      expect(exercise.clue).toEqual({ kind: 'audio' });
+      expect(exercise.answer).toEqual({ kind: 'write', hint: 'B' });
+      expect(isCorrect(exercise, 'der', 'ahnhof')).toBe(true);
+    });
+
+    it('leaves the other clues in the mix', () => {
+      expect(buildExercise(top(), words, rolls(0.9), true).clue).toEqual({ kind: 'translation', text: 'station' });
+    });
+
+    it('is never asked without a voice', () => {
+      expect(buildExercise(top(), words, rolls(0)).clue).toEqual({ kind: 'translation', text: 'station' });
+    });
+
+    it('is never asked below the top level', () => {
+      expect(buildExercise(top({ level: 4 }), words, rolls(0), true).clue).toEqual({ kind: 'translation', text: 'station' });
+    });
+  });
+
   it('level five: only the first letter', () => {
     const exercise = buildExercise(word({ level: 5, type: 'verb', term: 'laufen', article: null }), words);
     expect(exercise.answer).toEqual({ kind: 'write', hint: 'l' });
