@@ -89,7 +89,7 @@ export async function prepareVoice(language: Language) {
   if (status !== 'idle' && status !== 'failed') return;
   const cached = await caches
     .open(VOICE_CACHE)
-    .then((cache) => cache.match(VOICES[language].url))
+    .then(async (cache) => (await cache.match(VOICES[language].url)) ?? cache.match(VOICES[language].sourceUrl))
     .then(Boolean, () => false);
   if (stateOf(language).status !== status) return;
   if (!cached && connectionSavesData()) return setState(language, { status: 'offered', bytes: VOICES[language].bytes });

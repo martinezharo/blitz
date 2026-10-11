@@ -4,8 +4,8 @@
   "main": "worker/index.ts",
   "compatibility_date": "2026-10-01",
   "previews": {},
-  // The app runs in the browser; the Worker only answers /api: Google sign-in
-  // and sync. GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are secrets
+  // The app runs in the browser; the Worker answers /api: Google sign-in,
+  // sync, definitions and voice downloads. Google credentials are secrets
   // (`wrangler secret put`, or .dev.vars locally).
   "assets": {
     "directory": "./dist",
