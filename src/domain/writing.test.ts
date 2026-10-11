@@ -113,6 +113,17 @@ describe('sentenceFixes', () => {
     expect(sentenceFixes(text, marks).map((fix) => fix.written)).toEqual(['Damals wir hatten kein Handy.']);
   });
 
+  it.each([
+    ['In Mathe habe ich eine 2.', 'Danach wir hatten kein Handy.', 'Danach wir hatten', 'Danach hatten wir'],
+    ['In Mathe habe ich eine 1.', 'Peter hat ein Geschenk bekommt.', 'bekommt', 'bekommen'],
+    ['Die Lösung ist die 2.', 'Sie hat ein Geschenk bekommt.', 'bekommt', 'bekommen'],
+    ['Meine Note ist meine 2.', 'Danach wir hatten kein Handy.', 'Danach wir hatten', 'Danach hatten wir'],
+  ])('ends a sentence after a determiner and a cardinal: %s', (first, written, wrong, right) => {
+    const text = `${first} ${written}`;
+    const { marks } = markMistakes(text, { language: 'de', mistakes: [mistake(wrong, right)] });
+    expect(sentenceFixes(text, marks).map(({ written, corrected }) => [written, corrected])).toEqual([[written, written.replace(wrong, right)]]);
+  });
+
   it('keeps a mark that runs across two sentences whole', () => {
     const text = 'Ich bin müde. weil ich spät ins Bett ging.';
     const { marks } = markMistakes(text, { language: 'de', mistakes: [mistake('müde. weil', 'müde, weil')] });

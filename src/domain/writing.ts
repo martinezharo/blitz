@@ -140,14 +140,18 @@ const ABBREVIATIONS = new Set([
 /** Words a German ordinal usually stands before: 1. Januar, 2. Mal, 3. Stock. */
 const AFTER_ORDINAL = /^(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember|mal|platz|stock|klasse|jahrhundert|geburtstag|tag|woche|stunde|kapitel)\b/i;
 
-/** Articles and possessives directly before an ordinal or its adjectives. */
-const ORDINAL_DETERMINERS = /^(?:am|im|zum|zur|beim|vom|der|die|das|den|dem|des|ein|eine|einen|einem|einer|eines|(?:dies|jen|mein|dein|sein|ihr|unser|euer)(?:e|en|er|es|em)?)$/i;
+/** Definite articles and possessives before an ordinal; indefinite articles can name grades (eine 2.). */
+const ORDINAL_DETERMINERS = /^(?:am|im|zum|zur|beim|vom|der|die|das|den|dem|des|(?:dies|jen|mein|dein|sein|ihr|unser|euer)(?:e|en|er|es|em)?)$/i;
+
+/** Common sentence openings that do not name an ordinal noun. */
+const SENTENCE_OPENINGS = /^(?:ich|du|er|sie|es|wir|ihr|der|die|das|den|dem|des|ein|eine|einen|einem|einer|eines|danach|dann|damals|heute|gestern|jetzt|bald|später|früher|dort|hier|deshalb|deswegen|daher|darum|trotzdem|außerdem|allerdings|also|aber|doch|und|oder|wenn|weil|obwohl|als|nun|anschließend|schließlich)$/i;
 
 /** Use noun-phrase context for ordinals beyond the usual date/rank words. Bare cardinals still end sentences. */
 function ordinal(number: string, next: string, before: string): boolean {
   if (!/^\d+$/.test(number)) return false;
   if (/^\d{1,2}$/.test(number) && AFTER_ORDINAL.test(next)) return true;
   if (!/^\p{Lu}/u.test(next)) return false;
+  if (SENTENCE_OPENINGS.test(next.replace(/[^\p{L}]+$/u, ''))) return false;
   const words = before.trimEnd().split(/\s+/);
   for (let at = words.length - 1; at >= 0; at--) {
     const word = words[at]!;
