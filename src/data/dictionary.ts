@@ -1,4 +1,4 @@
-import { DICT_KINDS, type DictEntry, type DictKind, MIN_QUERY, normalize, shardKey, type Suggestion, suggest } from '../domain/dictionary.ts';
+import { DICT_KINDS, type DictEntry, type DictKind, MIN_QUERY, normalize, shardKey, type Suggestion, suggest, wordOfPlural } from '../domain/dictionary.ts';
 import type { Language } from '../domain/word.ts';
 
 const shards = new Map<string, Promise<DictEntry[]>>();
@@ -42,4 +42,16 @@ export async function lookupWord(language: Language, term: string): Promise<Sugg
   const query = normalize(term);
   const found = await lookup(language, term);
   return found.find((suggestion) => !suggestion.translated && normalize(suggestion.term) === query) ?? null;
+}
+
+/**
+ * The dictionary's entry for a word as it was used in a text: the word itself,
+ * or failing that the word it is the plural of. Null when it has neither.
+ */
+export async function lookupForm(language: Language, form: string): Promise<Suggestion | null> {
+  const exact = await lookupWord(language, form);
+  if (exact) return exact;
+  const query = normalize(form);
+  if (query.length < MIN_QUERY) return null;
+  return wordOfPlural(form, await shard(DICT_KINDS[language][0]!, shardKey(query)));
 }

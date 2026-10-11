@@ -124,6 +124,57 @@ describe('sync', () => {
   });
 });
 
+describe('corrections', () => {
+  const correction = (correctionId: string, updatedAt: number): Change => ({
+    id: correctionId,
+    updatedAt,
+    kind: 'correction',
+    word: null,
+    correction: {
+      id: correctionId,
+      language: 'de',
+      written: 'Ich habe ein Hund.',
+      corrected: 'Ich habe einen Hund.',
+      fixes: [{ wrong: 'ein Hund', right: 'einen Hund', why: 'Accusative', from: [9, 17], to: [9, 19] }],
+      createdAt: updatedAt,
+      updatedAt,
+    },
+  });
+  const post = (fetcher: typeof fetch, body: unknown) =>
+    fetcher('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+  it('travel to the devices that ask for them, and only to those', async () => {
+    const as = server.as(await server.signUp('ada'));
+    const sentence = correction(id(), 10);
+    const bank = change(id(), 11);
+    expect((await post(as, { cursor: 0, changes: [sentence, bank], kinds: ['correction'] })).status).toBe(200);
+
+    const knows = (await (await post(as, { cursor: 0, changes: [], kinds: ['correction'] })).json()) as SyncResponse;
+    expect(knows.changes).toEqual([sentence, bank]);
+    // A device from before corrections existed is only ever sent words.
+    const older = await sync(as, 0);
+    expect(older.changes).toEqual([bank]);
+    expect(older.cursor).toBe(knows.cursor);
+  });
+
+  it('are deleted like words', async () => {
+    const as = server.as(await server.signUp('ada'));
+    const sentenceId = id();
+    await post(as, { cursor: 0, changes: [correction(sentenceId, 10)], kinds: ['correction'] });
+    await post(as, { cursor: 0, changes: [{ id: sentenceId, updatedAt: 20, kind: 'correction', word: null, correction: null }], kinds: ['correction'] });
+    const pulled = (await (await post(as, { cursor: 0, changes: [], kinds: ['correction'] })).json()) as SyncResponse;
+    expect(pulled.changes).toEqual([{ id: sentenceId, updatedAt: 20, kind: 'correction', word: null, correction: null }]);
+  });
+
+  it('rejects malformed ones', async () => {
+    const as = server.as(await server.signUp('ada'));
+    const sentence = correction(id(), 10);
+    const bad = { ...sentence, correction: { ...sentence.correction!, fixes: [{ wrong: 'x', right: 'y', why: '', from: [0, 99], to: [0, 1] }] } };
+    expect((await post(as, { cursor: 0, changes: [bad] })).status).toBe(400);
+    expect((await post(as, { cursor: 0, changes: [{ ...sentence, kind: 'note' }] })).status).toBe(400);
+  });
+});
+
 describe('photos', () => {
   it('stores a photo under the hash of its bytes, per account', async () => {
     const bytes = new TextEncoder().encode('jpeg bytes');

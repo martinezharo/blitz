@@ -1,6 +1,7 @@
 import { currentUser, finishGoogleSignIn, me, signOut, startGoogleSignIn } from './auth.ts';
+import { correct } from './correct.ts';
 import { definition } from './definition.ts';
-import { beginLocalSignIn, beginProductionSignIn, exchangeTicket, finishLocalSignIn, proxyAccountRequest } from './dev-auth.ts';
+import { beginLocalSignIn, beginProductionSignIn, exchangeTicket, finishLocalSignIn, proxyAccountRequest, upstreamUser } from './dev-auth.ts';
 import type { Env } from './env.ts';
 import { problem, sameOrigin } from './http.ts';
 import { getPhoto, putPhoto, sync } from './sync.ts';
@@ -24,6 +25,12 @@ export default {
     if (env.DEVELOPMENT_UPSTREAM) {
       if (method === 'GET' && pathname === '/api/auth/google') return beginLocalSignIn(request, env);
       if (method === 'GET' && pathname === '/api/auth/dev/finish') return finishLocalSignIn(request, env);
+      // Checked here, with production's account: production may not have the endpoint yet.
+      if (method === 'POST' && pathname === '/api/correct') {
+        const user = await upstreamUser(request, env);
+        if (!user) return problem(401, 'Not signed in');
+        return correct(request, env, user);
+      }
       if (pathname === '/api/me' || pathname === '/api/sync' || pathname === '/api/definition' || pathname === '/api/auth/sign-out' ||
           /^\/api\/photos\/[^/]+$/.test(pathname)) return proxyAccountRequest(request, env);
       return problem(404, 'Not found');
@@ -44,10 +51,11 @@ export default {
     if (method === 'POST' && pathname === '/api/auth/sign-out') return signOut(request, env);
 
     const photo = pathname.match(/^\/api\/photos\/([^/]+)$/);
-    if (pathname === '/api/sync' || photo) {
+    if (pathname === '/api/sync' || pathname === '/api/correct' || photo) {
       const user = await currentUser(request, env);
       if (!user) return problem(401, 'Not signed in');
       if (method === 'POST' && pathname === '/api/sync') return sync(request, env, user);
+      if (method === 'POST' && pathname === '/api/correct') return correct(request, env, user);
       if (method === 'PUT' && photo) return putPhoto(request, env, user, photo[1]!);
       if (method === 'GET' && photo) return getPhoto(env, user, photo[1]!);
     }

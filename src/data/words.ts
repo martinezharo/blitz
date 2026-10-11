@@ -136,7 +136,7 @@ export async function fillCounterparts(words: Word[]): Promise<void> {
  * A v4 UUID. `crypto.randomUUID` only exists on secure origins, and the dev
  * server is reached over plain HTTP on the tailnet.
  */
-function newId(): string {
+export function newId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   bytes[6] = (bytes[6]! & 0x0f) | 0x40;
   bytes[8] = (bytes[8]! & 0x3f) | 0x80;

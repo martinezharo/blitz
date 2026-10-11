@@ -1,4 +1,5 @@
 import { LANGUAGES, MAX_LEVEL, WORD_TYPES, type Word } from './word.ts';
+import type { Correction, Fix } from './writing.ts';
 
 /**
  * What the browser and the Worker exchange. Shared by both, so the wire shape
@@ -6,22 +7,35 @@ import { LANGUAGES, MAX_LEVEL, WORD_TYPES, type Word } from './word.ts';
  *
  * Conflicts resolve per word, last write wins by `updatedAt`. A deletion is a
  * change too (`word: null`), so it reaches every device.
+ *
+ * Sentences of the grammar history travel the same way, as changes of their
+ * own kind. Devices from before they existed do not ask for them, and so are
+ * never sent any.
  */
 
 /** A word as it travels: the photo is the SHA-256 of its bytes, fetched apart. */
 export type WireWord = Omit<Word, 'photo' | 'photoKey'> & { photo: string | null };
 
+/** What else than words a device can sync. */
+export type ChangeKind = 'correction';
+
 export interface Change {
   id: string;
   updatedAt: number;
-  /** Null when the word was deleted. */
+  /** Absent for a word, the one kind every device knows. */
+  kind?: ChangeKind;
+  /** Null when the word was deleted, and for a change of another kind. */
   word: WireWord | null;
+  /** A correction's change only: null when it was deleted. */
+  correction?: Correction | null;
 }
 
 export interface SyncRequest {
   /** The highest version this device has already pulled. */
   cursor: number;
   changes: Change[];
+  /** The kinds besides words this device understands. */
+  kinds?: ChangeKind[];
 }
 
 export interface SyncResponse {
@@ -58,6 +72,13 @@ export function parseChange(value: unknown): Change | null {
   if (typeof value !== 'object' || value === null) return null;
   const { id, updatedAt, word } = value as Record<string, unknown>;
   if (typeof id !== 'string' || !ID.test(id) || !isTime(updatedAt)) return null;
+  const { kind, correction } = value as Record<string, unknown>;
+  if (kind === 'correction') {
+    if (correction === null) return { id, updatedAt, kind, word: null, correction: null };
+    const parsed = parseCorrection(correction);
+    return parsed && parsed.id === id && parsed.updatedAt === updatedAt ? { id, updatedAt, kind, word: null, correction: parsed } : null;
+  }
+  if (kind !== undefined) return null;
   if (word === null) return { id, updatedAt, word: null };
   const parsed = parseWireWord(word);
   return parsed && parsed.id === id && parsed.updatedAt === updatedAt ? { id, updatedAt, word: parsed } : null;
@@ -107,5 +128,49 @@ function parseWireWord(value: unknown): WireWord | null {
     ...(word.archived === true && { archived: true }),
     createdAt: word.createdAt as number,
     updatedAt: word.updatedAt as number,
+  };
+}
+
+const isSpan = (value: unknown, length: number): value is [number, number] =>
+  Array.isArray(value) &&
+  value.length === 2 &&
+  value.every((at) => Number.isInteger(at)) &&
+  (value[0] as number) >= 0 &&
+  (value[0] as number) <= (value[1] as number) &&
+  (value[1] as number) <= length;
+
+function parseCorrection(value: unknown): Correction | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const item = value as Record<string, unknown>;
+  if (
+    typeof item.id !== 'string' ||
+    (item.language !== 'de' && item.language !== 'en') ||
+    !isText(item.written, 2000) ||
+    !isText(item.corrected, 2000) ||
+    !Array.isArray(item.fixes) ||
+    item.fixes.length > 40 ||
+    !isTime(item.createdAt) ||
+    !isTime(item.updatedAt)
+  ) {
+    return null;
+  }
+  const written = item.written as string;
+  const corrected = item.corrected as string;
+  const fixes: Fix[] = [];
+  for (const fix of item.fixes as unknown[]) {
+    if (typeof fix !== 'object' || fix === null) return null;
+    const { wrong, right, why, from, to } = fix as Record<string, unknown>;
+    if (!isText(wrong, 200) || typeof right !== 'string' || right.length > 200 || typeof why !== 'string' || why.length > 200) return null;
+    if (!isSpan(from, written.length) || !isSpan(to, corrected.length)) return null;
+    fixes.push({ wrong: wrong as string, right, why, from: [from[0], from[1]], to: [to[0], to[1]] });
+  }
+  return {
+    id: item.id,
+    language: item.language,
+    written,
+    corrected,
+    fixes,
+    createdAt: item.createdAt as number,
+    updatedAt: item.updatedAt as number,
   };
 }

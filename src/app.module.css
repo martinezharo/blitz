@@ -5,9 +5,10 @@
   z-index: 50;
 }
 
+/* Phones reach the account from the tab bar's menu instead. */
 .cornerEnd {
   position: fixed;
-  display: flex;
+  display: none;
   gap: 0.45rem;
   top: max(0.9rem, env(safe-area-inset-top));
   right: max(0.9rem, env(safe-area-inset-right));
@@ -21,6 +22,10 @@
 }
 
 @media (min-width: 48rem) {
+  .cornerEnd {
+    display: flex;
+  }
+
   .page {
     padding-top: max(12vh, 6rem);
   }

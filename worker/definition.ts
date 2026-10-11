@@ -1,6 +1,7 @@
 import { checkDefinition, DEFINITION_STYLE } from '../src/domain/definition-style.ts';
 import { type DictEntry, type DictSense, normalize, SENSE_TYPE_OF, shardKey } from '../src/domain/dictionary.ts';
 import type { WordType } from '../src/domain/word.ts';
+import { takeSlot } from './allowance.ts';
 import { currentUser } from './auth.ts';
 import type { Env } from './env.ts';
 import { json, problem, sha256 } from './http.ts';
@@ -150,37 +151,6 @@ async function findMeaning(request: Request, env: Env, query: URLSearchParams): 
   };
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
-
-/**
- * Takes one use from the day's allowances, for this account and for everyone,
- * before the model is asked: a failing model still costs a slot, so a loop of
- * retries cannot run it up. Returns whether there was room; when the day's
- * allowance for everyone is gone, the account gets its slot back.
- */
-async function takeSlot(env: Env, userId: string): Promise<boolean> {
-  const day = today();
-  const take = async (scope: string, by: 1 | -1) =>
-    (
-      await env.DB.prepare(
-        'INSERT INTO definition_usage (day, scope, count) VALUES (?1, ?2, MAX(?3, 0)) ON CONFLICT (day, scope) DO UPDATE SET count = MAX(count + ?3, 0) RETURNING count',
-      )
-        .bind(day, scope, by)
-        .first<{ count: number }>()
-    )?.count ?? Infinity;
-  if ((await take(`user:${userId}`, 1)) > DAILY_LIMIT.perAccount) return false;
-  const all = await take('all', 1);
-  if (all > DAILY_LIMIT.everyone) {
-    await take(`user:${userId}`, -1);
-    return false;
-  }
-  // The first use of the day clears the days that are not needed any more.
-  if (all === 1) {
-    await env.DB.prepare('DELETE FROM definition_usage WHERE day < ?').bind(new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10)).run();
-  }
-  return true;
-}
-
 /** GET /api/definition?language=&term=&type=&article=&translation=&hint= */
 export async function definition(request: Request, env: Env): Promise<Response> {
   const query = new URL(request.url).searchParams;
@@ -201,7 +171,7 @@ export async function definition(request: Request, env: Env): Promise<Response> 
   if (origin && origin !== 'same-origin' && origin !== 'none') return problem(403, 'Cross-site request');
   const user = await currentUser(request, env);
   if (!user) return problem(401, 'Sign in to have a definition written');
-  if (!(await takeSlot(env, user.id))) return problem(429, 'Too many definitions today');
+  if (!(await takeSlot(env, null, user.id, DAILY_LIMIT))) return problem(429, 'Too many definitions today');
 
   let written: string | null = null;
   try {

@@ -222,3 +222,10 @@
   .authDialog { padding: 0.55rem; }
   .authCard { margin: max(1vh, 0.25rem) auto; padding: 1.3rem; border-radius: var(--radius-tail-xl); }
 }
+
+/* The same menu, opened from the tab bar on phones: pinned above its last tab. */
+.appMenu {
+  inset: auto max(0.9rem, env(safe-area-inset-right)) calc(max(0.75rem, env(safe-area-inset-bottom)) + 4.7rem) auto;
+  border-radius: 1.35rem 1.35rem 0.45rem 1.35rem;
+  transform-origin: bottom right;
+}
