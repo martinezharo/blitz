@@ -6,8 +6,10 @@ a meaning: an English translation, an English definition, a picture, or any mix.
 
 Ready-made lists (food, colours, body, jobs) can be imported from the page
 behind "Ready-made word lists": open one, untick what you do not want, and add
-the rest. They are written out in `src/domain/lists-catalogue.ts`, each word
-with its article, plural, other-sex form, translation and definition. A new list also needs an icon in
+the rest. Their words are in `src/domain/lists-concepts.ts` (article, plural,
+other-sex form, translation) and their definitions in
+`src/domain/lists-definitions.json`, which `pnpm lists` writes from the curated
+dictionary below. A new list also needs an icon in
 `src/features/lists/list-icons.ts` and a colour in the two `data-list` blocks of
 the lists' stylesheets.
 
@@ -30,15 +32,42 @@ pnpm deploy   # build, migrate D1 and publish to Cloudflare Workers
 
 Typing a word suggests entries from `public/dict/`, static JSON built from
 [Wiktionary](https://en.wiktionary.org) (via [kaikki.org](https://kaikki.org),
-CC BY-SA) and ranked with OpenSubtitles word frequencies. A German word is
-defined by the English definition of its translation, and a German noun
+CC BY-SA) and ranked with OpenSubtitles word frequencies. A German noun
 for a person or animal brings its form for the other sex (Lehrer, Lehrerin),
 which practice asks for half the time. It is committed, so
 nothing runs on deploy. To refresh it, run `pnpm dictionary` (downloads about
 4.5 GB into `.cache/dictionary` the first time). German is searched by the
 German word or its English translation; English by the English word.
 
-`pnpm dev` runs the Worker too, on local D1 and R2 (`.wrangler/state`). Apply
+#### Definitions
+
+Wiktionary lumps the meanings of a German word together, borrows its definition
+from the wrong translation and orders English meanings by etymology, so the
+most common words are rewritten by a model, one clear meaning at a time, each
+with its own short translations and a definition under 70 characters:
+
+```sh
+pnpm curate --count 4000   # node scripts/curate-dictionary.ts
+pnpm curated               # node scripts/apply-curated.ts
+```
+
+`curate` drives the Codex CLI (`codex exec`, so it runs on a ChatGPT
+subscription) over the most common words, in batches, and saves every batch to
+`scripts/dictionary/curated/{de,en}.json` as it goes; stop it whenever you like
+and run it again to carry on. It stops by itself when the subscription runs out.
+The instructions it gives the model are in `scripts/dictionary/curate-prompt.ts`.
+`curated` puts the result into `public/dict` (marked `c: 1`) without building
+the dictionary again, and `pnpm dictionary` applies the same files when it does.
+
+Every other meaning gets its definition from `GET /api/definition`: the first
+time someone signed in picks it, the Worker asks Gemma 4 (`@cf/google/gemma-4-26b-a4b-it`,
+Workers AI) and keeps the answer in D1 (`definitions`) for everyone. The Worker
+reads the word from the dictionary itself, so the browser never sends text for
+the model to read, and a daily allowance (per account and overall) keeps it
+inside Workers AI's free neurons. Guests see what is already written.
+
+`pnpm dev` runs the Worker too, on local D1 and R2 (`.wrangler/state`). The AI
+binding always runs on Cloudflare, so development needs `wrangler login`. Apply
 the schema once with `pnpm wrangler d1 migrations apply blitz --local`.
 Google sign-in needs `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, in
 `.dev.vars` locally and as Worker secrets in production. In isolated local

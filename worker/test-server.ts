@@ -9,7 +9,7 @@ import worker from './index.ts';
  * returns a fetch that is signed in as that session's user.
  */
 export async function testServer(overrides: Partial<Env> = {}) {
-  const proxy = await getPlatformProxy<Env>({ configPath: 'wrangler.jsonc', persist: false });
+  const proxy = await getPlatformProxy<Env>({ configPath: 'wrangler.jsonc', persist: false, remoteBindings: false });
   const env = { ...proxy.env, GOOGLE_CLIENT_ID: 'client', GOOGLE_CLIENT_SECRET: 'secret', DEVELOPMENT_BRIDGE_SECRET: 'test-bridge-secret', DEVELOPMENT_UPSTREAM: undefined, ...overrides } as Env;
 
   for (const file of readdirSync('migrations').sort()) {

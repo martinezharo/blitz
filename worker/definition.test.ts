@@ -112,12 +112,13 @@ describe('/api/definition', () => {
   it('finds an English meaning by its dictionary definition', async () => {
     const token = await server.signUp('cleo');
     asked = [];
-    answer = { choices: [{ message: { content: '{"definition": "A small flying animal that is active at night"}' } }] };
-    const bat = JSON.parse(readFileSync('public/dict/en/ba.json', 'utf8')).find((entry: { w: string }) => entry.w === 'bat');
-    const sense = bat.s.find((candidate: { d: string }) => candidate.d.startsWith('Any flying mammal'));
-    const response = await ask(server.as(token), { language: 'en', term: 'bat', type: 'noun', hint: sense.d });
+    // Any word of the dictionary with two meanings of one type: the second is named by its definition.
+    const entries = JSON.parse(readFileSync('public/dict/en/ba.json', 'utf8')) as { w: string; s: { t: string; d?: string }[] }[];
+    const entry = entries.find((candidate) => candidate.s.filter((sense) => sense.t === 'n' && sense.d).length >= 2)!;
+    const second = entry.s.filter((sense) => sense.t === 'n' && sense.d)[1]!;
+    const response = await ask(server.as(token), { language: 'en', term: entry.w, type: 'noun', hint: second.d! });
     expect(response.status).toBe(200);
-    expect((asked[0] as { messages: { content: string }[] }).messages.at(-1)!.content).toContain('Any flying mammal');
+    expect((asked[0] as { messages: { content: string }[] }).messages.at(-1)!.content).toContain(second.d!);
   });
 
   it('answers 502 and keeps nothing when the model fails or rambles', async () => {
