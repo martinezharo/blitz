@@ -140,8 +140,13 @@ const ABBREVIATIONS = new Set([
 /** Words a German ordinal usually stands before: 1. Januar, 2. Mal, 3. Stock. */
 const AFTER_ORDINAL = /^(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember|mal|platz|stock|klasse|jahrhundert|geburtstag|tag|woche|stunde|kapitel)\b/i;
 
-/** Whether a number and the word after it read as an ordinal, not a number that ends a sentence (Das war 1989.). */
-const ordinal = (number: string, next: string) => /^\d{1,2}$/.test(number) && AFTER_ORDINAL.test(next);
+/** Articles and possessives before an ordinal noun, with optional inflected adjectives. */
+const BEFORE_ORDINAL = /(?:^|[^\p{L}])(?:am|im|zum|zur|beim|vom|der|die|das|den|dem|des|ein|eine|einen|einem|einer|eines|(?:dies|jen|mein|dein|sein|ihr|unser|euer)(?:e|en|er|es|em)?)(?:[ \t]+\p{Ll}+(?:e|en|er|es|em))*[ \t]+$/iu;
+
+/** Use noun-phrase context for ordinals beyond the usual date/rank words. Bare cardinals still end sentences. */
+const ordinal = (number: string, next: string, before: string) =>
+  /^\d+$/.test(number) &&
+  ((/^\d{1,2}$/.test(number) && AFTER_ORDINAL.test(next)) || (/^\p{Lu}/u.test(next) && BEFORE_ORDINAL.test(before)));
 
 /**
  * Where each sentence of the text starts and ends: up to a line break, or a
@@ -169,7 +174,7 @@ function sentences(text: string): [number, number][] {
       const short =
         char === '.' &&
         after === at + 1 &&
-        (ABBREVIATIONS.has(bare) || /^\p{L}$/u.test(bare) || ordinal(bare, nextWord) || /\p{Ll}/u.test(next));
+        (ABBREVIATIONS.has(bare) || /^\p{L}$/u.test(bare) || ordinal(bare, nextWord, text.slice(start, at - word.length)) || /\p{Ll}/u.test(next));
       if ((after === text.length || /\s/.test(text[after]!)) && !short) {
         end = after;
         while (end < text.length && /[ \t]/.test(text[end]!)) end++;

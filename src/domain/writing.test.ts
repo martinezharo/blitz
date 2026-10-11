@@ -91,8 +91,24 @@ describe('sentenceFixes', () => {
     expect(sentenceFixes(text, marks).map((fix) => fix.written)).toEqual(['Am 1. Januar hat es z. B. viel geschneit und wir hat gespielt.']);
   });
 
-  it('still ends a sentence at a number that closes it', () => {
-    const text = 'Das war 1989. Damals wir hatten kein Handy.';
+  it.each([
+    'Am 1. Advent hat er ein Geschenk bekommt.',
+    'Er spielt in der 1. Bundesliga und hat ein Geschenk bekommt.',
+    'Im 2. Weltkrieg hat er ein Geschenk bekommt.',
+    'Für den 1. Preis hat er ein Geschenk bekommt.',
+    'Bei der 125. Vorstellung hat er ein Geschenk bekommt.',
+    'Nach seiner erfolgreichen 3. Probe hat er ein Geschenk bekommt.',
+  ])('keeps the full sentence around an ordinal: %s', (written) => {
+    const text = `${written} Das war schön.`;
+    const { marks } = markMistakes(text, { language: 'de', mistakes: [mistake('bekommt', 'bekommen')] });
+    const fixes = sentenceFixes(text, marks);
+    expect(fixes.map(({ written, corrected }) => [written, corrected])).toEqual([[written, written.replace('bekommt', 'bekommen')]]);
+    expect(fixes[0]!.written.slice(...fixes[0]!.fixes[0]!.from)).toBe('bekommt');
+    expect(fixes[0]!.corrected.slice(...fixes[0]!.fixes[0]!.to)).toBe('bekommen');
+  });
+
+  it.each(['Das war 1989.', 'Das kostet 2.', 'Wir fahren um 8.'])('still ends a sentence at a number that closes it: %s', (first) => {
+    const text = `${first} Damals wir hatten kein Handy.`;
     const { marks } = markMistakes(text, { language: 'de', mistakes: [mistake('Damals wir hatten', 'Damals hatten wir')] });
     expect(sentenceFixes(text, marks).map((fix) => fix.written)).toEqual(['Damals wir hatten kein Handy.']);
   });
