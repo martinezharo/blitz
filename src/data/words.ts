@@ -20,22 +20,34 @@ export function useWords(language: Language): Word[] | undefined {
   );
 }
 
+function newWord(language: Language, draft: Draft, now: number): Word {
+  return { ...wordFields(language, draft), id: newId(), level: 1, streak: 0, createdAt: now, updatedAt: now };
+}
+
 export async function addWord(language: Language, draft: Draft): Promise<Word> {
-  const now = Date.now();
-  const word: Word = {
-    ...wordFields(language, draft),
-    id: newId(),
-    level: 1,
-    streak: 0,
-    createdAt: now,
-    updatedAt: now,
-  };
+  const word = newWord(language, draft, Date.now());
   await db.transaction('rw', db.words, db.pending, async () => {
     await db.words.add(word);
-    await db.pending.put({ id: word.id, at: now });
+    await db.pending.put({ id: word.id, at: word.createdAt });
   });
   requestSync();
   return word;
+}
+
+/**
+ * Adds several words at once, or none if one of them is not complete. They
+ * show in the list in the order given: the list is newest first, so each one
+ * is stamped a millisecond later than the one after it.
+ */
+export async function addWords(language: Language, drafts: Draft[]): Promise<Word[]> {
+  const now = Date.now();
+  const words = drafts.map((draft, index) => newWord(language, draft, now + drafts.length - 1 - index));
+  await db.transaction('rw', db.words, db.pending, async () => {
+    await db.words.bulkAdd(words);
+    await db.pending.bulkPut(words.map((word) => ({ id: word.id, at: word.createdAt })));
+  });
+  requestSync();
+  return words;
 }
 
 export async function updateWord(word: Word, draft: Draft): Promise<void> {

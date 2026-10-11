@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type Draft, emptyDraft, type Word } from '../domain/word.ts';
 import { db } from './db.ts';
-import { addWord, deleteWord, fillCounterparts, recordAnswer, setArchived, updateWord } from './words.ts';
+import { addWord, addWords, deleteWord, fillCounterparts, recordAnswer, setArchived, updateWord } from './words.ts';
 
 const bank: Draft = { ...emptyDraft('Bank'), type: 'noun', article: 'die', translation: 'bench' };
 
@@ -14,6 +14,17 @@ describe('words', () => {
   it('adds a word at level one', async () => {
     const word = await addWord('de', bank);
     expect(await db.words.get(word.id)).toMatchObject({ term: 'Bank', article: 'die', level: 1, language: 'de' });
+  });
+
+  it('adds several words in the order given, or none', async () => {
+    const drafts = ['eins', 'zwei', 'drei'].map((term) => ({ ...emptyDraft(term), type: 'adjective' as const, translation: term }));
+    await addWords('de', drafts);
+    const stored = await db.words.where('[language+createdAt]').between(['de', 0], ['de', Infinity]).reverse().toArray();
+    expect(stored.map((word) => word.term)).toEqual(['eins', 'zwei', 'drei']);
+    expect(await db.pending.count()).toBeGreaterThanOrEqual(3);
+
+    await expect(addWords('de', [bank, emptyDraft('vier')])).rejects.toThrow();
+    expect(await db.words.count()).toBe(3);
   });
 
   it('keeps languages apart', async () => {
