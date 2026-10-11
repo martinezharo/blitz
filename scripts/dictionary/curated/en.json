@@ -11642,7 +11642,7 @@
 "delinquent":[{"type":"adjective","definition":"Failing to do something that should have been done"},{"type":"noun","definition":"A young person who has broken the law"}],
 "schizophrenia":[{"type":"noun","definition":"A serious mental illness that can change thoughts and perceptions"}],
 "sculptor":[{"type":"noun","definition":"A person who makes statues and other art from solid materials"}],
-"netherlands":[],
+"netherlands":[{"type":"noun","definition":"A flat country in western Europe with canals"}],
 "inca":[],
 "ado":[{"type":"noun","definition":"A lot of fuss or activity over something"}],
 "neurological":[{"type":"adjective","definition":"Describes something relating to the brain and nerves"}],
@@ -12055,5 +12055,18 @@
 "charmer":[{"type":"noun","definition":"A person who easily wins others' liking with a warm manner"}],
 "aligned":[{"type":"adjective","definition":"Arranged in a straight line or in the right position"},{"type":"adjective","definition":"In agreement with a person, group, or goal"}],
 "topped":[{"type":"adjective","definition":"Having something placed or spread over the top"},{"type":"adjective","definition":"Having reached a higher amount or level than something else"}],
-"washing machine":[{"type":"noun","definition":"A machine that washes clothes"}]
+"washing machine":[{"type":"noun","definition":"A machine that washes clothes"}],
+"germany":[{"type":"noun","definition":"A country in central Europe"}],
+"france":[{"type":"noun","definition":"A country in western Europe"}],
+"spain":[{"type":"noun","definition":"A country in southern Europe"}],
+"italy":[{"type":"noun","definition":"A country in southern Europe shaped like a boot"}],
+"greece":[{"type":"noun","definition":"A country in southeastern Europe with many islands"}],
+"russia":[{"type":"noun","definition":"A large country in eastern Europe and Asia"}],
+"poland":[{"type":"noun","definition":"A country in central Europe on the Baltic Sea"}],
+"sweden":[{"type":"noun","definition":"A country in northern Europe"}],
+"norway":[{"type":"noun","definition":"A country in northern Europe with fjords"}],
+"denmark":[{"type":"noun","definition":"A small country in northern Europe"}],
+"finland":[{"type":"noun","definition":"A country in northern Europe with many lakes"}],
+"austria":[{"type":"noun","definition":"A country in central Europe with the Alps"}],
+"switzerland":[{"type":"noun","definition":"A neutral country in central Europe"}]
 }

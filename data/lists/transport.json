@@ -1,0 +1,26 @@
+{
+  "name": "Transport",
+  "icon": "bus",
+  "words": [
+    "Auto",
+    "Bus",
+    "Zug",
+    "Fahrrad",
+    "Flugzeug",
+    "Schiff",
+    "Straßenbahn",
+    "Motorrad",
+    "Taxi",
+    "Boot",
+    "Haltestelle",
+    "Fahrkarte",
+    "Unfall",
+    "Metro",
+    "fahren",
+    "fliegen",
+    "Station",
+    "Bahnsteig",
+    "Gleis > track",
+    "Fähre"
+  ]
+}

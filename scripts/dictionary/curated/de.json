@@ -12055,5 +12055,20 @@
 "Klugheit":[{"type":"noun","article":"die","plural":"Klugheiten","translations":["intelligence","wisdom"],"definition":"The ability to think clearly and make good choices"}],
 "Zeugenschutz":[{"type":"noun","article":"der","translations":["witness protection"],"definition":"A system that protects people who give evidence in court"}],
 "Perser":[{"type":"noun","article":"der","plural":"Perser","counterpart":"Perserin","translations":["Persian person","Persian"],"definition":"A man from Iran or whose family came from there"}],
-"schlüsseln":[]
+"schlüsseln":[],
+"Deutschland":[{"type":"noun","translations":["Germany"],"definition":"A country in central Europe"}],
+"Frankreich":[{"type":"noun","translations":["France"],"definition":"A country in western Europe"}],
+"Spanien":[{"type":"noun","translations":["Spain"],"definition":"A country in southern Europe"}],
+"Italien":[{"type":"noun","translations":["Italy"],"definition":"A country in southern Europe shaped like a boot"}],
+"Griechenland":[{"type":"noun","translations":["Greece"],"definition":"A country in southeastern Europe with many islands"}],
+"Russland":[{"type":"noun","translations":["Russia"],"definition":"A large country in eastern Europe and Asia"}],
+"Polen":[{"type":"noun","translations":["Poland"],"definition":"A country in central Europe on the Baltic Sea"}],
+"Schweden":[{"type":"noun","translations":["Sweden"],"definition":"A country in northern Europe"}],
+"Norwegen":[{"type":"noun","translations":["Norway"],"definition":"A country in northern Europe with fjords"}],
+"Dänemark":[{"type":"noun","translations":["Denmark"],"definition":"A small country in northern Europe"}],
+"Finnland":[{"type":"noun","translations":["Finland"],"definition":"A country in northern Europe with many lakes"}],
+"Österreich":[{"type":"noun","translations":["Austria"],"definition":"A country in central Europe with the Alps"}],
+"Schweiz":[{"type":"noun","article":"die","translations":["Switzerland"],"definition":"A neutral country in central Europe"}],
+"Niederlande":[{"type":"noun","article":"die","plural":"Niederlande","translations":["Netherlands"],"definition":"A flat country in western Europe with canals"}],
+"Island":[{"type":"noun","translations":["Iceland"],"definition":"A country in the North Atlantic"}]
 }

@@ -1,0 +1,28 @@
+{
+  "name": "Clothing",
+  "icon": "shirt",
+  "words": [
+    "Kleid",
+    "Hose",
+    "Hemd",
+    "Jacke",
+    "Mantel",
+    "Schuh",
+    "Stiefel",
+    "Hut",
+    "Mütze",
+    "Handschuh",
+    "Schal",
+    "Rock",
+    "Pullover",
+    "Jeans",
+    "Anzug",
+    "Bluse",
+    "Socke",
+    "Gürtel",
+    "Brille",
+    "Sonnenbrille",
+    "Regenschirm",
+    "Handtasche"
+  ]
+}

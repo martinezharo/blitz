@@ -1,0 +1,28 @@
+{
+  "name": "Animals",
+  "icon": "paw-print",
+  "words": [
+    "Hund",
+    "Katze",
+    "Vogel",
+    "Fisch",
+    "Pferd",
+    "Maus",
+    "Bär",
+    "Löwe",
+    "Tiger",
+    "Wolf",
+    "Schlange",
+    "Spinne",
+    "Fuchs",
+    "Hase",
+    "Ente",
+    "Huhn",
+    "Schwein",
+    "Kuh",
+    "Schaf",
+    "Affe",
+    "Elefant",
+    "Biene"
+  ]
+}
