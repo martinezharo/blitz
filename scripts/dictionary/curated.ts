@@ -1,5 +1,6 @@
-import { type DictEntry, type DictSense, normalize, type ReverseEntry, type SenseType } from '../../src/domain/dictionary.ts';
-import type { WordType } from '../../src/domain/word.ts';
+import { checkDefinition } from '../../src/domain/definition-style.ts';
+import { type DictEntry, type DictSense, normalize, type ReverseEntry, SENSE_TYPE_OF } from '../../src/domain/dictionary.ts';
+import { LANGUAGES, WORD_TYPES, type WordType } from '../../src/domain/word.ts';
 import { reverseKeys } from './extract.ts';
 
 /**
@@ -29,47 +30,13 @@ export interface CuratedWord {
 
 export type CuratedLanguage = 'de' | 'en';
 
-/** What a definition may be, at most. The prompt asks for 70; a little slack is allowed. */
-export const MAX_DEFINITION_LENGTH = 80;
 export const MAX_CURATED_SENSES = 4;
-/** What the instructions ask a definition to stay under. `MAX_DEFINITION_LENGTH` is the slack. */
-export const ASKED_DEFINITION_LENGTH = 70;
 /** How many German words one English word names in the reverse dictionary. */
 export const REVERSE_PER_KEY = 6;
 const MAX_TRANSLATIONS = 3;
 const MAX_TRANSLATION_LENGTH = 30;
-const ARTICLES = new Set(['der', 'die', 'das']);
-const TYPES = new Set<string>(['noun', 'verb', 'adjective', 'adverb', 'other']);
-
-const SENSE_TYPE_OF: Record<WordType, SenseType> = { noun: 'n', verb: 'v', adjective: 'j', adverb: 'd', other: 'o' };
-
-/**
- * What is wrong with a definition that is otherwise usable: it is longer than it
- * was asked to be, or it uses the word it defines (or its translation, or a word
- * that starts like one of them): "phone: To call someone using a phone". The
- * model is told not to, and mostly does not.
- */
-export function definitionProblems(term: string, translations: readonly string[], definition: string): string[] {
-  const problems: string[] = [];
-  if (definition.length > ASKED_DEFINITION_LENGTH) problems.push(`${definition.length} characters`);
-  const used = normalize(definition).split(' ').filter(Boolean);
-  // The word, and what it is mostly translated as when that is one word: a long
-  // translation ("lung cancer") is not a word to keep out of every definition.
-  const first = translations[0]?.replace(/^to /i, '');
-  const named = [term, first]
-    .filter((name): name is string => !!name)
-    .map(normalize)
-    .filter((name) => name.length >= 3 && !name.includes(' '));
-  for (const name of new Set(named)) {
-    // The start of a long word stands for its family (sign, signal); a short one only for itself.
-    const start = name.length <= 4 ? name : name.slice(0, Math.max(4, name.length - 2));
-    if (used.some((word) => word === name || (start.length >= 4 && word.startsWith(start)))) {
-      problems.push(`uses "${name}"`);
-      break;
-    }
-  }
-  return problems;
-}
+const ARTICLES = new Set(LANGUAGES.de.articles ?? []);
+const TYPES = new Set<string>(WORD_TYPES.map((type) => type.value));
 
 const text = (value: unknown) => (typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '');
 
@@ -81,11 +48,9 @@ export function cleanSense(language: CuratedLanguage, raw: unknown): { sense: Cu
   const value = (raw ?? {}) as Record<string, unknown>;
   const type = text(value.type);
   if (!TYPES.has(type)) return { problem: `type "${type}"` };
-  const definition = text(value.definition).replace(/[.!]+$/, '');
-  if (!definition) return { problem: 'no definition' };
-  if (definition.length > MAX_DEFINITION_LENGTH) return { problem: `definition of ${definition.length} characters` };
-  if (/[()]/.test(definition)) return { problem: 'definition with brackets' };
-  if (!/^\p{Lu}/u.test(definition)) return { problem: 'definition without a capital' };
+  const checked = checkDefinition(value.definition);
+  if ('problem' in checked) return checked;
+  const { definition } = checked;
 
   const translations = Array.isArray(value.translations) ? value.translations.map(text).filter(Boolean) : [];
   if (language === 'de') {

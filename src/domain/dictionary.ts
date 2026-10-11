@@ -17,6 +17,9 @@ export const SENSE_TYPES: Record<SenseType, WordType> = {
   o: 'other',
 };
 
+/** The one letter of each word type: `SENSE_TYPES` the other way round. */
+export const SENSE_TYPE_OF = Object.fromEntries(Object.entries(SENSE_TYPES).map(([letter, type]) => [type, letter])) as Record<WordType, SenseType>;
+
 /** One meaning of a word, as stored. */
 export interface DictSense {
   t: SenseType;

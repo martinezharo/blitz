@@ -6,12 +6,13 @@ a meaning: an English translation, an English definition, a picture, or any mix.
 
 Ready-made lists (food, colours, body, jobs) can be imported from the page
 behind "Ready-made word lists": open one, untick what you do not want, and add
-the rest. Their words are in `src/domain/lists-concepts.ts` (article, plural,
-other-sex form, translation) and their definitions in
-`src/domain/lists-definitions.json`, which `pnpm lists` writes from the curated
-dictionary below. A new list also needs an icon in
-`src/features/lists/list-icons.ts` and a colour in the two `data-list` blocks of
-the lists' stylesheets.
+the rest. A list only says which meanings it holds, by their English word and
+their German one (`src/domain/lists-concepts.ts`). Everything else about a word,
+from its plural to its definition, is copied from the curated dictionary below
+into `src/domain/lists-words.json` by `pnpm lists`, so a word imported from a
+list is the same word as one picked from the dictionary (both go through
+`fillDraft`). A new list needs its concepts there and a picture and colour in
+`src/features/lists/list-looks.ts`, which the types insist on.
 
 Words live in this browser's IndexedDB first, so the app works offline and
 without an account. Signing in with Google syncs them, pictures included, to
@@ -55,7 +56,10 @@ pnpm curated               # node scripts/apply-curated.ts
 subscription) over the most common words, in batches, and saves every batch to
 `scripts/dictionary/curated/{de,en}.json` as it goes; stop it whenever you like
 and run it again to carry on. It stops by itself when the subscription runs out.
-The instructions it gives the model are in `scripts/dictionary/curate-prompt.ts`.
+The instructions it gives the model are in `scripts/dictionary/curate-prompt.ts`;
+the rules for a definition, shared with the Worker's, in `src/domain/definition-style.ts`.
+`pnpm curate -- --fix` sends definitions that use the word they define, or run long,
+back to be rewritten. After curating, run `pnpm lists` too.
 `curated` puts the result into `public/dict` (marked `c: 1`) without building
 the dictionary again, and `pnpm dictionary` applies the same files when it does.
 

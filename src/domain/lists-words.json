@@ -1,0 +1,753 @@
+{
+ "food": {
+  "de": [
+   {
+    "term": "Apfel",
+    "type": "noun",
+    "definition": "A round fruit with firm flesh and a small core",
+    "article": "der",
+    "plural": "Äpfel",
+    "translation": "apple"
+   },
+   {
+    "term": "Banane",
+    "type": "noun",
+    "definition": "A long, curved fruit with soft flesh and a yellow skin",
+    "article": "die",
+    "plural": "Bananen",
+    "translation": "banana"
+   },
+   {
+    "term": "Orange",
+    "type": "noun",
+    "definition": "A round citrus fruit with juicy flesh and a thick skin",
+    "article": "die",
+    "plural": "Orangen",
+    "translation": "orange"
+   },
+   {
+    "term": "Erdbeere",
+    "type": "noun",
+    "definition": "A small, soft red fruit with tiny seeds on its skin",
+    "article": "die",
+    "plural": "Erdbeeren",
+    "translation": "strawberry"
+   },
+   {
+    "term": "Kartoffel",
+    "type": "noun",
+    "definition": "An edible underground part of a plant, often cooked",
+    "article": "die",
+    "plural": "Kartoffeln",
+    "translation": "potato"
+   },
+   {
+    "term": "Tomate",
+    "type": "noun",
+    "definition": "A soft, round fruit often used as a vegetable",
+    "article": "die",
+    "plural": "Tomaten",
+    "translation": "tomato"
+   },
+   {
+    "term": "Zwiebel",
+    "type": "noun",
+    "definition": "A round vegetable with layers and a strong smell",
+    "article": "die",
+    "plural": "Zwiebeln",
+    "translation": "onion"
+   },
+   {
+    "term": "Brot",
+    "type": "noun",
+    "definition": "A baked food made from flour, water and yeast",
+    "article": "das",
+    "plural": "Brote",
+    "translation": "bread"
+   },
+   {
+    "term": "Käse",
+    "type": "noun",
+    "definition": "A food made from milk, often firm or soft",
+    "article": "der",
+    "plural": "Käse",
+    "translation": "cheese"
+   },
+   {
+    "term": "Ei",
+    "type": "noun",
+    "definition": "A round or oval food with a shell, laid by a bird",
+    "article": "das",
+    "plural": "Eier",
+    "translation": "egg"
+   },
+   {
+    "term": "Milch",
+    "type": "noun",
+    "definition": "A white liquid used as a drink or in cooking",
+    "article": "die",
+    "translation": "milk"
+   },
+   {
+    "term": "Butter",
+    "type": "noun",
+    "definition": "A soft, pale food made from cream",
+    "article": "die",
+    "translation": "butter"
+   },
+   {
+    "term": "Reis",
+    "type": "noun",
+    "definition": "A grain cooked and eaten as food",
+    "article": "der",
+    "translation": "rice"
+   },
+   {
+    "term": "Fleisch",
+    "type": "noun",
+    "definition": "The soft parts of animals that people eat",
+    "article": "das",
+    "translation": "meat"
+   },
+   {
+    "term": "Fisch",
+    "type": "noun",
+    "definition": "An animal that lives in water and breathes through gills",
+    "article": "der",
+    "plural": "Fische",
+    "translation": "fish"
+   },
+   {
+    "term": "Kuchen",
+    "type": "noun",
+    "definition": "A sweet baked food, often served for dessert",
+    "article": "der",
+    "plural": "Kuchen",
+    "translation": "cake"
+   }
+  ],
+  "en": [
+   {
+    "term": "apple",
+    "type": "noun",
+    "definition": "A round fruit with firm flesh and a core of seeds"
+   },
+   {
+    "term": "banana",
+    "type": "noun",
+    "definition": "A long curved fruit with a soft sweet inside"
+   },
+   {
+    "term": "orange",
+    "type": "noun",
+    "definition": "A round citrus fruit with a thick skin and juicy flesh"
+   },
+   {
+    "term": "strawberry",
+    "type": "noun",
+    "definition": "A small red fruit with tiny seeds on its skin"
+   },
+   {
+    "term": "potato",
+    "type": "noun",
+    "definition": "A round underground vegetable with pale flesh and thin skin"
+   },
+   {
+    "term": "tomato",
+    "type": "noun",
+    "definition": "A soft round red fruit often used as a vegetable"
+   },
+   {
+    "term": "onion",
+    "type": "noun",
+    "definition": "A round vegetable with layers and a strong smell"
+   },
+   {
+    "term": "bread",
+    "type": "noun",
+    "definition": "A baked food made from flour and water"
+   },
+   {
+    "term": "cheese",
+    "type": "noun",
+    "definition": "A food made from milk, often firm or soft"
+   },
+   {
+    "term": "egg",
+    "type": "noun",
+    "definition": "A round or oval food laid by a bird"
+   },
+   {
+    "term": "milk",
+    "type": "noun",
+    "definition": "A white liquid made by female mammals to feed their young"
+   },
+   {
+    "term": "butter",
+    "type": "noun",
+    "definition": "A soft yellow food made from milk"
+   },
+   {
+    "term": "rice",
+    "type": "noun",
+    "definition": "Small grains eaten as a cooked food"
+   },
+   {
+    "term": "meat",
+    "type": "noun",
+    "definition": "Animal flesh eaten as food"
+   },
+   {
+    "term": "fish",
+    "type": "noun",
+    "definition": "An animal that lives in water and breathes through gills"
+   },
+   {
+    "term": "cake",
+    "type": "noun",
+    "definition": "A sweet baked food made with flour and often eggs"
+   }
+  ]
+ },
+ "colours": {
+  "de": [
+   {
+    "term": "rot",
+    "type": "adjective",
+    "definition": "The colour of ripe strawberries",
+    "translation": "red"
+   },
+   {
+    "term": "blau",
+    "type": "adjective",
+    "definition": "The colour of a clear daytime sky",
+    "translation": "blue"
+   },
+   {
+    "term": "grün",
+    "type": "adjective",
+    "definition": "The colour of grass and many leaves",
+    "translation": "green"
+   },
+   {
+    "term": "gelb",
+    "type": "adjective",
+    "definition": "The colour of ripe lemons",
+    "translation": "yellow"
+   },
+   {
+    "term": "schwarz",
+    "type": "adjective",
+    "definition": "The colour of coal or the night sky",
+    "translation": "black"
+   },
+   {
+    "term": "weiß",
+    "type": "adjective",
+    "definition": "The colour of fresh snow",
+    "translation": "white"
+   },
+   {
+    "term": "grau",
+    "type": "adjective",
+    "definition": "The colour between black and white",
+    "translation": "grey, gray"
+   },
+   {
+    "term": "braun",
+    "type": "adjective",
+    "definition": "The colour of soil or tree bark",
+    "translation": "brown"
+   },
+   {
+    "term": "orange",
+    "type": "adjective",
+    "definition": "The colour of a ripe citrus fruit",
+    "translation": "orange"
+   },
+   {
+    "term": "rosa",
+    "type": "adjective",
+    "definition": "The colour made by mixing red and white",
+    "translation": "pink"
+   },
+   {
+    "term": "lila",
+    "type": "adjective",
+    "definition": "A colour between red and blue",
+    "translation": "purple"
+   }
+  ],
+  "en": [
+   {
+    "term": "red",
+    "type": "adjective",
+    "definition": "The colour of blood or ripe tomatoes"
+   },
+   {
+    "term": "blue",
+    "type": "adjective",
+    "definition": "The colour of a clear daytime sky"
+   },
+   {
+    "term": "green",
+    "type": "adjective",
+    "definition": "The colour of fresh grass"
+   },
+   {
+    "term": "yellow",
+    "type": "adjective",
+    "definition": "The colour of lemons or ripe bananas"
+   },
+   {
+    "term": "black",
+    "type": "adjective",
+    "definition": "The darkest colour, like coal or the night sky"
+   },
+   {
+    "term": "white",
+    "type": "adjective",
+    "definition": "The colour of fresh snow or milk"
+   },
+   {
+    "term": "grey",
+    "type": "adjective",
+    "definition": "The colour between black and white"
+   },
+   {
+    "term": "brown",
+    "type": "adjective",
+    "definition": "The colour of soil or chocolate"
+   },
+   {
+    "term": "orange",
+    "type": "adjective",
+    "definition": "Having the colour between red and yellow"
+   },
+   {
+    "term": "pink",
+    "type": "adjective",
+    "definition": "The colour of a pale red flower"
+   },
+   {
+    "term": "purple",
+    "type": "adjective",
+    "definition": "The colour made by mixing red and blue"
+   }
+  ]
+ },
+ "body": {
+  "de": [
+   {
+    "term": "Kopf",
+    "type": "noun",
+    "definition": "The part of the body with the brain, eyes, ears and mouth",
+    "article": "der",
+    "plural": "Köpfe",
+    "translation": "head"
+   },
+   {
+    "term": "Gesicht",
+    "type": "noun",
+    "definition": "The front of a person's head, with the eyes, nose and mouth",
+    "article": "das",
+    "plural": "Gesichter",
+    "translation": "face"
+   },
+   {
+    "term": "Auge",
+    "type": "noun",
+    "definition": "The body part used for seeing",
+    "article": "das",
+    "plural": "Augen",
+    "translation": "eye"
+   },
+   {
+    "term": "Ohr",
+    "type": "noun",
+    "definition": "The body part used for hearing",
+    "article": "das",
+    "plural": "Ohren",
+    "translation": "ear"
+   },
+   {
+    "term": "Nase",
+    "type": "noun",
+    "definition": "A part of the face used for smelling and breathing",
+    "article": "die",
+    "plural": "Nasen",
+    "translation": "nose, snout"
+   },
+   {
+    "term": "Mund",
+    "type": "noun",
+    "definition": "An opening in the face used for eating and speaking",
+    "article": "der",
+    "plural": "Münder",
+    "translation": "mouth"
+   },
+   {
+    "term": "Zahn",
+    "type": "noun",
+    "definition": "A hard part in the mouth used for biting and chewing",
+    "article": "der",
+    "plural": "Zähne",
+    "translation": "tooth"
+   },
+   {
+    "term": "Hals",
+    "type": "noun",
+    "definition": "The part joining the head to the body",
+    "article": "der",
+    "plural": "Hälse",
+    "translation": "neck"
+   },
+   {
+    "term": "Schulter",
+    "type": "noun",
+    "definition": "The part joining the arm to the upper body",
+    "article": "die",
+    "plural": "Schultern",
+    "translation": "shoulder"
+   },
+   {
+    "term": "Arm",
+    "type": "noun",
+    "definition": "A body part used for reaching and holding",
+    "article": "der",
+    "plural": "Arme",
+    "translation": "arm"
+   },
+   {
+    "term": "Hand",
+    "type": "noun",
+    "definition": "The end of an arm with fingers, used for holding things",
+    "article": "die",
+    "plural": "Hände",
+    "translation": "hand"
+   },
+   {
+    "term": "Finger",
+    "type": "noun",
+    "definition": "One of the narrow parts at the end of a hand",
+    "article": "der",
+    "plural": "Finger",
+    "translation": "finger"
+   },
+   {
+    "term": "Bauch",
+    "type": "noun",
+    "definition": "The front part of the body below the chest",
+    "article": "der",
+    "plural": "Bäuche",
+    "translation": "belly, abdomen"
+   },
+   {
+    "term": "Rücken",
+    "type": "noun",
+    "definition": "The rear part of the body from the neck to the hips",
+    "article": "der",
+    "plural": "Rücken",
+    "translation": "back"
+   },
+   {
+    "term": "Bein",
+    "type": "noun",
+    "definition": "A body part used for standing and walking",
+    "article": "das",
+    "plural": "Beine",
+    "translation": "leg"
+   },
+   {
+    "term": "Knie",
+    "type": "noun",
+    "definition": "The joint in the middle of the leg that bends",
+    "article": "das",
+    "plural": "Knie",
+    "translation": "knee"
+   },
+   {
+    "term": "Fuß",
+    "type": "noun",
+    "definition": "The part at the end of a leg that touches the ground",
+    "article": "der",
+    "plural": "Füße",
+    "translation": "foot"
+   },
+   {
+    "term": "Herz",
+    "type": "noun",
+    "definition": "An organ that pumps blood through the body",
+    "article": "das",
+    "plural": "Herzen",
+    "translation": "heart"
+   }
+  ],
+  "en": [
+   {
+    "term": "head",
+    "type": "noun",
+    "definition": "The part of the body with the brain, eyes, ears, nose and mouth"
+   },
+   {
+    "term": "face",
+    "type": "noun",
+    "definition": "The front of the head, with the eyes, nose and mouth"
+   },
+   {
+    "term": "eye",
+    "type": "noun",
+    "definition": "The part of the body that sees"
+   },
+   {
+    "term": "ear",
+    "type": "noun",
+    "definition": "The body part used for hearing"
+   },
+   {
+    "term": "nose",
+    "type": "noun",
+    "definition": "A part of the face used for smelling and breathing"
+   },
+   {
+    "term": "mouth",
+    "type": "noun",
+    "definition": "The opening in the face used for eating and speaking"
+   },
+   {
+    "term": "tooth",
+    "type": "noun",
+    "definition": "A hard part in the mouth used for biting and chewing"
+   },
+   {
+    "term": "neck",
+    "type": "noun",
+    "definition": "The part of the body between the head and shoulders"
+   },
+   {
+    "term": "shoulder",
+    "type": "noun",
+    "definition": "The part of the body where the arm joins the upper body"
+   },
+   {
+    "term": "arm",
+    "type": "noun",
+    "definition": "A body part from the shoulder to the hand"
+   },
+   {
+    "term": "hand",
+    "type": "noun",
+    "definition": "The body part at the end of the arm with fingers and a thumb"
+   },
+   {
+    "term": "finger",
+    "type": "noun",
+    "definition": "One of the long parts at the end of the hand"
+   },
+   {
+    "term": "belly",
+    "type": "noun",
+    "definition": "The front part of the body below the chest"
+   },
+   {
+    "term": "back",
+    "type": "noun",
+    "definition": "The rear part of the body from the shoulders to the hips"
+   },
+   {
+    "term": "leg",
+    "type": "noun",
+    "definition": "A body part used for standing and walking"
+   },
+   {
+    "term": "knee",
+    "type": "noun",
+    "definition": "The joint in the middle of the leg that bends"
+   },
+   {
+    "term": "foot",
+    "type": "noun",
+    "definition": "The body part at the end of the leg used for standing and walking"
+   },
+   {
+    "term": "heart",
+    "type": "noun",
+    "definition": "The organ that moves blood through the body"
+   }
+  ]
+ },
+ "jobs": {
+  "de": [
+   {
+    "term": "Lehrer",
+    "type": "noun",
+    "definition": "A person who helps students learn in a school",
+    "article": "der",
+    "plural": "Lehrer",
+    "counterpart": "Lehrerin",
+    "translation": "teacher"
+   },
+   {
+    "term": "Arzt",
+    "type": "noun",
+    "definition": "A person who treats sick or injured people",
+    "article": "der",
+    "plural": "Ärzte",
+    "counterpart": "Ärztin",
+    "translation": "doctor"
+   },
+   {
+    "term": "Koch",
+    "type": "noun",
+    "definition": "A person who prepares food as a job",
+    "article": "der",
+    "plural": "Köche",
+    "counterpart": "Köchin",
+    "translation": "cook, chef"
+   },
+   {
+    "term": "Bäcker",
+    "type": "noun",
+    "definition": "A person who makes and sells bread and cakes",
+    "article": "der",
+    "plural": "Bäcker",
+    "counterpart": "Bäckerin",
+    "translation": "baker"
+   },
+   {
+    "term": "Polizist",
+    "type": "noun",
+    "definition": "A person whose job is to enforce the law and protect people",
+    "article": "der",
+    "plural": "Polizisten",
+    "counterpart": "Polizistin",
+    "translation": "police officer"
+   },
+   {
+    "term": "Verkäufer",
+    "type": "noun",
+    "definition": "A person who sells goods in a shop",
+    "article": "der",
+    "plural": "Verkäufer",
+    "counterpart": "Verkäuferin",
+    "translation": "salesperson, shop assistant"
+   },
+   {
+    "term": "Ingenieur",
+    "type": "noun",
+    "definition": "A person who designs or builds machines, roads, or structures",
+    "article": "der",
+    "plural": "Ingenieure",
+    "counterpart": "Ingenieurin",
+    "translation": "engineer"
+   },
+   {
+    "term": "Friseur",
+    "type": "noun",
+    "definition": "A person whose job is to cut and style hair",
+    "article": "der",
+    "plural": "Friseure",
+    "counterpart": "Friseurin",
+    "translation": "hairdresser, barber"
+   },
+   {
+    "term": "Kellner",
+    "type": "noun",
+    "definition": "A person who serves food and drinks in a restaurant",
+    "article": "der",
+    "plural": "Kellner",
+    "counterpart": "Kellnerin",
+    "translation": "waiter"
+   },
+   {
+    "term": "Anwalt",
+    "type": "noun",
+    "definition": "A person trained to give legal advice and speak for clients",
+    "article": "der",
+    "plural": "Anwälte",
+    "counterpart": "Anwältin",
+    "translation": "lawyer"
+   },
+   {
+    "term": "Pilot",
+    "type": "noun",
+    "definition": "A person who flies an aircraft",
+    "article": "der",
+    "plural": "Piloten",
+    "counterpart": "Pilotin",
+    "translation": "pilot"
+   },
+   {
+    "term": "Schauspieler",
+    "type": "noun",
+    "definition": "A person who performs a character in plays or films",
+    "article": "der",
+    "plural": "Schauspieler",
+    "counterpart": "Schauspielerin",
+    "translation": "actor"
+   }
+  ],
+  "en": [
+   {
+    "term": "teacher",
+    "type": "noun",
+    "definition": "A person who helps others learn"
+   },
+   {
+    "term": "doctor",
+    "type": "noun",
+    "definition": "A person trained to treat sick or injured people"
+   },
+   {
+    "term": "cook",
+    "type": "noun",
+    "definition": "A person who prepares food"
+   },
+   {
+    "term": "baker",
+    "type": "noun",
+    "definition": "A person who makes bread and cakes"
+   },
+   {
+    "term": "police officer",
+    "type": "noun",
+    "definition": "A person whose job is to help keep people safe and enforce the law"
+   },
+   {
+    "term": "shop assistant",
+    "type": "noun",
+    "definition": "A person whose job is to help customers in a shop"
+   },
+   {
+    "term": "engineer",
+    "type": "noun",
+    "definition": "A person who designs or builds machines, roads, or buildings"
+   },
+   {
+    "term": "hairdresser",
+    "type": "noun",
+    "definition": "A person who cuts and styles people's hair"
+   },
+   {
+    "term": "waiter",
+    "type": "noun",
+    "definition": "A person who serves food and drinks in a restaurant"
+   },
+   {
+    "term": "lawyer",
+    "type": "noun",
+    "definition": "A person trained to give legal advice and speak for people in court"
+   },
+   {
+    "term": "pilot",
+    "type": "noun",
+    "definition": "A person who flies an aircraft"
+   },
+   {
+    "term": "actor",
+    "type": "noun",
+    "definition": "A person who performs a character in a play or film"
+   }
+  ]
+ }
+}

@@ -19,14 +19,16 @@
  * Then `node scripts/apply-curated.ts` puts them into public/dict.
  */
 import { spawn } from 'node:child_process';
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { LIST_CONCEPTS } from '../src/domain/lists-concepts.ts';
-import type { DictEntry } from '../src/domain/dictionary.ts';
-import { type CuratedLanguage, type CuratedSense, cleanWord, definitionProblems, readCurated, writeCurated } from './dictionary/curated.ts';
+import { type DictEntry, SENSE_TYPES } from '../src/domain/dictionary.ts';
+import { definitionProblems } from '../src/domain/definition-style.ts';
+import { type CuratedLanguage, type CuratedSense, cleanWord, readCurated, writeCurated } from './dictionary/curated.ts';
 import { ANSWER_SCHEMA, PROMPTS, REVISION } from './dictionary/curate-prompt.ts';
+import { readEntries } from './dictionary/shards.ts';
 
 const { values: args } = parseArgs({
   options: {
@@ -62,13 +64,6 @@ interface Candidate {
 /** The problems of each meaning of a word that has been written, in order. */
 const problemsOf = (term: string, senses: readonly CuratedSense[]) => senses.map((sense) => definitionProblems(term, sense.translations, sense.definition));
 
-async function loadEntries(language: CuratedLanguage): Promise<DictEntry[]> {
-  const dir = join(DICT, language);
-  const out: DictEntry[] = [];
-  for (const file of await readdir(dir)) out.push(...(JSON.parse(await readFile(join(dir, file), 'utf8')) as DictEntry[]));
-  return out;
-}
-
 /** The words to write, the ones of the lists first, then by how common they are. Words written already are left out. */
 async function candidates(language: CuratedLanguage): Promise<Candidate[]> {
   const done = await readCurated(language);
@@ -77,9 +72,9 @@ async function candidates(language: CuratedLanguage): Promise<Candidate[]> {
       .filter(([term, senses]) => problemsOf(term, senses).some((problems) => problems.length > 0))
       .map(([term, senses]) => ({ term, rank: 0, entry: { w: term, r: 0, s: [] }, current: senses }));
   }
-  const entries = await loadEntries(language);
+  const entries = await readEntries<DictEntry>(DICT, language);
   const byTerm = new Map(entries.map((entry) => [entry.w, entry]));
-  const listed = new Set(LIST_CONCEPTS.flatMap((list) => list.concepts.map((concept) => (language === 'de' ? concept.de.term : concept.en))));
+  const listed = new Set(LIST_CONCEPTS.flatMap((list) => list.concepts.map((concept) => (language === 'de' ? concept.de : concept.en))));
   const wanted = (entry: DictEntry) => !done.has(entry.w) && (entry.s.length === 0 || !entry.s.every((sense) => sense.c === 1));
   // A word of the lists the dictionary does not have is written too, from the word alone.
   const first = [...listed].map((term) => byTerm.get(term) ?? { w: term, r: 0, s: [] }).filter(wanted);
@@ -103,12 +98,12 @@ function inputOf(language: CuratedLanguage, candidate: Candidate) {
   const dictionary =
     language === 'de'
       ? candidate.entry.s.map((sense) => ({
-          type: { n: 'noun', v: 'verb', j: 'adjective', d: 'adverb', o: 'other' }[sense.t],
+          type: SENSE_TYPES[sense.t],
           ...(sense.a ? { article: sense.a } : {}),
           ...(sense.p ? { plural: sense.p } : {}),
           ...(sense.g ? { translations: sense.g } : {}),
         }))
-      : [...new Set(candidate.entry.s.map((sense) => ({ n: 'noun', v: 'verb', j: 'adjective', d: 'adverb', o: 'other' })[sense.t]))].map((type) => ({ type }));
+      : [...new Set(candidate.entry.s.map((sense) => SENSE_TYPES[sense.t]))].map((type) => ({ type }));
   return { term: candidate.term, dictionary };
 }
 

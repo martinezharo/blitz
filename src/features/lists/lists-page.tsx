@@ -1,11 +1,12 @@
 import { Check, ChevronLeft, LoaderCircle, Plus, X } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { addWords } from '../../data/words.ts';
-import { knownWords, listDraft, type ListWord, type WordList } from '../../domain/lists.ts';
+import { fillDraft, type Suggestion } from '../../domain/dictionary.ts';
+import { knownWords, type WordList } from '../../domain/lists.ts';
 import { WORD_LISTS } from '../../domain/lists-catalogue.ts';
-import { LANGUAGES, type Language, type Word, wordSummary } from '../../domain/word.ts';
+import { emptyDraft, LANGUAGES, type Language, type Word, wordSummary } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
-import { LIST_ICONS } from './list-icons.ts';
+import { listIcon, listTint } from './list-looks.ts';
 import styles from './lists-page.module.css';
 
 interface ListsPageProps {
@@ -112,13 +113,13 @@ function ListGrid({ language, words, onOpen }: { language: Language; words: Word
         <p className={styles.lede}>Pick a list, untick what you do not want, and add the rest.</p>
         <ul className={styles.grid}>
           {WORD_LISTS.map((list) => {
-            const Icon = LIST_ICONS[list.id];
+            const Icon = listIcon(list.id);
             const items = list.words[language];
             const have = knownWords(items, words).size;
             const all = have === items.length;
             return (
               <li key={list.id}>
-                <button type="button" className={styles.card} data-list={list.id} onClick={() => onOpen(list)}>
+                <button type="button" className={styles.card} style={listTint(list.id)} onClick={() => onOpen(list)}>
                   <span className={styles.icon} aria-hidden="true">
                     <Icon />
                   </span>
@@ -164,16 +165,16 @@ function ListDetail({
   onDone: () => void;
 }) {
   const items = list.words[language];
-  const Icon = LIST_ICONS[list.id];
+  const Icon = listIcon(list.id);
   // Taken when the list opens: words added from it do not turn into "known"
   // under the person's fingers.
   const [known] = useState(() => knownWords(items, words));
   const available = items.filter((item) => !known.has(item));
-  const [picked, setPicked] = useState<Set<ListWord>>(() => new Set(available));
+  const [picked, setPicked] = useState<Set<Suggestion>>(() => new Set(available));
   const [adding, setAdding] = useState(false);
   const everyOne = picked.size === available.length;
 
-  function toggle(item: ListWord) {
+  function toggle(item: Suggestion) {
     sounds.toggle(!picked.has(item));
     const next = new Set(picked);
     if (!next.delete(item)) next.add(item);
@@ -188,7 +189,7 @@ function ListDetail({
       // In the list's own order, whatever the order of the ticks.
       await addWords(
         language,
-        items.filter((item) => picked.has(item)).map(listDraft),
+        items.filter((item) => picked.has(item)).map((item) => fillDraft(language, emptyDraft(item.term), item)),
       );
       sounds.saved();
       onDone();
@@ -202,7 +203,7 @@ function ListDetail({
     <>
       <div className={styles.body}>
         <div className={styles.column}>
-          <div className={styles.detailHead} data-list={list.id}>
+          <div className={styles.detailHead} style={listTint(list.id)}>
             <span className={styles.icon} aria-hidden="true">
               <Icon />
             </span>

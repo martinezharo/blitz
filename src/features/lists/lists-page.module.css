@@ -113,11 +113,6 @@
   font-size: var(--text-md);
 }
 
-[data-list='food'] { --tint: var(--accent); }
-[data-list='colours'] { --tint: var(--die); }
-[data-list='body'] { --tint: var(--der); }
-[data-list='jobs'] { --tint: var(--das); }
-
 .icon {
   display: grid;
   width: 3.2rem;

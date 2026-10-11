@@ -1,7 +1,7 @@
 import { ArrowRight, ListPlus } from 'lucide-react';
 import { WORD_LISTS } from '../../domain/lists-catalogue.ts';
 import styles from './lists-entry.module.css';
-import { LIST_ICONS } from './list-icons.ts';
+import { listIcon, listTint } from './list-looks.ts';
 
 /** A quiet line under the composer, for when you would rather not type every word. */
 export function ListsPill({ onOpen }: { onOpen: () => void }) {
@@ -20,9 +20,9 @@ export function ListsInvite({ onOpen }: { onOpen: () => void }) {
     <button type="button" className={styles.invite} onClick={onOpen}>
       <span className={styles.chips} aria-hidden="true">
         {WORD_LISTS.map((list) => {
-          const Icon = LIST_ICONS[list.id];
+          const Icon = listIcon(list.id);
           return (
-            <span key={list.id} className={styles.chip} data-list={list.id}>
+            <span key={list.id} className={styles.chip} style={listTint(list.id)}>
               <Icon />
             </span>
           );

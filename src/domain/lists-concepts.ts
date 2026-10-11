@@ -1,96 +1,106 @@
-import type { ListId } from './lists.ts';
+import type { WordType } from './word.ts';
 
 /**
- * What the ready-made lists hold, without the definitions: each meaning with its
- * English word and its German one. `pnpm lists` writes the definitions
- * (lists-definitions.json) from the curated dictionary, and lists-catalogue.ts
- * puts the two together.
+ * What the ready-made lists hold: only which meanings, as their English word and
+ * their German one (with the article, for a noun). Everything else about a word,
+ * from its plural to its definition, is the dictionary's: `pnpm lists` copies it
+ * from the curated dictionary into lists-words.json, so a word imported from a
+ * list is the same word as one picked from the dictionary.
  */
 
-export type Concept =
-  | { type: 'noun'; en: string; de: { article: string; term: string; plural: string | null; counterpart?: string }; translation?: string }
-  | { type: 'adjective'; en: string; de: { term: string } };
+interface Concept {
+  type: Extract<WordType, 'noun' | 'adjective'>;
+  en: string;
+  de: string;
+  /** der, die or das. Nouns only. */
+  article?: string;
+}
 
-export const LIST_CONCEPTS: readonly { id: ListId; name: string; concepts: Concept[] }[] = [
+const noun = (en: string, article: string, de: string): Concept => ({ type: 'noun', en, de, article });
+const adjective = (en: string, de: string): Concept => ({ type: 'adjective', en, de });
+
+export const LIST_CONCEPTS = [
   {
     id: 'food',
     name: 'Food',
     concepts: [
-      { type: 'noun', en: 'apple', de: { article: 'der', term: 'Apfel', plural: 'Äpfel' } },
-      { type: 'noun', en: 'banana', de: { article: 'die', term: 'Banane', plural: 'Bananen' } },
-      { type: 'noun', en: 'orange', de: { article: 'die', term: 'Orange', plural: 'Orangen' } },
-      { type: 'noun', en: 'strawberry', de: { article: 'die', term: 'Erdbeere', plural: 'Erdbeeren' } },
-      { type: 'noun', en: 'potato', de: { article: 'die', term: 'Kartoffel', plural: 'Kartoffeln' } },
-      { type: 'noun', en: 'tomato', de: { article: 'die', term: 'Tomate', plural: 'Tomaten' } },
-      { type: 'noun', en: 'onion', de: { article: 'die', term: 'Zwiebel', plural: 'Zwiebeln' } },
-      { type: 'noun', en: 'bread', de: { article: 'das', term: 'Brot', plural: 'Brote' } },
-      { type: 'noun', en: 'cheese', de: { article: 'der', term: 'Käse', plural: 'Käse' } },
-      { type: 'noun', en: 'egg', de: { article: 'das', term: 'Ei', plural: 'Eier' } },
-      { type: 'noun', en: 'milk', de: { article: 'die', term: 'Milch', plural: null } },
-      { type: 'noun', en: 'butter', de: { article: 'die', term: 'Butter', plural: null } },
-      { type: 'noun', en: 'rice', de: { article: 'der', term: 'Reis', plural: null } },
-      { type: 'noun', en: 'meat', de: { article: 'das', term: 'Fleisch', plural: null } },
-      { type: 'noun', en: 'fish', de: { article: 'der', term: 'Fisch', plural: 'Fische' } },
-      { type: 'noun', en: 'cake', de: { article: 'der', term: 'Kuchen', plural: 'Kuchen' } },
+      noun('apple', 'der', 'Apfel'),
+      noun('banana', 'die', 'Banane'),
+      noun('orange', 'die', 'Orange'),
+      noun('strawberry', 'die', 'Erdbeere'),
+      noun('potato', 'die', 'Kartoffel'),
+      noun('tomato', 'die', 'Tomate'),
+      noun('onion', 'die', 'Zwiebel'),
+      noun('bread', 'das', 'Brot'),
+      noun('cheese', 'der', 'Käse'),
+      noun('egg', 'das', 'Ei'),
+      noun('milk', 'die', 'Milch'),
+      noun('butter', 'die', 'Butter'),
+      noun('rice', 'der', 'Reis'),
+      noun('meat', 'das', 'Fleisch'),
+      noun('fish', 'der', 'Fisch'),
+      noun('cake', 'der', 'Kuchen'),
     ],
   },
   {
     id: 'colours',
     name: 'Colours',
     concepts: [
-      { type: 'adjective', en: 'red', de: { term: 'rot' } },
-      { type: 'adjective', en: 'blue', de: { term: 'blau' } },
-      { type: 'adjective', en: 'green', de: { term: 'grün' } },
-      { type: 'adjective', en: 'yellow', de: { term: 'gelb' } },
-      { type: 'adjective', en: 'black', de: { term: 'schwarz' } },
-      { type: 'adjective', en: 'white', de: { term: 'weiß' } },
-      { type: 'adjective', en: 'grey', de: { term: 'grau' } },
-      { type: 'adjective', en: 'brown', de: { term: 'braun' } },
-      { type: 'adjective', en: 'orange', de: { term: 'orange' } },
-      { type: 'adjective', en: 'pink', de: { term: 'rosa' } },
-      { type: 'adjective', en: 'purple', de: { term: 'lila' } },
+      adjective('red', 'rot'),
+      adjective('blue', 'blau'),
+      adjective('green', 'grün'),
+      adjective('yellow', 'gelb'),
+      adjective('black', 'schwarz'),
+      adjective('white', 'weiß'),
+      adjective('grey', 'grau'),
+      adjective('brown', 'braun'),
+      adjective('orange', 'orange'),
+      adjective('pink', 'rosa'),
+      adjective('purple', 'lila'),
     ],
   },
   {
     id: 'body',
     name: 'Body',
     concepts: [
-      { type: 'noun', en: 'head', de: { article: 'der', term: 'Kopf', plural: 'Köpfe' } },
-      { type: 'noun', en: 'face', de: { article: 'das', term: 'Gesicht', plural: 'Gesichter' } },
-      { type: 'noun', en: 'eye', de: { article: 'das', term: 'Auge', plural: 'Augen' } },
-      { type: 'noun', en: 'ear', de: { article: 'das', term: 'Ohr', plural: 'Ohren' } },
-      { type: 'noun', en: 'nose', de: { article: 'die', term: 'Nase', plural: 'Nasen' } },
-      { type: 'noun', en: 'mouth', de: { article: 'der', term: 'Mund', plural: 'Münder' } },
-      { type: 'noun', en: 'tooth', de: { article: 'der', term: 'Zahn', plural: 'Zähne' } },
-      { type: 'noun', en: 'neck', de: { article: 'der', term: 'Hals', plural: 'Hälse' } },
-      { type: 'noun', en: 'shoulder', de: { article: 'die', term: 'Schulter', plural: 'Schultern' } },
-      { type: 'noun', en: 'arm', de: { article: 'der', term: 'Arm', plural: 'Arme' } },
-      { type: 'noun', en: 'hand', de: { article: 'die', term: 'Hand', plural: 'Hände' } },
-      { type: 'noun', en: 'finger', de: { article: 'der', term: 'Finger', plural: 'Finger' } },
-      { type: 'noun', en: 'belly', de: { article: 'der', term: 'Bauch', plural: 'Bäuche' } },
-      { type: 'noun', en: 'back', de: { article: 'der', term: 'Rücken', plural: 'Rücken' } },
-      { type: 'noun', en: 'leg', de: { article: 'das', term: 'Bein', plural: 'Beine' } },
-      { type: 'noun', en: 'knee', de: { article: 'das', term: 'Knie', plural: 'Knie' } },
-      { type: 'noun', en: 'foot', de: { article: 'der', term: 'Fuß', plural: 'Füße' } },
-      { type: 'noun', en: 'heart', de: { article: 'das', term: 'Herz', plural: 'Herzen' } },
+      noun('head', 'der', 'Kopf'),
+      noun('face', 'das', 'Gesicht'),
+      noun('eye', 'das', 'Auge'),
+      noun('ear', 'das', 'Ohr'),
+      noun('nose', 'die', 'Nase'),
+      noun('mouth', 'der', 'Mund'),
+      noun('tooth', 'der', 'Zahn'),
+      noun('neck', 'der', 'Hals'),
+      noun('shoulder', 'die', 'Schulter'),
+      noun('arm', 'der', 'Arm'),
+      noun('hand', 'die', 'Hand'),
+      noun('finger', 'der', 'Finger'),
+      noun('belly', 'der', 'Bauch'),
+      noun('back', 'der', 'Rücken'),
+      noun('leg', 'das', 'Bein'),
+      noun('knee', 'das', 'Knie'),
+      noun('foot', 'der', 'Fuß'),
+      noun('heart', 'das', 'Herz'),
     ],
   },
   {
     id: 'jobs',
     name: 'Jobs',
     concepts: [
-      { type: 'noun', en: 'teacher', de: { article: 'der', term: 'Lehrer', plural: 'Lehrer', counterpart: 'Lehrerin' } },
-      { type: 'noun', en: 'doctor', de: { article: 'der', term: 'Arzt', plural: 'Ärzte', counterpart: 'Ärztin' } },
-      { type: 'noun', en: 'cook', de: { article: 'der', term: 'Koch', plural: 'Köche', counterpart: 'Köchin' } },
-      { type: 'noun', en: 'baker', de: { article: 'der', term: 'Bäcker', plural: 'Bäcker', counterpart: 'Bäckerin' } },
-      { type: 'noun', en: 'police officer', de: { article: 'der', term: 'Polizist', plural: 'Polizisten', counterpart: 'Polizistin' } },
-      { type: 'noun', en: 'shop assistant', de: { article: 'der', term: 'Verkäufer', plural: 'Verkäufer', counterpart: 'Verkäuferin' }, translation: 'salesperson' },
-      { type: 'noun', en: 'engineer', de: { article: 'der', term: 'Ingenieur', plural: 'Ingenieure', counterpart: 'Ingenieurin' } },
-      { type: 'noun', en: 'hairdresser', de: { article: 'der', term: 'Friseur', plural: 'Friseure', counterpart: 'Friseurin' } },
-      { type: 'noun', en: 'waiter', de: { article: 'der', term: 'Kellner', plural: 'Kellner', counterpart: 'Kellnerin' } },
-      { type: 'noun', en: 'lawyer', de: { article: 'der', term: 'Anwalt', plural: 'Anwälte', counterpart: 'Anwältin' } },
-      { type: 'noun', en: 'pilot', de: { article: 'der', term: 'Pilot', plural: 'Piloten', counterpart: 'Pilotin' } },
-      { type: 'noun', en: 'actor', de: { article: 'der', term: 'Schauspieler', plural: 'Schauspieler', counterpart: 'Schauspielerin' } },
+      noun('teacher', 'der', 'Lehrer'),
+      noun('doctor', 'der', 'Arzt'),
+      noun('cook', 'der', 'Koch'),
+      noun('baker', 'der', 'Bäcker'),
+      noun('police officer', 'der', 'Polizist'),
+      noun('shop assistant', 'der', 'Verkäufer'),
+      noun('engineer', 'der', 'Ingenieur'),
+      noun('hairdresser', 'der', 'Friseur'),
+      noun('waiter', 'der', 'Kellner'),
+      noun('lawyer', 'der', 'Anwalt'),
+      noun('pilot', 'der', 'Pilot'),
+      noun('actor', 'der', 'Schauspieler'),
     ],
   },
-];
+] as const satisfies readonly { id: string; name: string; concepts: readonly Concept[] }[];
+
+export type ListId = (typeof LIST_CONCEPTS)[number]['id'];

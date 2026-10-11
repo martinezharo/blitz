@@ -13,43 +13,18 @@
  * it finds the same words. Running it twice changes nothing the second time.
  * `scripts/build-dictionary.ts` applies the same files when it builds from scratch.
  */
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { type DictEntry, normalize, type ReverseEntry, shardKey } from '../src/domain/dictionary.ts';
 import { applyCurated, type CuratedLanguage, readCurated, REVERSE_PER_KEY, reverseEntriesOf } from './dictionary/curated.ts';
+import { readShards, serialised, writeShards } from './dictionary/shards.ts';
 
 const { values: args } = parseArgs({ options: { dict: { type: 'string', default: 'public/dict' } } });
 const DICT = resolve(args.dict!);
 
-async function readShards<T>(kind: string): Promise<Map<string, T[]>> {
-  const dir = join(DICT, kind);
-  const shards = new Map<string, T[]>();
-  // A dictionary without a reverse part (a partial copy) has none to bring in line.
-  const files = await readdir(dir).catch((error: NodeJS.ErrnoException) => (error.code === 'ENOENT' ? [] : Promise.reject(error)));
-  for (const file of files) shards.set(file.replace(/\.json$/, ''), JSON.parse(await readFile(join(dir, file), 'utf8')) as T[]);
-  return shards;
-}
-
-/** Writes only the files whose content changed. */
-async function writeShards<T>(kind: string, shards: Map<string, T[]>, before: Map<string, string>): Promise<number> {
-  const dir = join(DICT, kind);
-  await mkdir(dir, { recursive: true });
-  let changed = 0;
-  for (const [key, shard] of shards) {
-    const json = JSON.stringify(shard);
-    if (before.get(key) === json) continue;
-    await writeFile(join(dir, `${key}.json`), json);
-    changed++;
-  }
-  return changed;
-}
-
-const serialised = <T>(shards: Map<string, T[]>) => new Map([...shards].map(([key, shard]) => [key, JSON.stringify(shard)]));
-
 async function apply(language: CuratedLanguage): Promise<Set<string>> {
   const curated = await readCurated(language);
-  const shards = await readShards<DictEntry>(language);
+  const shards = await readShards<DictEntry>(DICT, language);
   const before = serialised(shards);
   const touched = new Set<string>();
   for (const [key, shard] of shards) {
@@ -65,7 +40,7 @@ async function apply(language: CuratedLanguage): Promise<Set<string>> {
       }),
     );
   }
-  const changed = await writeShards(language, shards, before);
+  const changed = await writeShards(DICT, language, shards, before);
   console.log(`${language}: ${curated.size} curated words, ${touched.size} applied, ${changed} files written`);
   return touched;
 }
@@ -73,12 +48,12 @@ async function apply(language: CuratedLanguage): Promise<Set<string>> {
 /** The German words whose meanings changed get their English keys again. */
 async function reapplyReverse(touched: Set<string>) {
   if (touched.size === 0) return;
-  const german = await readShards<DictEntry>('de');
-  const english = await readShards<DictEntry>('en');
+  const german = await readShards<DictEntry>(DICT, 'de');
+  const english = await readShards<DictEntry>(DICT, 'en');
   const englishWords = new Set([...english.values()].flatMap((shard) => shard.map((entry) => normalize(entry.w))));
   const entries = new Map([...german.values()].flatMap((shard) => shard.map((entry) => [entry.w, entry] as const)));
 
-  const shards = await readShards<ReverseEntry>('de-rev');
+  const shards = await readShards<ReverseEntry>(DICT, 'de-rev');
   const before = serialised(shards);
 
   const fresh = new Map<string, ReverseEntry[]>();
@@ -102,7 +77,7 @@ async function reapplyReverse(touched: Set<string>) {
       });
     rebuilt.set(key, shard);
   }
-  const changed = await writeShards('de-rev', rebuilt, before);
+  const changed = await writeShards(DICT, 'de-rev', rebuilt, before);
   console.log(`de-rev: ${changed} files written`);
 }
 

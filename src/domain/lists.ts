@@ -1,48 +1,25 @@
-import { normalize } from './dictionary.ts';
-import { type Draft, emptyDraft, type Language, type Word, type WordType } from './word.ts';
+import { normalize, type Suggestion } from './dictionary.ts';
+import type { ListId } from './lists-concepts.ts';
+import type { Language, Word } from './word.ts';
+
+export type { ListId };
 
 /**
- * A ready-made list of words to import. Its words are written out in full, so
- * showing a list and importing it needs neither the dictionary nor a network.
+ * A ready-made list of words to import. Each word is a dictionary meaning, as
+ * the new-word line would offer it: importing fills in a word exactly like
+ * picking that meaning does (`fillDraft`). They are written out, so showing a
+ * list and importing it needs neither the dictionary nor a network.
  */
-
-/** One word of a list. A German word brings its translation, an English one its definition. */
-export interface ListWord {
-  type: WordType;
-  term: string;
-  article?: string;
-  plural?: string;
-  /** The same noun for the other sex. German nouns for people only. */
-  counterpart?: string;
-  translation?: string;
-  definition?: string;
-}
-
-export type ListId = 'food' | 'colours' | 'body' | 'jobs';
-
 export interface WordList {
   id: ListId;
   name: string;
-  words: Record<Language, ListWord[]>;
-}
-
-/** What the sheet would hold for this word, ready to be saved as it is. */
-export function listDraft(word: ListWord): Draft {
-  return {
-    ...emptyDraft(word.term),
-    type: word.type,
-    article: word.article ?? null,
-    plural: word.plural ?? '',
-    counterpart: word.counterpart ?? '',
-    translation: word.translation ?? '',
-    definition: word.definition ?? '',
-  };
+  words: Record<Language, Suggestion[]>;
 }
 
 const keyOf = (term: string, article: string | null | undefined) => `${article ?? ''}|${normalize(term)}`;
 
 /** The words of the list that the person already has, as the same word with the same article. */
-export function knownWords(words: readonly ListWord[], saved: readonly Word[]): Set<ListWord> {
+export function knownWords(words: readonly Suggestion[], saved: readonly Word[]): Set<Suggestion> {
   const have = new Set(saved.map((word) => keyOf(word.term, word.article)));
   return new Set(words.filter((word) => have.has(keyOf(word.term, word.article))));
 }

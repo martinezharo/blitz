@@ -1,3 +1,5 @@
+import { DEFINITION_LENGTH, DEFINITION_STYLE } from '../../src/domain/definition-style.ts';
+
 /**
  * The instructions for the model that writes the dictionary's meanings, kept
  * with the code so a run can be repeated and the wording reviewed. They were
@@ -14,7 +16,7 @@ export const PROMPT_VERSION = 3;
 export const REVISION = `THIS IS A REVISION. The input holds meanings you wrote earlier for each word, in "current", and some of them have a "problem". Return every word of the input, with all its meanings in the same order, in the same schema.
 - Keep each meaning as it is (type, article, plural, counterpart and translations) and rewrite only its definition, unless the translations are what is wrong.
 - A definition must never contain the word being defined, its translation, or any word of the same family ("dancer": no "dance" or "dancing"; "paint": no "painting"). Describe it with other words: name the category, then one distinguishing feature.
-- At most 70 characters. Plain everyday words.
+- At most ${DEFINITION_LENGTH.asked} characters. Plain everyday words.
 - A meaning with no "problem" stays exactly as it is.`;
 
 const COMMON = `You are curating the meanings of words for a vocabulary-learning app. A learner (adult, beginner to intermediate, reads English) types a word and the app offers its meanings; they pick ONE meaning and save it as a flash card. So each meaning must be one clear, distinct, everyday sense, never a blend of several.
@@ -36,13 +38,7 @@ WHICH MEANINGS TO KEEP
 - Keep "term" exactly as given.
 
 DEFINITION (for every meaning)
-- English, one short phrase, at most 70 characters. Shorter is better.
-- Plain everyday words a twelve-year-old knows. No jargon, no Latin or scientific names, no parentheses, no examples, no etymology, no usage notes.
-- Begin with a capital letter. No full stop at the end.
-- Things, animals, people: "A ..." / "An ..." ("A person who ..." for jobs and roles, in wording that fits men and women). Foods and materials: what it is or looks like. Body parts: where it is or what it does.
-- Verbs: begin with "To ...". Adjectives: "Having ..." or "Describes ..."; colours: "The colour of ...". Adverbs: "In a ... way", or what they say about time, place or degree.
-- Say what the thing IS or DOES so that someone who has never seen the word can recognise the meaning: name the category, then one distinguishing feature.
-- Never use the word itself, its translation, or a word of the same family in the definition. Never mention any language.
+${DEFINITION_STYLE}
 - A definition must fit ONLY its own meaning. The definitions of two meanings of one word must clearly differ.
 
 Before you answer, check each meaning once more: is it common enough, is it distinct from the others, is the type right, does the definition fit only this meaning? Remove any that fail.

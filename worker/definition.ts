@@ -1,4 +1,5 @@
-import { type DictEntry, type DictSense, normalize, SENSE_TYPES, shardKey } from '../src/domain/dictionary.ts';
+import { checkDefinition, DEFINITION_STYLE } from '../src/domain/definition-style.ts';
+import { type DictEntry, type DictSense, normalize, SENSE_TYPE_OF, shardKey } from '../src/domain/dictionary.ts';
 import type { WordType } from '../src/domain/word.ts';
 import { currentUser } from './auth.ts';
 import type { Env } from './env.ts';
@@ -19,14 +20,12 @@ import { json, problem, sha256 } from './http.ts';
 
 export const MODEL = '@cf/google/gemma-4-26b-a4b-it';
 /** Bumped when the instructions change enough to want the definitions written again. */
-export const PROMPT_VERSION = 1;
+export const PROMPT_VERSION = 2;
 /**
  * What the model may be asked for per day. About 7 neurons each, so the whole
  * allowance stays inside the 10,000 neurons Workers AI gives for free.
  */
 export const DAILY_LIMIT = { everyone: 1000, perAccount: 100 };
-const MAX_LENGTH = 80;
-const MIN_LENGTH = 8;
 
 const SYSTEM = `You write the short English definition that a language-learning app shows under a word the learner is saving. The learner is an adult beginner or intermediate who reads English.
 
@@ -34,16 +33,7 @@ WHAT TO DEFINE
 Define the exact sense given by the word's type and, for German words, its English translation. The translation is the ground truth for the meaning. A dictionary hint is attached for context, but it is often about a different sense, too technical, or plainly wrong (for example, the hint for a word meaning "mouth" may describe "a person"). Use the hint only when it agrees with the translation; otherwise ignore it and rely on your own knowledge of the word. If the translation lists several unrelated meanings, define only the first one.
 
 STYLE
-- One short phrase, at most 70 characters. Shorter is better.
-- Plain everyday words that a twelve-year-old knows. No jargon, no Latin or scientific names, no technical or specialised vocabulary, no parentheses, no examples, no etymology, no usage notes.
-- Begin with a capital letter. No full stop at the end.
-- Things, animals, people: "A ..." / "An ..." ("A person who ..." for jobs and roles, in neutral wording that fits men and women).
-- Foods and materials: say what it is made of or looks like, e.g. "A sweet baked food ...".
-- Body parts: say where it is or what it does.
-- Verbs: begin with "To ...". Adjectives: "Having ..." or "Describes ..."; colours: "The colour of ...". Adverbs: "In a ... way" or what they say about time, place or degree.
-- Say what the thing IS or DOES so that someone who has never seen the word can recognise the right meaning: name the category, then one distinguishing feature.
-- Never use the word itself, its translation, or a word of the same family in the definition (no "A teacher is someone who teaches").
-- Never mention German, English or any language.
+${DEFINITION_STYLE}
 
 OUTPUT
 Reply with JSON only, exactly: {"definition": "..."}`;
@@ -120,11 +110,8 @@ export function readDefinition(answer: unknown): string | null {
   } else {
     value = (content as { definition?: unknown } | undefined)?.definition;
   }
-  if (typeof value !== 'string') return null;
-  const definition = value.replace(/\s+/g, ' ').trim().replace(/[.!]+$/, '');
-  if (definition.length < MIN_LENGTH || definition.length > MAX_LENGTH) return null;
-  if (/[()]/.test(definition) || !/^\p{Lu}/u.test(definition)) return null;
-  return definition;
+  const checked = checkDefinition(value);
+  return 'definition' in checked ? checked.definition : null;
 }
 
 /** The meaning of the dictionary that the request names, or null if the dictionary has none like it. */
@@ -133,7 +120,7 @@ async function findMeaning(request: Request, env: Env, query: URLSearchParams): 
   const term = (query.get('term') ?? '').trim();
   const type = query.get('type');
   if ((language !== 'de' && language !== 'en') || !term || term.length > 40) return null;
-  const sense = Object.entries(SENSE_TYPES).find(([, name]) => name === type)?.[0];
+  const sense = type ? SENSE_TYPE_OF[type as WordType] : undefined;
   if (!sense) return null;
 
   const url = new URL(`/dict/${language}/${shardKey(normalize(term))}.json`, request.url);

@@ -84,11 +84,6 @@
   height: 1.15rem;
 }
 
-[data-list='food'] { --tint: var(--accent); }
-[data-list='colours'] { --tint: var(--die); }
-[data-list='body'] { --tint: var(--der); }
-[data-list='jobs'] { --tint: var(--das); }
-
 .inviteText {
   flex: 1;
   min-width: 0;
