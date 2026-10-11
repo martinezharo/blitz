@@ -79,6 +79,18 @@ describe('sentenceFixes', () => {
     expect(second.corrected.slice(...second.fixes[0]!.to)).toBe('dem');
   });
 
+  it('does not end a sentence inside a number or after a short form', () => {
+    const text = 'Ich habe z.B. 3.5 Kilo Äpfel gekauft und es war ein gute Tag. Danach usw. war es spät.';
+    const { marks } = markMistakes(text, { language: 'de', mistakes: [mistake('ein gute Tag', 'ein guter Tag')] });
+    expect(sentenceFixes(text, marks).map((fix) => fix.written)).toEqual(['Ich habe z.B. 3.5 Kilo Äpfel gekauft und es war ein gute Tag.']);
+  });
+
+  it('keeps a mark that runs across two sentences whole', () => {
+    const text = 'Ich bin müde. weil ich spät ins Bett ging.';
+    const { marks } = markMistakes(text, { language: 'de', mistakes: [mistake('müde. weil', 'müde, weil')] });
+    expect(sentenceFixes(text, marks).map((fix) => [fix.written, fix.corrected])).toEqual([[text, 'Ich bin müde, weil ich spät ins Bett ging.']]);
+  });
+
   it('leaves out sentences with only spelling mistakes', () => {
     const text = 'Ich mag hunde.';
     const { marks } = markMistakes(text, { language: 'de', mistakes: [mistake('hunde', 'Hunde', 'spelling', 'Hund')] });

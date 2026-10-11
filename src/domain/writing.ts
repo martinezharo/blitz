@@ -131,16 +131,53 @@ export interface SentenceFix {
   fixes: Fix[];
 }
 
-/** Where each sentence of the text starts and ends: up to a . ! ? or a line break, and the space after. */
+/** Short forms that end in a full stop without ending the sentence. Lower case, without the last dot. */
+const ABBREVIATIONS = new Set([
+  'z.b', 'd.h', 'u.a', 'usw', 'bzw', 'ca', 'vgl', 'evtl', 'ggf', 'inkl', 'nr', 'str', 'dr', 'prof', 'hr', 'fr', 'etc',
+  'e.g', 'i.e', 'mr', 'mrs', 'ms', 'st', 'vs', 'approx', 'no',
+]);
+
+/**
+ * Where each sentence of the text starts and ends: up to a line break, or a
+ * . ! ? followed by a space or the end, with the space after. A full stop
+ * inside a number (3.5) or after a short form (z.B., usw.) is not an end.
+ */
 function sentences(text: string): [number, number][] {
   const out: [number, number][] = [];
-  const pattern = /[^.!?\n]*(?:[.!?]+["'»“”)]*|\n|$)/g;
-  for (const match of text.matchAll(pattern)) {
-    if (match[0] === '') {
-      if (match.index >= text.length) break;
-      continue;
+  let start = 0;
+  for (let at = 0; at < text.length; at++) {
+    const char = text[at]!;
+    let end = -1;
+    if (char === '\n') {
+      end = at + 1;
+    } else if ('.!?'.includes(char)) {
+      let after = at + 1;
+      while (after < text.length && /[.!?"'»“”)]/.test(text[after]!)) after++;
+      const word = text.slice(start, at).match(/(\S+)$/)?.[1]?.toLowerCase() ?? '';
+      const short = char === '.' && after === at + 1 && ABBREVIATIONS.has(word.replace(/^[^\p{L}]+/u, ''));
+      if ((after === text.length || /\s/.test(text[after]!)) && !short) {
+        end = after;
+        while (end < text.length && /[ \t]/.test(text[end]!)) end++;
+      }
+      at = after - 1;
     }
-    out.push([match.index, match.index + match[0].length]);
+    if (end !== -1) {
+      out.push([start, end]);
+      start = end;
+      at = end - 1;
+    }
+  }
+  if (start < text.length) out.push([start, text.length]);
+  return out;
+}
+
+/** The sentences, joined where a mark runs across the end of one into the next. */
+function sentencesAround(text: string, marks: readonly Mark[]): [number, number][] {
+  const out: [number, number][] = [];
+  for (const [start, end] of sentences(text)) {
+    const last = out.at(-1);
+    if (last && marks.some((mark) => mark.start < last[1] && mark.end > last[1])) last[1] = end;
+    else out.push([start, end]);
   }
   return out;
 }
@@ -152,7 +189,7 @@ function sentences(text: string): [number, number][] {
  */
 export function sentenceFixes(text: string, marks: readonly Mark[]): SentenceFix[] {
   const out: SentenceFix[] = [];
-  for (const [start, end] of sentences(text)) {
+  for (const [start, end] of sentencesAround(text, marks)) {
     const inside = marks.filter((mark) => mark.start >= start && mark.end <= end);
     if (!inside.some((mark) => mark.kind === 'grammar')) continue;
     // Trimmed, and the offsets moved with it.
