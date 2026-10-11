@@ -530,7 +530,8 @@
 .forget[data-confirming] {
   padding-inline: 0.6rem;
   background: var(--danger);
-  color: #fff;
+  /* As the word sheet's delete: the page colour reads on the danger red in both themes. */
+  color: var(--background);
 }
 
 .forget svg {
