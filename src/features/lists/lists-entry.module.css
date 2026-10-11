@@ -1,0 +1,113 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  padding: 0.45rem 0.8rem 0.45rem 0.65rem;
+  border: 0;
+  border-radius: var(--radius-tail-pill);
+  background: var(--icon-background);
+  color: var(--muted);
+  font-size: var(--text-md);
+  font-weight: var(--weight-strong);
+  cursor: pointer;
+  transition: background var(--motion-standard), color var(--motion-standard), transform var(--motion-spring);
+}
+
+.pill:hover {
+  background: var(--icon-hover);
+  color: var(--foreground);
+}
+
+.pill:active {
+  transform: scale(0.97);
+}
+
+.pill svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.arrow {
+  transition: transform var(--motion-spring);
+}
+
+.pill:hover .arrow,
+.invite:hover .arrow {
+  transform: translateX(0.18rem);
+}
+
+.invite {
+  display: flex;
+  width: min(100%, 24rem);
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 1.8rem;
+  padding: 0.8rem 1.1rem 0.8rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-tail-xl);
+  background: var(--background);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--motion-standard), transform var(--motion-spring);
+}
+
+.invite:hover {
+  border-color: var(--faint);
+}
+
+.invite:active {
+  transform: scale(0.985);
+}
+
+/* The lists' icons, overlapping like a hand of cards. */
+.chips {
+  display: flex;
+  flex: none;
+  padding-left: 0.5rem;
+}
+
+.chip {
+  display: grid;
+  width: 2.3rem;
+  height: 2.3rem;
+  place-items: center;
+  margin-left: -0.5rem;
+  border: 2px solid var(--background);
+  border-radius: var(--radius-tail-sm);
+  background: color-mix(in srgb, var(--tint) 16%, var(--background));
+  color: var(--tint);
+}
+
+.chip svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.inviteText {
+  flex: 1;
+  min-width: 0;
+}
+
+.inviteText strong {
+  display: block;
+  color: var(--foreground);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-black);
+}
+
+.inviteText small {
+  display: block;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--text-md);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.invite > .arrow {
+  flex: none;
+  width: 1.2rem;
+  height: 1.2rem;
+  color: var(--muted);
+}

@@ -8,8 +8,8 @@ const VERSION = '__VERSION__';
 const KNOWN = '__KNOWN__';
 const PRECACHE = '__PRECACHE__';
 
-// The shell is replaced with every build; hashed assets and dictionary pages
-// outlive builds, so the shell is the only cache named after the version.
+// The shell is replaced with every build; hashed assets, dictionary pages and
+// lists outlive builds, so the shell is the only cache named after the version.
 const SHELL = `blitz-shell-${VERSION}`;
 const ASSETS = 'blitz-assets';
 const DICTIONARY = 'blitz-dictionary';
@@ -46,7 +46,7 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/')) return;
 
   if (request.mode === 'navigate') event.respondWith(openPage(request));
-  else if (url.pathname.startsWith('/dict/')) event.respondWith(staleWhileRevalidate(request));
+  else if (url.pathname.startsWith('/dict/') || url.pathname.startsWith('/lists/')) event.respondWith(staleWhileRevalidate(request));
   else event.respondWith(fromCacheOrNetwork(request, url));
 });
 
@@ -74,7 +74,7 @@ async function fromCacheOrNetwork(request, url) {
   return response;
 }
 
-/** Dictionary pages are rebuilt now and then: answer fast from storage, refresh behind. */
+/** Dictionary pages and the ready-made lists are rebuilt now and then: answer fast from storage, refresh behind. */
 async function staleWhileRevalidate(request) {
   const dictionary = await caches.open(DICTIONARY);
   const stored = await dictionary.match(request);

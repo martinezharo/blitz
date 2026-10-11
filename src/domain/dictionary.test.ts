@@ -25,6 +25,24 @@ describe('normalize and shardKey', () => {
   });
 });
 
+describe('suggest definitions', () => {
+  const wiktionary: DictEntry = { w: 'Mund', r: 900, s: [{ t: 'n', a: 'der', p: 'Münder', g: ['mouth of a person'], d: 'An individual who has been granted personhood' }] };
+  const written: DictEntry = { w: 'Mund', r: 900, s: [{ t: 'n', a: 'der', p: 'Münder', g: ['mouth'], d: 'An opening in the face used for eating and speaking', c: 1 }] };
+  const english: DictEntry = { w: 'bat', r: 400, s: [{ t: 'n', d: 'Any flying mammal of the order Chiroptera' }] };
+
+  it('does not offer the definition a German word borrowed from a translation', () => {
+    expect(suggest('mund', [[wiktionary]])[0]).toMatchObject({ translation: 'mouth of a person', definition: null, curated: false });
+  });
+
+  it('offers the definition written for learners', () => {
+    expect(suggest('mund', [[written]])[0]).toMatchObject({ definition: 'An opening in the face used for eating and speaking', curated: true });
+  });
+
+  it('keeps the only definition an English meaning has', () => {
+    expect(suggest('bat', [[english]])[0]).toMatchObject({ definition: 'Any flying mammal of the order Chiroptera', curated: false });
+  });
+});
+
 describe('suggest', () => {
   it('needs two letters to go on', () => {
     expect(suggest('b', [[bank]])).toEqual([]);

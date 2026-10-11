@@ -4,6 +4,33 @@ Learn the words you pick, in German and English. Each language is its own
 space with its own list. Write a word, say what kind of word it is, and give it
 a meaning: an English translation, an English definition, a picture, or any mix.
 
+Ready-made lists (food, colours, body, jobs, household) can be imported from
+the page behind "Ready-made word lists": open one, untick what you do not want,
+and add the rest.
+
+A list is a file in `data/lists`, and nothing else:
+
+```json
+{ "name": "Food", "icon": "apple", "tint": "orange", "words": ["Apfel", "Brot", "Schloss > castle"] }
+```
+
+The words are German, as the dictionary lists them. Everything about a word, from
+its article and plural to its translations and definition, comes from the
+curated dictionary below, and the English side of the list is the first
+translation of each word. `"Schloss > castle"` says which meaning is meant, and
+is the English word too. `icon` is the name of any [Lucide](https://lucide.dev/icons)
+icon, `tint` one of orange, red, blue, green (they go round if left out) and
+`order` where it comes in the grid.
+
+`pnpm list:new "Household objects" --count 30` makes one from a theme: the model
+proposes the words and an icon, the words the curated dictionary lacks are
+written, and the ones it still cannot match are taken out and named.
+
+Lists are made at build time into `public/lists` (not in git): an index of all
+of them and one file per list, which the app loads when it is opened, so there
+can be as many as you like without making the app any bigger. `pnpm dev` and
+`pnpm build` make them, and fail (or warn, in dev) naming what is missing.
+
 Words live in this browser's IndexedDB first, so the app works offline and
 without an account. Signing in with Google syncs them, pictures included, to
 every other device signed in to the same account.
@@ -35,17 +62,57 @@ pnpm deploy   # build, migrate D1 and publish to Cloudflare Workers
 
 ### Dictionary
 
-Typing a word suggests entries from `public/dict/`, static JSON built from
-[Wiktionary](https://en.wiktionary.org) (via [kaikki.org](https://kaikki.org),
-CC BY-SA) and ranked with OpenSubtitles word frequencies. A German word is
-defined by the English definition of its translation, and a German noun
-for a person or animal brings its form for the other sex (Lehrer, Lehrerin),
-which practice asks for half the time. It is committed, so
-nothing runs on deploy. To refresh it, run `pnpm dictionary` (downloads about
-4.5 GB into `.cache/dictionary` the first time). German is searched by the
-German word or its English translation; English by the English word.
+Typing a word suggests entries from `/dict/`, static JSON in `public/dict/`
+made from two things that are in git:
 
-`pnpm dev` runs the Worker too, on local D1 and R2 (`.wrangler/state`). Apply
+- `data/dictionary/`, the base built from
+  [Wiktionary](https://en.wiktionary.org) (via [kaikki.org](https://kaikki.org),
+  CC BY-SA) and ranked with OpenSubtitles word frequencies. A German noun for a
+  person or animal brings its form for the other sex (Lehrer, Lehrerin), which
+  practice asks for half the time. To refresh it, run `pnpm dictionary`
+  (downloads about 4.5 GB into `.cache/dictionary` the first time).
+- `scripts/dictionary/curated/{de,en}.json`, the meanings a model wrote for the
+  most common words (below), put over the base.
+
+`public/dict/` itself (like `public/lists/`) is not versioned: `vite dev` and `vite build` make it when
+it is missing or out of date (a couple of seconds), so curating more words
+changes one JSON file instead of hundreds of dictionary files. `pnpm curated`
+makes it by hand. German is searched by the German word or its English
+translation; English by the English word.
+
+#### Definitions
+
+Wiktionary lumps the meanings of a German word together, borrows its definition
+from the wrong translation and orders English meanings by etymology, so the
+most common words are rewritten by a model, one clear meaning at a time, each
+with its own short translations and a definition under 70 characters:
+
+```sh
+pnpm curate --count 4000   # node scripts/curate-dictionary.ts
+pnpm curated               # node scripts/apply-curated.ts: public/dict from the base and these
+```
+
+`curate` drives the Codex CLI (`codex exec`, so it runs on a ChatGPT
+subscription) over the most common words, in batches, and saves every batch to
+`scripts/dictionary/curated/{de,en}.json` as it goes; stop it whenever you like
+and run it again to carry on. It stops by itself when the subscription runs out.
+The instructions it gives the model are in `scripts/dictionary/curate-prompt.ts`;
+the rules for a definition, shared with the Worker's, in `src/domain/definition-style.ts`.
+`pnpm curate -- --fix` sends definitions that use the word they define, or run long,
+back to be rewritten. 
+Curated meanings are marked `c: 1` in the dictionary the app serves; `pnpm dev` and
+`pnpm build` apply them by themselves (`pnpm curated` does it by hand, and
+`--force` makes it again). The lists of `data/lists` are made the same way.
+
+Every other meaning gets its definition from `GET /api/definition`: the first
+time someone signed in picks it, the Worker asks Gemma 4 (`@cf/google/gemma-4-26b-a4b-it`,
+Workers AI) and keeps the answer in D1 (`definitions`) for everyone. The Worker
+reads the word from the dictionary itself, so the browser never sends text for
+the model to read, and a daily allowance (per account and overall) keeps it
+inside Workers AI's free neurons. Guests see what is already written.
+
+`pnpm dev` runs the Worker too, on local D1 and R2 (`.wrangler/state`). The AI
+binding always runs on Cloudflare, so development needs `wrangler login`. Apply
 the schema once with `pnpm wrangler d1 migrations apply blitz --local`.
 Google sign-in needs `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, in
 `.dev.vars` locally and as Worker secrets in production. In isolated local

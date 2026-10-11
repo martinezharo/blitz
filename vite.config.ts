@@ -2,7 +2,11 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
+import { readCurated } from './scripts/dictionary/curated.ts';
+import { generateDictionary } from './scripts/dictionary/generate.ts';
+import { generateLists } from './scripts/dictionary/lists.ts';
 
 /**
  * Sends plain-HTTP visits on the tailnet IP to the same server's HTTPS
@@ -36,6 +40,33 @@ function secureOrigin(): Plugin {
         response.setHeader('Location', target.toString());
         response.end();
       });
+    },
+  };
+}
+
+/**
+ * Two things the app serves are not in git, because they are made from what is:
+ * the dictionary (public/dict), from the base built from Wiktionary
+ * (data/dictionary) with the curated meanings put over it, and the ready-made
+ * lists (public/lists), from data/lists and the curated meanings. They are made
+ * when missing or out of date, before anything is served or copied from public/,
+ * so dev, build and the Cloudflare build all have them. A list that cannot be
+ * made stops a build; in development it is left out and reported.
+ */
+function generated(): Plugin {
+  let building = true;
+  return {
+    name: 'blitz:generated',
+    configResolved(config) {
+      building = config.command === 'build';
+    },
+    async buildStart() {
+      await generateDictionary(resolve('data/dictionary'), resolve('public/dict'));
+      const { problems } = await generateLists(await readCurated('de'), await readCurated('en'));
+      if (problems.length === 0) return;
+      const message = `Lists that could not be made:\n  ${problems.join('\n  ')}\nRun \`pnpm curate --count 0\` for words the curated dictionary lacks.`;
+      if (building) throw new Error(message);
+      this.warn(message);
     },
   };
 }
@@ -79,7 +110,7 @@ function serviceWorker(): Plugin {
 
 export default defineConfig({
   // The Worker (/api) runs inside the dev server, on local D1 and R2.
-  plugins: [secureOrigin(), react(), cloudflare(), serviceWorker()],
+  plugins: [generated(), secureOrigin(), react(), cloudflare(), serviceWorker()],
   server: {
     // The dev box publishes this server over HTTPS on its Tailscale hostname,
     // the secure origin development sign-in needs. Vite rejects Host headers it

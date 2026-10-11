@@ -1,0 +1,19 @@
+{
+  "name": "Colours",
+  "icon": "palette",
+  "tint": "red",
+  "order": 2,
+  "words": [
+    "rot",
+    "blau",
+    "grün",
+    "gelb",
+    "schwarz",
+    "weiß",
+    "grau",
+    "braun",
+    "orange",
+    "rosa",
+    "lila"
+  ]
+}

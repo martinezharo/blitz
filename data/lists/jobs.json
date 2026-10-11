@@ -1,0 +1,20 @@
+{
+  "name": "Jobs",
+  "icon": "briefcase",
+  "tint": "green",
+  "order": 4,
+  "words": [
+    "Lehrer",
+    "Arzt",
+    "Koch",
+    "Bäcker",
+    "Polizist",
+    "Verkäufer > shop assistant",
+    "Ingenieur",
+    "Friseur",
+    "Kellner",
+    "Anwalt",
+    "Pilot",
+    "Schauspieler"
+  ]
+}

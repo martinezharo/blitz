@@ -12,7 +12,10 @@
     "check": "tsc --noEmit && tsc --noEmit -p worker",
     "test": "vitest run",
     "dictionary": "node scripts/build-dictionary.ts",
-    "deploy": "pnpm build && wrangler d1 migrations apply blitz --remote && wrangler deploy"
+    "deploy": "pnpm build && wrangler d1 migrations apply blitz --remote && wrangler deploy",
+    "curate": "node scripts/curate-dictionary.ts",
+    "curated": "node scripts/apply-curated.ts",
+    "list:new": "node scripts/new-list.ts"
   },
   "dependencies": {
     "@fontsource-variable/nunito": "^5.3.0",

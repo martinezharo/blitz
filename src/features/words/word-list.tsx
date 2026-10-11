@@ -6,16 +6,18 @@ import { sounds } from '../../shared/sound.ts';
 import { morph, morphEndsIn } from '../../shared/ui/morph.ts';
 import { openSheetEnds } from '../../shared/ui/sheet.tsx';
 import { useObjectUrl } from '../../shared/ui/use-object-url.ts';
+import { ListsInvite } from '../lists/lists-entry.tsx';
 import styles from './word-list.module.css';
 
 interface WordListProps {
   language: Language;
   words: Word[];
   onOpen: (word: Word) => void;
+  onBrowseLists: () => void;
 }
 
 /** Every word of the language: the ones in practice first, the archived ones in a drawer below. */
-export function WordList({ language, words, onOpen }: WordListProps) {
+export function WordList({ language, words, onOpen, onBrowseLists }: WordListProps) {
   const [showArchived, setShowArchived] = useState(false);
 
   if (words.length === 0) {
@@ -26,6 +28,7 @@ export function WordList({ language, words, onOpen }: WordListProps) {
         </span>
         <strong>No {LANGUAGES[language].name} words yet</strong>
         <p>Write your first one up there.</p>
+        <ListsInvite onOpen={onBrowseLists} />
       </div>
     );
   }

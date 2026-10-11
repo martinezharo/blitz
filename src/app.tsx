@@ -8,6 +8,8 @@ import { AccountBadge } from './features/account/account-badge.tsx';
 import { AuthModal } from './features/account/auth-modal.tsx';
 import { InstallButton } from './features/account/install.tsx';
 import { LanguageMenu } from './features/language/language-menu.tsx';
+import { ListsPill } from './features/lists/lists-entry.tsx';
+import { ListsPage } from './features/lists/lists-page.tsx';
 import { PreferencesModal } from './features/preferences/preferences-modal.tsx';
 import { PracticeDock } from './features/practice/practice-dock.tsx';
 import { PracticeSession } from './features/practice/practice-session.tsx';
@@ -51,6 +53,7 @@ export function App() {
   const [soundsOn, setSoundsOn] = useSounds();
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [practicing, setPracticing] = useState(false);
+  const [browsingLists, setBrowsingLists] = useState(false);
 
   useEffect(() => {
     if (words) void fillCounterparts(words);
@@ -79,6 +82,11 @@ export function App() {
     );
   }
 
+  function openLists() {
+    sounds.open();
+    setBrowsingLists(true);
+  }
+
   return (
     <>
       <div className={styles.corner}>
@@ -102,7 +110,8 @@ export function App() {
 
       <main className={styles.page}>
         <Composer language={language} onAdd={setEditing} />
-        {words && <WordList language={language} words={words} onOpen={(word) => setEditing({ word })} />}
+        {words && words.length > 0 && <ListsPill onOpen={openLists} />}
+        {words && <WordList language={language} words={words} onOpen={(word) => setEditing({ word })} onBrowseLists={openLists} />}
       </main>
 
       <PracticeDock words={active?.length ?? 0} onStart={() => setPracticing(true)} />
@@ -114,6 +123,16 @@ export function App() {
           language={language}
           words={active}
           onClose={() => setPracticing(false)}
+        />
+      )}
+
+      {browsingLists && words && (
+        <ListsPage
+          // Lists follow the language: a new page whenever it changes under it.
+          key={language}
+          language={language}
+          words={words}
+          onClose={() => setBrowsingLists(false)}
         />
       )}
 

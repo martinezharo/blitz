@@ -1,4 +1,5 @@
 import { currentUser, finishGoogleSignIn, me, signOut, startGoogleSignIn } from './auth.ts';
+import { definition } from './definition.ts';
 import { beginLocalSignIn, beginProductionSignIn, exchangeTicket, finishLocalSignIn, proxyAccountRequest } from './dev-auth.ts';
 import type { Env } from './env.ts';
 import { problem, sameOrigin } from './http.ts';
@@ -19,7 +20,7 @@ export default {
     if (env.DEVELOPMENT_UPSTREAM) {
       if (method === 'GET' && pathname === '/api/auth/google') return beginLocalSignIn(request, env);
       if (method === 'GET' && pathname === '/api/auth/dev/finish') return finishLocalSignIn(request, env);
-      if (pathname === '/api/me' || pathname === '/api/sync' || pathname === '/api/auth/sign-out' ||
+      if (pathname === '/api/me' || pathname === '/api/sync' || pathname === '/api/definition' || pathname === '/api/auth/sign-out' ||
           /^\/api\/photos\/[^/]+$/.test(pathname)) return proxyAccountRequest(request, env);
       return problem(404, 'Not found');
     }
@@ -29,6 +30,13 @@ export default {
     if (method === 'GET' && pathname === '/api/auth/google') return startGoogleSignIn(request, env);
     if (method === 'GET' && pathname === '/api/auth/callback') return finishGoogleSignIn(request, env);
     if (method === 'GET' && pathname === '/api/me') return me(request, env);
+    if (method === 'GET' && pathname === '/api/definition') {
+      // Before migrations/0003 has been applied there is no table to read: say so, do not crash.
+      return definition(request, env).catch((error) => {
+        console.error('Definition error:', error);
+        return problem(503, 'Definitions are not available');
+      });
+    }
     if (method === 'POST' && pathname === '/api/auth/sign-out') return signOut(request, env);
 
     const photo = pathname.match(/^\/api\/photos\/([^/]+)$/);

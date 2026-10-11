@@ -152,9 +152,15 @@ export function wordFields(language: Language, draft: Draft) {
 }
 
 /** A short line under the word in the list: meaning first, then the plural and the counterpart. */
-export function wordSummary(word: Word): string {
+export function wordSummary(word: {
+  article?: string | null;
+  translation?: string | null;
+  definition?: string | null;
+  plural?: string | null;
+  counterpart?: string | null;
+}): string {
   const meaning = word.translation ?? word.definition ?? '';
-  const other = counterpartArticle(word.article);
+  const other = counterpartArticle(word.article ?? null);
   const counterpart = word.counterpart && (other ? `${other} ${word.counterpart}` : word.counterpart);
   return [meaning, word.plural && `pl. ${word.plural}`, counterpart].filter(Boolean).join(' · ');
 }
