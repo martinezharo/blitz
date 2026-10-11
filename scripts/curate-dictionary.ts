@@ -19,7 +19,7 @@ import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { WORD_LISTS } from '../src/domain/lists-catalogue.ts';
+import { LIST_CONCEPTS } from '../src/domain/lists-concepts.ts';
 import type { DictEntry } from '../src/domain/dictionary.ts';
 import { type CuratedLanguage, type CuratedSense, cleanWord, readCurated, writeCurated } from './dictionary/curated.ts';
 import { ANSWER_SCHEMA, PROMPTS } from './dictionary/curate-prompt.ts';
@@ -62,9 +62,10 @@ async function candidates(language: CuratedLanguage): Promise<Candidate[]> {
   const entries = await loadEntries(language);
   const done = await readCurated(language);
   const byTerm = new Map(entries.map((entry) => [entry.w, entry]));
-  const listed = new Set(WORD_LISTS.flatMap((list) => list.words[language].map((word) => word.term)));
-  const wanted = (entry: DictEntry) => !done.has(entry.w) && !entry.s.every((sense) => sense.c === 1);
-  const first = [...listed].map((term) => byTerm.get(term)).filter((entry): entry is DictEntry => !!entry && wanted(entry));
+  const listed = new Set(LIST_CONCEPTS.flatMap((list) => list.concepts.map((concept) => (language === 'de' ? concept.de.term : concept.en))));
+  const wanted = (entry: DictEntry) => !done.has(entry.w) && (entry.s.length === 0 || !entry.s.every((sense) => sense.c === 1));
+  // A word of the lists the dictionary does not have is written too, from the word alone.
+  const first = [...listed].map((term) => byTerm.get(term) ?? { w: term, r: 0, s: [] }).filter(wanted);
   // The most common words, written yet or not: asking for 4000 means the first 4000.
   const common = entries
     .filter((entry) => /^\p{L}+$/u.test(entry.w) && !listed.has(entry.w))
