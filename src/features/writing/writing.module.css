@@ -18,10 +18,91 @@
 }
 
 /* The page written on: one card for the text and what to do with it. */
+/* An idea to write about, only if one is wanted: a quiet aside, not a task. */
+.prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1.3rem;
+  padding: 0.65rem 0.55rem 0.65rem 0.85rem;
+  border-radius: var(--radius-tail-lg);
+  background: color-mix(in srgb, var(--accent) 9%, var(--background));
+}
+
+/* A lit bulb. */
+.bulb {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: none;
+  align-self: flex-start;
+  margin-top: 0.1rem;
+  color: var(--accent);
+  stroke-width: 2.4;
+}
+
+.prompt p {
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.idea {
+  display: block;
+  /* The accent, deepened towards the text so small type reads on the tint (5.6:1 in light). */
+  color: color-mix(in srgb, var(--accent) 70%, var(--foreground));
+  font-size: var(--text-sm);
+  font-weight: var(--weight-strong);
+}
+
+.prompt strong {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-strong);
+}
+
+.prompt small {
+  display: block;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-body);
+}
+
+.another {
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--background);
+  color: var(--muted);
+  cursor: pointer;
+  transition: background var(--motion-standard), color var(--motion-standard), transform var(--motion-spring);
+}
+
+.another:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+  transform: rotate(-20deg);
+}
+
+.another:active {
+  transform: rotate(-20deg) scale(0.9);
+}
+
+.another svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  stroke-width: 2.4;
+}
+
 .paper {
   display: flex;
   flex-direction: column;
-  margin-top: 1.3rem;
+  margin-top: 0.8rem;
   border: 2px solid var(--line);
   border-radius: var(--radius-tail-xl);
   background: var(--background);
@@ -29,17 +110,27 @@
 }
 
 .paper:focus-within {
-  border-color: var(--foreground);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.3rem color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
+/* Ruled like a notebook: a line under every line of text. */
 .field,
 .marked {
-  min-height: 11rem;
+  --rule: 2.1rem;
+  min-height: calc(5 * var(--rule) + 1rem);
   margin: 0;
-  padding: 1.05rem 1.15rem 0.6rem;
+  padding: 0.55rem 1.15rem 0.45rem;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 calc(var(--rule) - 1px),
+    var(--line) calc(var(--rule) - 1px) var(--rule)
+  );
+  background-position: 0 0.55rem;
+  background-clip: content-box;
   font-size: max(var(--text-field-min), 1.15rem);
   font-weight: 750;
-  line-height: 1.65;
+  line-height: var(--rule);
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
@@ -47,9 +138,10 @@
 .field {
   width: 100%;
   border: 0;
-  border-radius: inherit;
+  border-radius: 0;
   outline: none;
-  background: transparent;
+  background-color: transparent;
+  caret-color: var(--accent);
   resize: none;
   field-sizing: content;
 }
@@ -128,16 +220,32 @@
   font-size: var(--text-lg);
   font-weight: var(--weight-black);
   cursor: pointer;
-  transition: transform var(--motion-spring), opacity var(--motion-standard);
+  transition: transform var(--motion-spring), box-shadow var(--motion-standard), background var(--motion-standard), color var(--motion-standard);
 }
 
-.check:active {
+.check:hover:not([aria-disabled='true']) {
+  box-shadow: 0 0.75rem 1.5rem rgb(15 16 13 / 18%);
+  transform: translateY(-2px) rotate(-0.4deg);
+}
+
+.check:hover:not([aria-disabled='true']) .checkIcon {
+  transform: rotate(-12deg);
+}
+
+.check:active:not([aria-disabled='true']) {
   transform: scale(0.97);
 }
 
+/* Nothing written yet: switched off, not faded. */
 .check[aria-disabled='true'] {
-  opacity: 0.35;
+  background: var(--icon-background);
+  color: var(--faint);
   cursor: default;
+}
+
+.check[aria-disabled='true'] .checkIcon {
+  background: var(--line);
+  color: var(--faint);
 }
 
 .checkIcon {
@@ -148,6 +256,7 @@
   border-radius: 50%;
   background: var(--accent);
   color: var(--accent-ink);
+  transition: transform var(--motion-spring), background var(--motion-standard);
 }
 
 .checkIcon svg {

@@ -1,4 +1,4 @@
-import { Check, LoaderCircle, LogIn, PenLine, Plus, RotateCcw, SpellCheck2 } from 'lucide-react';
+import { Check, Dices, Lightbulb, LoaderCircle, LogIn, PenLine, Plus, RotateCcw, SpellCheck2 } from 'lucide-react';
 import { type RefObject, useEffect, useRef, useState } from 'react';
 import type { AccountState } from '../../data/account.ts';
 import { lookupForm } from '../../data/dictionary.ts';
@@ -13,10 +13,28 @@ import { History } from './history.tsx';
 import { type Mismatch, MismatchSheet } from './mismatch-sheet.tsx';
 import styles from './writing.module.css';
 
-/** A question to start from, in the language being written. */
-const PROMPTS: Record<Language, string> = {
-  de: 'Was hast du heute gemacht?',
-  en: 'What did you do today?',
+/** Ideas to write about, for when nothing comes to mind: in the language being written, with what they ask in English. */
+const PROMPTS: Record<Language, { ask: string; means: string | null }[]> = {
+  de: [
+    { ask: 'Was hast du heute gemacht?', means: 'What did you do today?' },
+    { ask: 'Wie sieht dein Zimmer aus?', means: 'What does your room look like?' },
+    { ask: 'Was isst du am liebsten?', means: 'What do you like eating most?' },
+    { ask: 'Was machst du am Wochenende?', means: 'What are you doing at the weekend?' },
+    { ask: 'Erzähl von deiner Familie.', means: 'Tell me about your family.' },
+    { ask: 'Wohin möchtest du reisen, und warum?', means: 'Where would you like to travel, and why?' },
+    { ask: 'Wie war dein letzter Urlaub?', means: 'How was your last holiday?' },
+    { ask: 'Was ist dein Lieblingsfilm?', means: 'What is your favourite film?' },
+  ],
+  en: [
+    { ask: 'What did you do today?', means: null },
+    { ask: 'What does your room look like?', means: null },
+    { ask: 'What do you like eating most?', means: null },
+    { ask: 'What are you doing this weekend?', means: null },
+    { ask: 'Tell me about your family.', means: null },
+    { ask: 'Where would you like to travel, and why?', means: null },
+    { ask: 'How was your last holiday?', means: null },
+    { ask: 'What is your favourite film?', means: null },
+  ],
 };
 
 const FAILURES: Record<Exclude<CheckFailure, 'signed-out'>, string> = {
@@ -55,6 +73,7 @@ export function WritingPage({ language, words, account, onSignIn, onAddWord, onS
   const [failure, setFailure] = useState<CheckFailure | null>(null);
   const [mismatch, setMismatch] = useState<Mismatch | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
+  const [prompt, setPrompt] = useState(() => Math.floor(Math.random() * PROMPTS[language].length));
   const field = useRef<HTMLTextAreaElement>(null);
   const cards = useRef<(HTMLLIElement | null)[]>([]);
 
@@ -145,6 +164,28 @@ export function WritingPage({ language, words, account, onSignIn, onAddWord, onS
         Write anything in {spec.name}. Check it, and Blitz marks what to fix.
       </p>
 
+      {!showMarks && (
+        <aside className={styles.prompt} aria-label="An idea to write about">
+          <Lightbulb className={styles.bulb} aria-hidden="true" />
+          <p>
+            <span className={styles.idea}>Need an idea? Write about anything you like, or try this:</span>
+            <strong lang={language}>{PROMPTS[language][prompt]!.ask}</strong>
+            {PROMPTS[language][prompt]!.means && <small lang="en">{PROMPTS[language][prompt]!.means}</small>}
+          </p>
+          <button
+            type="button"
+            className={styles.another}
+            aria-label="Another idea"
+            onClick={() => {
+              sounds.tap();
+              setPrompt((current) => (current + 1 + Math.floor(Math.random() * (PROMPTS[language].length - 1))) % PROMPTS[language].length);
+            }}
+          >
+            <Dices aria-hidden="true" />
+          </button>
+        </aside>
+      )}
+
       <div className={styles.paper} data-checking={checking || undefined}>
         {showMarks ? (
           <p className={styles.marked} lang={language}>
@@ -172,7 +213,7 @@ export function WritingPage({ language, words, account, onSignIn, onAddWord, onS
             value={draft.text}
             onChange={(event) => write(event.target.value)}
             readOnly={checking}
-            placeholder={PROMPTS[language]}
+            placeholder="Start writing…"
             aria-label={`Your text in ${spec.name}`}
             maxLength={MAX_TEXT}
             lang={language}
