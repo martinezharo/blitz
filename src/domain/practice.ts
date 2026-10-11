@@ -103,6 +103,28 @@ export interface Exercise {
 
 const CHOICES: Record<number, number> = { 1: 4, 2: 8 };
 
+/** How different two spellings are, from 0 (the same) to 1 (nothing in common): edits over the longer length. */
+function spellingGap(a: string, b: string): number {
+  const [x, y] = [[...a.toLocaleLowerCase()], [...b.toLocaleLowerCase()]];
+  let row = Array.from({ length: y.length + 1 }, (_, index) => index);
+  for (const [i, left] of x.entries()) {
+    const next = [i + 1];
+    for (const [j, right] of y.entries()) {
+      next.push(Math.min(row[j + 1]! + 1, next[j]! + 1, row[j]! + Number(left !== right)));
+    }
+    row = next;
+  }
+  return row[y.length]! / Math.max(x.length, y.length, 1);
+}
+
+/** The candidates spelled most like the term first. Ties, and equal spellings, come in random order. */
+function closest<T extends Pick<Filler, 'term'>>(candidates: T[], term: string, random: Random): T[] {
+  return shuffle(candidates, random)
+    .map((candidate) => ({ candidate, gap: spellingGap(candidate.term, term) }))
+    .sort((a, b) => a.gap - b.gap)
+    .map(({ candidate }) => candidate);
+}
+
 /**
  * `canHear` says whether a voice is ready to read the word aloud. Only then
  * can a word at the top level be asked by ear: hear it, and write it.
@@ -132,8 +154,9 @@ export function buildExercise(word: Word, words: Word[], random: Random = Math.r
     // Common words make up the numbers while the list is short, never one already in it.
     const fillers = FILLERS[word.language].filter((filler) => !words.some((other) => sameText(other.term, filler.term)));
     // Same kind of word first, so the wrong options are not giveaways, and the
-    // user's own words before the fillers.
-    const others = [...shuffle(words.filter((other) => other.id !== word.id), random), ...shuffle(fillers, random)].sort(
+    // user's own words before the fillers. Within each, the ones spelled most
+    // like the answer come first, as they are the easiest to mix up.
+    const others = [...closest(words.filter((other) => other.id !== word.id), term, random), ...closest(fillers, term, random)].sort(
       (a, b) => Number(b.type === word.type) - Number(a.type === word.type),
     );
     const options = new Set([correct]);

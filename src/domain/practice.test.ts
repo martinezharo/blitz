@@ -129,6 +129,15 @@ describe('exercises', () => {
     expect(isCorrect(exercise, '', 'die Bank')).toBe(true);
   });
 
+  it('offers the words spelled most like the answer', () => {
+    const near = ['Band', 'Tank', 'Banken'].map((term) => word({ id: term, term, article: 'der' }));
+    for (let run = 0; run < 20; run++) {
+      const exercise = buildExercise(word(), [word(), ...others, ...near]);
+      if (exercise.answer.kind !== 'choice') throw new Error('Expected a choice');
+      expect([...exercise.answer.options].sort()).toEqual(['der Band', 'der Banken', 'der Tank', 'die Bank']);
+    }
+  });
+
   it('pads with words of the same kind first', () => {
     const verb = word({ level: 2, type: 'verb', term: 'laufen', article: null });
     const exercise = buildExercise(verb, [verb]);
