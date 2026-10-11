@@ -9,6 +9,8 @@
   // (`wrangler secret put`, or .dev.vars locally).
   "assets": {
     "directory": "./dist",
+    // The Worker reads the dictionary from here to know which meanings exist.
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
   },
@@ -20,6 +22,9 @@
       "migrations_dir": "migrations"
     }
   ],
+  // Writes the definitions the dictionary lacks (worker/definition.ts). AI
+  // bindings always run on Cloudflare, also in local development.
+  "ai": { "binding": "AI", "remote": true },
   "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "blitz-photos" }],
   "observability": { "enabled": true }
 }

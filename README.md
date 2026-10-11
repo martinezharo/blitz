@@ -4,6 +4,13 @@ Learn the words you pick, in German and English. Each language is its own
 space with its own list. Write a word, say what kind of word it is, and give it
 a meaning: an English translation, an English definition, a picture, or any mix.
 
+Ready-made lists (food, colours, body, jobs) can be imported from the page
+behind "Ready-made word lists": open one, untick what you do not want, and add
+the rest. They are written out in `src/domain/lists-catalogue.ts`, each word
+with its article, plural, other-sex form, translation and definition. A new list also needs an icon in
+`src/features/lists/list-icons.ts` and a colour in the two `data-list` blocks of
+the lists' stylesheets.
+
 Words live in this browser's IndexedDB first, so the app works offline and
 without an account. Signing in with Google syncs them, pictures included, to
 every other device signed in to the same account.

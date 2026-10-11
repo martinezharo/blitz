@@ -1,6 +1,7 @@
 import { Archive, ArchiveRestore, ImagePlus, Trash2, X } from 'lucide-react';
 import { type FormEvent, useEffect, useId, useRef, useState } from 'react';
 import { compressPhoto } from '../../data/photo.ts';
+import { askDefinition } from '../../data/definitions.ts';
 import { lookupWord } from '../../data/dictionary.ts';
 import { addWord, deleteWord, setArchived, updateWord } from '../../data/words.ts';
 import { fillDraft, normalize, type Suggestion } from '../../domain/dictionary.ts';
@@ -64,6 +65,25 @@ export function WordSheet({ language, word, term, suggestion, onClose }: WordShe
   };
   const set = (patch: Partial<Draft>) => setDraft((current) => ({ ...current, ...patch }));
 
+  /**
+   * A meaning the dictionary has no good definition for gets one written, once
+   * for everybody. It replaces what the sheet was filled with, unless the person
+   * has written something of their own or changed what kind of word it is.
+   */
+  function refine(found: Suggestion, filledWith: string) {
+    if (found.curated) return;
+    void askDefinition(language, found).then((written) => {
+      if (!written) return;
+      setDraft((now) =>
+        now.type === found.type && normalize(now.term) === normalize(found.term) && now.definition === filledWith ? { ...now, definition: written } : now,
+      );
+    });
+  }
+  useEffect(() => {
+    if (suggestion) refine(suggestion, fillDraft(language, emptyDraft(suggestion.term), suggestion).definition);
+    // Once, for the word the sheet opened with.
+  }, []);
+
   // A new word that is typed, not picked, is filled in from the dictionary
   // once it settles on a word it knows. Only what is still empty is filled.
   const typed = word || suggestion ? null : draft.term;
@@ -77,7 +97,11 @@ export function WordSheet({ language, word, term, suggestion, onClose }: WordShe
           // Typing went on while it was looked up.
           if (normalize(now.term) !== normalize(found.term)) return now;
           const next = fillDraft(language, { ...now, term: found.term }, found);
-          if (next.type !== now.type) setFilled(true);
+          if (next.type !== now.type) {
+            setFilled(true);
+            // After this update, not inside it: asking has a side effect.
+            queueMicrotask(() => refine(found, next.definition));
+          }
           return next;
         });
       });

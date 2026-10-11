@@ -2,6 +2,7 @@ export interface Env {
   DB: D1Database;
   PHOTOS: R2Bucket;
   ASSETS: Fetcher;
+  AI: Ai;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
   /** Set only on a local Worker to use the production account and data. */

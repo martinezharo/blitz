@@ -30,6 +30,12 @@ export interface DictSense {
   g?: string[];
   /** English definition. */
   d?: string;
+  /**
+   * 1 when the meaning was written for learners (see scripts/curate-dictionary.ts):
+   * one clear sense, with a short definition of its own. Absent for one cut from
+   * Wiktionary, whose definition can be long, technical, or borrowed from another word.
+   */
+  c?: 1;
 }
 
 /** A word and its meanings. `r` is how common it is: lower is more common. */
@@ -64,6 +70,8 @@ export interface Suggestion {
   definition: string | null;
   /** The word typed was its English translation, not the word itself. */
   translated: boolean;
+  /** The definition was written for learners. When it is not, a better one can be asked for. */
+  curated: boolean;
 }
 
 /** Lowercase letters and digits only, no accents: what typing is compared on. */
@@ -115,6 +123,15 @@ function matchesIn(entries: readonly DictEntry[], query: string, via: 0 | 1, key
   return found;
 }
 
+/**
+ * A German word's definition that Wiktionary did not write is borrowed from
+ * its first translation, and is often about another word: it is not offered.
+ */
+function offeredDefinition(sense: DictSense): string | null {
+  if (sense.c || !sense.g) return sense.d ?? null;
+  return null;
+}
+
 function suggestionOf(match: Match): Suggestion {
   const { entry, sense } = match;
   return {
@@ -124,8 +141,9 @@ function suggestionOf(match: Match): Suggestion {
     plural: sense.p ?? null,
     counterpart: sense.f ?? null,
     translation: sense.g?.join(', ') ?? null,
-    definition: sense.d ?? null,
+    definition: offeredDefinition(sense),
     translated: match.via === 1,
+    curated: sense.c === 1,
   };
 }
 
