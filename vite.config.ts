@@ -42,30 +42,37 @@ function secureOrigin(): Plugin {
 
 /**
  * Emits /sw.js from src/shared/sw.js, with this build's file names filled in.
- * The version is a hash of those names (they carry content hashes) plus the
- * logo, so a new build is a new service worker and an unchanged one is not.
+ * The version is a hash of those names (they carry content hashes), the page
+ * and the logo, which keep their names, so a new build is a new service worker
+ * and an unchanged one is not.
  */
 function serviceWorker(): Plugin {
   return {
     name: 'blitz:service-worker',
     apply: 'build',
-    generateBundle(_, bundle) {
-      if (this.environment.name !== 'client') return;
-      const files = Object.keys(bundle)
-        .filter((name) => !name.endsWith('.map'))
-        .map((name) => `/${name}`)
-        .sort();
-      const shell = ['/', '/logo.svg', ...files.filter((name) => /\.(js|css|woff2)$/.test(name))];
-      const version = createHash('sha256')
-        .update(files.join('\n'))
-        .update(readFileSync(new URL('./public/logo.svg', import.meta.url)))
-        .digest('hex')
-        .slice(0, 12);
-      const source = readFileSync(new URL('./src/shared/sw.js', import.meta.url), 'utf8')
-        .replace('__VERSION__', () => version)
-        .replace("'__KNOWN__'", () => JSON.stringify(files))
-        .replace("'__PRECACHE__'", () => JSON.stringify(shell));
-      this.emitFile({ type: 'asset', fileName: 'sw.js', source });
+    // After Vite's own plugins, which emit the page last.
+    generateBundle: {
+      order: 'post',
+      handler(_, bundle) {
+        if (this.environment.name !== 'client') return;
+        const files = Object.keys(bundle)
+          .filter((name) => !name.endsWith('.map'))
+          .map((name) => `/${name}`)
+          .sort();
+        const shell = ['/', '/logo.svg', ...files.filter((name) => /\.(js|css|woff2)$/.test(name))];
+        const page = (bundle['index.html'] as { source?: string | Uint8Array } | undefined)?.source ?? '';
+        const version = createHash('sha256')
+          .update(files.join('\n'))
+          .update(page)
+          .update(readFileSync(new URL('./public/logo.svg', import.meta.url)))
+          .digest('hex')
+          .slice(0, 12);
+        const source = readFileSync(new URL('./src/shared/sw.js', import.meta.url), 'utf8')
+          .replace('__VERSION__', () => version)
+          .replace("'__KNOWN__'", () => JSON.stringify(files))
+          .replace("'__PRECACHE__'", () => JSON.stringify(shell));
+        this.emitFile({ type: 'asset', fileName: 'sw.js', source });
+      },
     },
   };
 }

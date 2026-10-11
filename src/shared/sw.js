@@ -67,8 +67,9 @@ async function fromCacheOrNetwork(request, url) {
   if (stored) return stored;
   const response = await fetch(request);
   if (response.ok && url.pathname.startsWith('/assets/')) {
+    // A full cache must not cost the page a good response.
     const assets = await caches.open(ASSETS);
-    await assets.put(request, response.clone());
+    assets.put(request, response.clone()).catch(() => {});
   }
   return response;
 }
@@ -78,7 +79,7 @@ async function staleWhileRevalidate(request) {
   const dictionary = await caches.open(DICTIONARY);
   const stored = await dictionary.match(request);
   const refresh = fetch(request).then((response) => {
-    if (response.ok) dictionary.put(request, response.clone());
+    if (response.ok) dictionary.put(request, response.clone()).catch(() => {});
     return response;
   });
   if (stored) {
