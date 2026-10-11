@@ -49,7 +49,7 @@
 "braun":[{"type":"adjective","translations":["brown"],"definition":"The colour of soil or tree bark"}],
 "orange":[{"type":"adjective","translations":["orange"],"definition":"The colour of a ripe citrus fruit"}],
 "rosa":[{"type":"adjective","translations":["pink"],"definition":"The colour made by mixing red and white"}],
-"lila":[{"type":"adjective","translations":["purple"],"definition":"A colour between red and blue"}],
+"lila":[{"type":"adjective","translations":["purple"],"definition":"Having a pale purple colour"}],
 "Kopf":[{"type":"noun","article":"der","plural":"Köpfe","translations":["head"],"definition":"The part of the body with the brain, eyes, ears and mouth"}],
 "Gesicht":[{"type":"noun","article":"das","plural":"Gesichter","translations":["face"],"definition":"The front of a person's head, with the eyes, nose and mouth"}],
 "Auge":[{"type":"noun","article":"das","plural":"Augen","translations":["eye"],"definition":"The body part used for seeing"}],

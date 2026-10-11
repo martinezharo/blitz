@@ -16,6 +16,7 @@ export const PROMPT_VERSION = 3;
 export const REVISION = `THIS IS A REVISION. The input holds meanings you wrote earlier for each word, in "current", and some of them have a "problem". Return every word of the input, with all its meanings in the same order, in the same schema.
 - Keep each meaning as it is (type, article, plural, counterpart and translations) and rewrite only its definition, unless the translations are what is wrong.
 - A definition must never contain the word being defined, its translation, or any word of the same family ("dancer": no "dance" or "dancing"; "paint": no "painting"). Describe it with other words: name the category, then one distinguishing feature.
+- A definition that is "only a synonym" ("A child" for kid) says nothing new: say what the thing is or does, with its category and one distinguishing feature (a kid is a young person, informally a child).
 - At most ${DEFINITION_LENGTH.asked} characters. Plain everyday words.
 - A meaning with no "problem" stays exactly as it is.`;
 

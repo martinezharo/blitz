@@ -3,7 +3,7 @@
  * sense at a time, and saves them in scripts/dictionary/curated/{de,en}.json.
  *
  *   node scripts/curate-dictionary.ts [--language de|en|both] [--count 3000]
- *     [--batch 60] [--concurrency 4] [--model gpt-6-luna] [--effort low] [--fix]
+ *     [--batch 60] [--concurrency 4] [--model gpt-6-luna] [--effort low] [--fix [--only <problem>]]
  *
  * The model is driven through the Codex CLI (`codex exec`), so it runs on a
  * ChatGPT subscription rather than on an API key. Words are taken in order of
@@ -14,7 +14,8 @@
  *
  * With --fix it writes nothing new: it sends the definitions that use the word
  * they define, or run long, back to the model to be rewritten, and keeps the new
- * ones only where they are better.
+ * ones only where they are better. `--only synonym` repairs just the problems
+ * that name that text, here the ones that are only another word for the word.
  *
  * Then `node scripts/apply-curated.ts` puts them into public/dict.
  */
@@ -39,6 +40,7 @@ const { values: args } = parseArgs({
     model: { type: 'string', default: 'gpt-6-luna' },
     effort: { type: 'string', default: 'low' },
     fix: { type: 'boolean', default: false },
+    only: { type: 'string' },
   },
 });
 
@@ -62,14 +64,14 @@ interface Candidate {
 }
 
 /** The problems of each meaning of a word that has been written, in order. */
-const problemsOf = (term: string, senses: readonly CuratedSense[]) => senses.map((sense) => definitionProblems(term, sense.translations, sense.definition));
+const problemsOf = (term: string, senses: readonly CuratedSense[]) => senses.map((sense) => definitionProblems(term, sense.translations, sense.definition, sense.type));
 
 /** The words to write, the ones of the lists first, then by how common they are. Words written already are left out. */
 async function candidates(language: CuratedLanguage): Promise<Candidate[]> {
   const done = await readCurated(language);
   if (args.fix) {
     return [...done]
-      .filter(([term, senses]) => problemsOf(term, senses).some((problems) => problems.length > 0))
+      .filter(([term, senses]) => problemsOf(term, senses).some((problems) => problems.some((problem) => !args.only || problem.includes(args.only))))
       .map(([term, senses]) => ({ term, rank: 0, entry: { w: term, r: 0, s: [] }, current: senses }));
   }
   const entries = await readEntries<DictEntry>(DICT, language);

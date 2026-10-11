@@ -18,6 +18,15 @@ describe('definitionProblems', () => {
     expect(definitionProblems('Mund', ['mouth'], 'An opening in the face used for eating and speaking')).toEqual([]);
   });
 
+  it('finds a noun that is only another word for it', () => {
+    expect(definitionProblems('kid', [], 'A child', 'noun')).toEqual(['only a synonym']);
+    expect(definitionProblems('auto', [], 'A car', 'noun')).toEqual(['only a synonym']);
+    // Two words and a feature say what it is; a verb or adjective is naturally short.
+    expect(definitionProblems('puppy', [], 'A young dog', 'noun')).toEqual([]);
+    expect(definitionProblems('tiny', [], 'Very small', 'adjective')).toEqual([]);
+    expect(definitionProblems('kid', [], 'A child', undefined)).toEqual([]);
+  });
+
   it('finds one that is longer than it was asked to be', () => {
     expect(definitionProblems('zeitlich', ['temporary'], `Describes something that concerns ${'x'.repeat(40)}`)).toEqual(['74 characters']);
   });

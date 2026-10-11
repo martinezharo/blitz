@@ -40,11 +40,14 @@ export function checkDefinition(raw: unknown): { definition: string } | { proble
 /**
  * What is wrong with a definition that is otherwise usable: it is longer than it
  * was asked to be, or it uses the word it defines (or its translation, or a word
- * that starts like one of them): "phone: To call someone using a phone". The
- * models are told not to, and mostly do not.
+ * that starts like one of them): "phone: To call someone using a phone", or it
+ * is only another word for it ("kid: A child"). The models are told not to, and
+ * mostly do not.
  */
-export function definitionProblems(term: string, translations: readonly string[], definition: string): string[] {
+export function definitionProblems(term: string, translations: readonly string[], definition: string, type?: string): string[] {
   const problems: string[] = [];
+  // "A child", "A car": another word for it, which says nothing a learner who knows that word learns from.
+  if (type === 'noun' && /^(A|An) [\p{L}-]+$/u.test(definition)) problems.push('only a synonym');
   if (definition.length > DEFINITION_LENGTH.asked) problems.push(`${definition.length} characters`);
   const used = normalize(definition).split(' ').filter(Boolean);
   // The word, and what it is mostly translated as when that is one word: a long
