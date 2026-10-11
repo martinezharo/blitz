@@ -161,6 +161,8 @@
 
 .empty {
   display: grid;
+  /* One column no wider than the page, so the lists card fits narrow phones. */
+  grid-template-columns: minmax(0, 1fr);
   justify-items: center;
   margin-top: 4rem;
   color: var(--muted);
