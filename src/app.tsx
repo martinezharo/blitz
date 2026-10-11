@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAccount } from './data/account.ts';
-import { useLanguage, useSounds, useTheme } from './data/preferences.ts';
+import { useLanguage, useSounds, useTheme, useWordSort } from './data/preferences.ts';
 import { fillCounterparts, useWords } from './data/words.ts';
 import type { Word } from './domain/word.ts';
 import styles from './app.module.css';
@@ -43,6 +43,7 @@ function takeSignInOutcome(): { open: boolean; error: string | null } {
 
 export function App() {
   const [language, setLanguage] = useLanguage();
+  const [sort, setSort] = useWordSort();
   const words = useWords(language);
   // Archived words are out of practice and tucked away at the end of the list.
   const active = useMemo(() => words?.filter((word) => !word.archived), [words]);
@@ -111,7 +112,16 @@ export function App() {
       <main className={styles.page}>
         <Composer language={language} onAdd={setEditing} />
         {words && words.length > 0 && <ListsPill onOpen={openLists} />}
-        {words && <WordList language={language} words={words} onOpen={(word) => setEditing({ word })} onBrowseLists={openLists} />}
+        {words && (
+          <WordList
+            language={language}
+            words={words}
+            sort={sort}
+            onSortChange={setSort}
+            onOpen={(word) => setEditing({ word })}
+            onBrowseLists={openLists}
+          />
+        )}
       </main>
 
       <PracticeDock words={active?.length ?? 0} onStart={() => setPracticing(true)} />

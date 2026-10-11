@@ -1,24 +1,28 @@
 import { Archive, ChevronDown } from 'lucide-react';
-import { type CSSProperties, useState } from 'react';
+import { type CSSProperties, useMemo, useState } from 'react';
 import { mastery } from '../../domain/practice.ts';
-import { LANGUAGES, type Language, MAX_LEVEL, type Word, wordSummary } from '../../domain/word.ts';
+import { LANGUAGES, type Language, MAX_LEVEL, sortWords, type Word, type WordSort, wordSummary } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import { morph, morphEndsIn } from '../../shared/ui/morph.ts';
 import { openSheetEnds } from '../../shared/ui/sheet.tsx';
 import { useObjectUrl } from '../../shared/ui/use-object-url.ts';
 import { ListsInvite } from '../lists/lists-entry.tsx';
+import { SortMenu } from './sort-menu.tsx';
 import styles from './word-list.module.css';
 
 interface WordListProps {
   language: Language;
   words: Word[];
+  sort: WordSort;
+  onSortChange: (sort: WordSort) => void;
   onOpen: (word: Word) => void;
   onBrowseLists: () => void;
 }
 
 /** Every word of the language: the ones in practice first, the archived ones in a drawer below. */
-export function WordList({ language, words, onOpen, onBrowseLists }: WordListProps) {
+export function WordList({ language, words, sort, onSortChange, onOpen, onBrowseLists }: WordListProps) {
   const [showArchived, setShowArchived] = useState(false);
+  const sorted = useMemo(() => sortWords(words, sort, language), [words, sort, language]);
 
   if (words.length === 0) {
     return (
@@ -34,8 +38,8 @@ export function WordList({ language, words, onOpen, onBrowseLists }: WordListPro
   }
 
   const { points, max } = mastery(words);
-  const active = words.filter((word) => !word.archived);
-  const archived = words.filter((word) => word.archived);
+  const active = sorted.filter((word) => !word.archived);
+  const archived = sorted.filter((word) => word.archived);
   const open = (word: Word, row: HTMLElement) => {
     sounds.open();
     morph(morphEndsIn(row), () => onOpen(word), openSheetEnds);
@@ -44,13 +48,14 @@ export function WordList({ language, words, onOpen, onBrowseLists }: WordListPro
   return (
     <>
       <div className={styles.count}>
-        <span>
-          {active.length} {active.length === 1 ? 'word' : 'words'}
-        </span>
         <span className={styles.mastery} role="img" aria-label={`Mastery ${points} of ${max} points`}>
           <span className={styles.meter} style={{ '--fill': points / max } as CSSProperties} />
           {points} / {max}
         </span>
+        <span>
+          {active.length} {active.length === 1 ? 'word' : 'words'}
+        </span>
+        <SortMenu sort={sort} onChange={onSortChange} />
       </div>
       {active.length > 0 ? (
         <ul className={styles.words}>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { LANGUAGES, type Language } from '../domain/word.ts';
+import { LANGUAGES, type Language, WORD_SORTS, type WordSort } from '../domain/word.ts';
 import { setSoundsOn, sounds } from '../shared/sound.ts';
 
 const KEY = 'blitz.language';
@@ -129,4 +129,31 @@ export function useSounds(): [boolean, (on: boolean) => void] {
     }
   }, []);
   return [on, choose];
+}
+
+const SORT_KEY = 'blitz.sort';
+
+function storedSort(): WordSort {
+  try {
+    const value = localStorage.getItem(SORT_KEY);
+    const sort = WORD_SORTS.find((option) => option.value === value);
+    if (sort) return sort.value;
+  } catch {
+    // Storage can be blocked; fall through to the default.
+  }
+  return 'newest';
+}
+
+/** How the word list is ordered, remembered across visits. Newest first until a choice is made. */
+export function useWordSort(): [WordSort, (sort: WordSort) => void] {
+  const [sort, setSort] = useState(storedSort);
+  const choose = useCallback((next: WordSort) => {
+    setSort(next);
+    try {
+      localStorage.setItem(SORT_KEY, next);
+    } catch {
+      // Not remembered, but still applied for this visit.
+    }
+  }, []);
+  return [sort, choose];
 }

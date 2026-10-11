@@ -164,3 +164,29 @@ export function wordSummary(word: {
   const counterpart = word.counterpart && (other ? `${other} ${word.counterpart}` : word.counterpart);
   return [meaning, word.plural && `pl. ${word.plural}`, counterpart].filter(Boolean).join(' · ');
 }
+
+export type WordSort = 'newest' | 'oldest' | 'az' | 'za' | 'levelUp' | 'levelDown';
+
+export const WORD_SORTS: { value: WordSort; label: string }[] = [
+  { value: 'newest', label: 'Newest first' },
+  { value: 'oldest', label: 'Oldest first' },
+  { value: 'az', label: 'A to Z' },
+  { value: 'za', label: 'Z to A' },
+  { value: 'levelUp', label: 'Lowest level first' },
+  { value: 'levelDown', label: 'Highest level first' },
+];
+
+/** The words in this order, leaving the given list alone. Alphabetical order goes by the word itself, not its article; words of one level are newest first. */
+export function sortWords<T extends Pick<Word, 'term' | 'level' | 'createdAt'>>(words: readonly T[], sort: WordSort, language: Language): T[] {
+  const sorted = [...words];
+  if (sort === 'newest') return sorted.sort((a, b) => b.createdAt - a.createdAt);
+  if (sort === 'oldest') return sorted.sort((a, b) => a.createdAt - b.createdAt);
+  if (sort === 'levelUp' || sort === 'levelDown') {
+    const direction = sort === 'levelUp' ? 1 : -1;
+    // Words on the same level stay newest first.
+    return sorted.sort((a, b) => direction * (a.level - b.level) || b.createdAt - a.createdAt);
+  }
+  const collator = new Intl.Collator(language, { sensitivity: 'base', numeric: true });
+  const direction = sort === 'az' ? 1 : -1;
+  return sorted.sort((a, b) => direction * collator.compare(a.term, b.term));
+}

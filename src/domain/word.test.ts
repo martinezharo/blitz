@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type Draft, draftProblems, emptyDraft, wordFields, wordSummary, type Word } from './word.ts';
+import { type Draft, draftProblems, emptyDraft, wordFields, sortWords, wordSummary, type Word } from './word.ts';
 
 const noun: Draft = { ...emptyDraft('Bank'), type: 'noun', article: 'die', plural: 'Bänke', translation: 'bench' };
 
@@ -78,5 +78,35 @@ describe('wordSummary', () => {
 
   it('falls back to the definition', () => {
     expect(wordSummary({ ...word, translation: null, plural: null })).toBe('A long seat');
+  });
+});
+
+describe('sortWords', () => {
+  const words = [
+    { term: 'Zug', level: 2, createdAt: 2 },
+    { term: 'Äpfel', level: 1, createdAt: 1 },
+    { term: 'Baum', level: 2, createdAt: 3 },
+    { term: 'Hund', level: 5, createdAt: 4 },
+  ];
+  const terms = (sort: Parameters<typeof sortWords>[1]) => sortWords(words, sort, 'de').map((word) => word.term);
+
+  it('puts the newest or the oldest first', () => {
+    expect(terms('newest')).toEqual(['Hund', 'Baum', 'Zug', 'Äpfel']);
+    expect(terms('oldest')).toEqual(['Äpfel', 'Zug', 'Baum', 'Hund']);
+  });
+
+  it('goes alphabetically either way, filing umlauts with their letter', () => {
+    expect(terms('az')).toEqual(['Äpfel', 'Baum', 'Hund', 'Zug']);
+    expect(terms('za')).toEqual(['Zug', 'Hund', 'Baum', 'Äpfel']);
+  });
+
+  it('goes by level either way, newest first within a level', () => {
+    expect(terms('levelUp')).toEqual(['Äpfel', 'Baum', 'Zug', 'Hund']);
+    expect(terms('levelDown')).toEqual(['Hund', 'Baum', 'Zug', 'Äpfel']);
+  });
+
+  it('leaves the given list as it was', () => {
+    sortWords(words, 'az', 'de');
+    expect(words.map((word) => word.term)).toEqual(['Zug', 'Äpfel', 'Baum', 'Hund']);
   });
 });
