@@ -6,24 +6,28 @@
  *
  * A word the model wrote meanings for gets exactly those, in that order. The
  * reverse dictionary, which finds a German word from its English translation,
- * is brought in line with them. Running it twice changes nothing the second time.
+ * is brought in line with them: the keys of the words that changed are written
+ * again. That is not byte for byte what a build from scratch gives (an English
+ * word that lost a German word does not get back one the cap had cut, and which
+ * English words count is told by the dictionary, not by the frequency list), but
+ * it finds the same words. Running it twice changes nothing the second time.
  * `scripts/build-dictionary.ts` applies the same files when it builds from scratch.
  */
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { type DictEntry, normalize, type ReverseEntry, shardKey } from '../src/domain/dictionary.ts';
-import { applyCurated, type CuratedLanguage, readCurated, reverseEntriesOf } from './dictionary/curated.ts';
+import { applyCurated, type CuratedLanguage, readCurated, REVERSE_PER_KEY, reverseEntriesOf } from './dictionary/curated.ts';
 
 const { values: args } = parseArgs({ options: { dict: { type: 'string', default: 'public/dict' } } });
 const DICT = resolve(args.dict!);
-/** English words that name one German word, kept per English word. As in build-dictionary.ts. */
-const REVERSE_PER_KEY = 6;
 
 async function readShards<T>(kind: string): Promise<Map<string, T[]>> {
   const dir = join(DICT, kind);
   const shards = new Map<string, T[]>();
-  for (const file of await readdir(dir)) shards.set(file.replace(/\.json$/, ''), JSON.parse(await readFile(join(dir, file), 'utf8')) as T[]);
+  // A dictionary without a reverse part (a partial copy) has none to bring in line.
+  const files = await readdir(dir).catch((error: NodeJS.ErrnoException) => (error.code === 'ENOENT' ? [] : Promise.reject(error)));
+  for (const file of files) shards.set(file.replace(/\.json$/, ''), JSON.parse(await readFile(join(dir, file), 'utf8')) as T[]);
   return shards;
 }
 
@@ -55,7 +59,8 @@ async function apply(language: CuratedLanguage): Promise<Set<string>> {
         const senses = curated.get(entry.w);
         if (!senses) return entry;
         const next = applyCurated(language, entry, { term: entry.w, senses });
-        if (next !== entry) touched.add(entry.w);
+        // Only a word whose meanings really changed has its reverse keys written again.
+        if (JSON.stringify(next.s) !== JSON.stringify(entry.s)) touched.add(entry.w);
         return next;
       }),
     );

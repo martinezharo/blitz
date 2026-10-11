@@ -42,6 +42,8 @@ const DICT = resolve('public/dict');
 const LANGUAGES: CuratedLanguage[] = args.language === 'both' ? ['de', 'en'] : [args.language as CuratedLanguage];
 /** Said by the CLI when the plan's allowance is spent. */
 const OUT_OF_QUOTA = /usage limit|rate limit|quota|too many requests|\b429\b|try again (?:in|at|later)/i;
+/** How many failures in a row that sound like it it takes to believe it. */
+const STRIKES_TO_STOP = 3;
 const ATTEMPTS = 3;
 
 interface Candidate {
@@ -89,6 +91,7 @@ function inputOf(language: CuratedLanguage, candidate: Candidate) {
 }
 
 let stopped = false;
+let strikes = 0;
 
 /** One run of the model over some words. Returns what it wrote, as raw data. */
 async function ask(language: CuratedLanguage, batch: Candidate[], label: string): Promise<unknown[]> {
@@ -118,9 +121,11 @@ async function ask(language: CuratedLanguage, batch: Candidate[], label: string)
     });
     child.stdin.end(prompt);
   }).catch((error: Error) => {
-    if (OUT_OF_QUOTA.test(error.message)) stopped = true;
+    // One odd message is not the end of the allowance; several in a row, with no batch between, are.
+    if (OUT_OF_QUOTA.test(error.message) && ++strikes >= STRIKES_TO_STOP) stopped = true;
     throw error;
   });
+  strikes = 0;
   const answer = JSON.parse(await readFile(out, 'utf8')) as { words?: unknown[] };
   return answer.words ?? [];
 }
@@ -172,7 +177,8 @@ async function run(language: CuratedLanguage) {
       const { done, failed } = await curate(language, batch.words, batch.label);
       // A batch cut short by the allowance is asked for again from the start next time.
       for (const word of done) merged.set(word.term, word.senses);
-      saving = saving.then(() => writeCurated(language, merged));
+      // A write that fails is reported and the next one carries everything: the words are in memory.
+      saving = saving.then(() => writeCurated(language, merged)).catch((error) => console.error(`[${language}] could not save: ${(error as Error).message}`));
       await saving;
       finished++;
       console.log(`[${language}] ${finished}/${batches.length} batches, ${merged.size} words · ${batch.label}: ${done.length}/${batch.words.length}${failed.length ? `, left out: ${failed.join(' ')}` : ''}`);

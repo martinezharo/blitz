@@ -55,6 +55,8 @@ interface Meaning {
   article: string | null;
   translation: string | null;
   hint: string | null;
+  /** The dictionary already has a definition written for learners. */
+  written?: string | null;
 }
 
 function describe(meaning: Meaning): string {
@@ -103,14 +105,17 @@ const ANSWER = {
 export function readDefinition(answer: unknown): string | null {
   const result = answer as { choices?: { message?: { content?: unknown } }[]; response?: unknown } | null;
   const content = result?.choices?.[0]?.message?.content ?? result?.response;
-  let value: unknown = content;
+  let value: unknown;
   if (typeof content === 'string') {
-    const match = content.match(/\{[\s\S]*\}/);
-    if (!match) return null;
-    try {
-      value = (JSON.parse(match[0]) as { definition?: unknown }).definition;
-    } catch {
-      return null;
+    // The whole answer is the JSON; failing that, the first object in it (models sometimes add words around it).
+    const attempts = [content, content.match(/\{[^{}]*\}/)?.[0] ?? ''];
+    for (const attempt of attempts) {
+      try {
+        value = (JSON.parse(attempt) as { definition?: unknown }).definition;
+        break;
+      } catch {
+        // Try the next.
+      }
     }
   } else {
     value = (content as { definition?: unknown } | undefined)?.definition;
@@ -154,28 +159,38 @@ async function findMeaning(request: Request, env: Env, query: URLSearchParams): 
     article: picked.a ?? null,
     translation: picked.g?.join(', ') ?? null,
     hint: picked.d ?? null,
+    written: picked.c ? (picked.d ?? null) : null,
   };
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
 
 /**
- * Takes one use from the day's allowances, for everyone and for this account,
+ * Takes one use from the day's allowances, for this account and for everyone,
  * before the model is asked: a failing model still costs a slot, so a loop of
- * retries cannot run it up. Returns whether there was room.
+ * retries cannot run it up. Returns whether there was room; when the day's
+ * allowance for everyone is gone, the account gets its slot back.
  */
 async function takeSlot(env: Env, userId: string): Promise<boolean> {
   const day = today();
-  const count = async (scope: string) =>
+  const take = async (scope: string, by: 1 | -1) =>
     (
-      await env.DB.prepare('INSERT INTO definition_usage (day, scope, count) VALUES (?, ?, 1) ON CONFLICT (day, scope) DO UPDATE SET count = count + 1 RETURNING count')
-        .bind(day, scope)
+      await env.DB.prepare(
+        'INSERT INTO definition_usage (day, scope, count) VALUES (?1, ?2, MAX(?3, 0)) ON CONFLICT (day, scope) DO UPDATE SET count = MAX(count + ?3, 0) RETURNING count',
+      )
+        .bind(day, scope, by)
         .first<{ count: number }>()
     )?.count ?? Infinity;
-  if ((await count(`user:${userId}`)) > DAILY_LIMIT.perAccount) return false;
-  if ((await count('all')) > DAILY_LIMIT.everyone) return false;
-  // Old days are not needed.
-  await env.DB.prepare('DELETE FROM definition_usage WHERE day < ?').bind(new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10)).run();
+  if ((await take(`user:${userId}`, 1)) > DAILY_LIMIT.perAccount) return false;
+  const all = await take('all', 1);
+  if (all > DAILY_LIMIT.everyone) {
+    await take(`user:${userId}`, -1);
+    return false;
+  }
+  // The first use of the day clears the days that are not needed any more.
+  if (all === 1) {
+    await env.DB.prepare('DELETE FROM definition_usage WHERE day < ?').bind(new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10)).run();
+  }
   return true;
 }
 
@@ -184,6 +199,8 @@ export async function definition(request: Request, env: Env): Promise<Response> 
   const query = new URL(request.url).searchParams;
   const meaning = await findMeaning(request, env, query);
   if (!meaning) return problem(404, 'Not a word of the dictionary');
+  // Already written for learners, and in the dictionary: nothing to ask the model.
+  if (meaning.written) return json({ definition: meaning.written });
 
   const key = await sha256(
     [meaning.language, normalize(meaning.term), meaning.type, meaning.article ?? '', normalize(meaning.translation ?? ''), normalize(meaning.hint ?? '')].join('|'),
@@ -192,6 +209,9 @@ export async function definition(request: Request, env: Env): Promise<Response> 
   const known = await stored();
   if (known) return json({ definition: known.definition });
 
+  // Writing costs the allowance, and a GET carries the cookie from other sites too.
+  const origin = request.headers.get('Sec-Fetch-Site');
+  if (origin && origin !== 'same-origin' && origin !== 'none') return problem(403, 'Cross-site request');
   const user = await currentUser(request, env);
   if (!user) return problem(401, 'Sign in to have a definition written');
   if (!(await takeSlot(env, user.id))) return problem(429, 'Too many definitions today');
@@ -207,6 +227,7 @@ export async function definition(request: Request, env: Env): Promise<Response> 
       chat_template_kwargs: { enable_thinking: false },
     });
     written = readDefinition(answer);
+    if (!written) console.error('Unusable definition:', JSON.stringify(answer)?.slice(0, 300));
   } catch (error) {
     console.error('Workers AI error:', error);
   }

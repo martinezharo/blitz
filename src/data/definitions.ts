@@ -1,7 +1,7 @@
 import type { Suggestion } from '../domain/dictionary.ts';
 import type { Language } from '../domain/word.ts';
 
-/** Asked for once per meaning in a session, whatever the answer. */
+/** Asked for once per meaning in a session, unless the failure may pass. */
 const asked = new Map<string, Promise<string | null>>();
 
 const GIVE_UP_AFTER = 20_000;
@@ -24,14 +24,16 @@ export function askDefinition(language: Language, suggestion: Suggestion): Promi
   if (!pending) {
     pending = fetch(`/api/definition?${key}`, { signal: AbortSignal.timeout(GIVE_UP_AFTER) })
       .then(async (response) => {
-        if (!response.ok) return null;
+        // Not signed in, over the day's allowance, or not a word of the dictionary:
+        // asking again would answer the same, so it is not asked again this session.
+        if (!response.ok) return { definition: null, final: [401, 403, 404, 429].includes(response.status) };
         const body = (await response.json()) as { definition?: unknown };
-        return typeof body.definition === 'string' ? body.definition : null;
+        return { definition: typeof body.definition === 'string' ? body.definition : null, final: true };
       })
-      .catch(() => null)
-      .then((definition) => {
-        // Asked again next time, unless it was answered.
-        if (!definition) asked.delete(key);
+      .catch(() => ({ definition: null, final: false }))
+      .then(({ definition, final }) => {
+        // A connection or server failure is worth another try next time.
+        if (!final) asked.delete(key);
         return definition;
       });
     asked.set(key, pending);

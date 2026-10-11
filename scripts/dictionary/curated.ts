@@ -32,6 +32,8 @@ export type CuratedLanguage = 'de' | 'en';
 /** What a definition may be, at most. The prompt asks for 70; a little slack is allowed. */
 export const MAX_DEFINITION_LENGTH = 80;
 export const MAX_CURATED_SENSES = 4;
+/** How many German words one English word names in the reverse dictionary. */
+export const REVERSE_PER_KEY = 6;
 const MAX_TRANSLATIONS = 3;
 const MAX_TRANSLATION_LENGTH = 30;
 const ARTICLES = new Set(['der', 'die', 'das']);
@@ -183,10 +185,8 @@ export async function readCurated(language: CuratedLanguage): Promise<Map<string
 /** Written in the order given, which is by how common the words are. */
 export async function writeCurated(language: CuratedLanguage, words: Iterable<[string, CuratedSense[]]>): Promise<void> {
   const { mkdir, writeFile } = await import('node:fs/promises');
-  const file: CuratedFile = {};
-  for (const [term, senses] of words) file[term] = senses.map(packSense);
   await mkdir(CURATED_DIR, { recursive: true });
   // One word to a line, so a change to a few words is a small diff.
-  const lines = Object.entries(file).map(([term, senses]) => `${JSON.stringify(term)}:${JSON.stringify(senses)}`);
+  const lines = [...words].map(([term, senses]) => `${JSON.stringify(term)}:${JSON.stringify(senses.map(packSense))}`);
   await writeFile(new URL(`${language}.json`, CURATED_DIR), `{\n${lines.join(',\n')}\n}\n`);
 }
