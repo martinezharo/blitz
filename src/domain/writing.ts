@@ -140,13 +140,23 @@ const ABBREVIATIONS = new Set([
 /** Words a German ordinal usually stands before: 1. Januar, 2. Mal, 3. Stock. */
 const AFTER_ORDINAL = /^(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember|mal|platz|stock|klasse|jahrhundert|geburtstag|tag|woche|stunde|kapitel)\b/i;
 
-/** Articles and possessives before an ordinal noun, with optional inflected adjectives. */
-const BEFORE_ORDINAL = /(?:^|[^\p{L}])(?:am|im|zum|zur|beim|vom|der|die|das|den|dem|des|ein|eine|einen|einem|einer|eines|(?:dies|jen|mein|dein|sein|ihr|unser|euer)(?:e|en|er|es|em)?)(?:[ \t]+\p{Ll}+(?:e|en|er|es|em))*[ \t]+$/iu;
+/** Articles and possessives directly before an ordinal or its adjectives. */
+const ORDINAL_DETERMINERS = /^(?:am|im|zum|zur|beim|vom|der|die|das|den|dem|des|ein|eine|einen|einem|einer|eines|(?:dies|jen|mein|dein|sein|ihr|unser|euer)(?:e|en|er|es|em)?)$/i;
 
 /** Use noun-phrase context for ordinals beyond the usual date/rank words. Bare cardinals still end sentences. */
-const ordinal = (number: string, next: string, before: string) =>
-  /^\d+$/.test(number) &&
-  ((/^\d{1,2}$/.test(number) && AFTER_ORDINAL.test(next)) || (/^\p{Lu}/u.test(next) && BEFORE_ORDINAL.test(before)));
+function ordinal(number: string, next: string, before: string): boolean {
+  if (!/^\d+$/.test(number)) return false;
+  if (/^\d{1,2}$/.test(number) && AFTER_ORDINAL.test(next)) return true;
+  if (!/^\p{Lu}/u.test(next)) return false;
+  const words = before.trimEnd().split(/\s+/);
+  for (let at = words.length - 1; at >= 0; at--) {
+    const word = words[at]!;
+    if (ORDINAL_DETERMINERS.test(word)) return true;
+    // Adjectives are lower case; a noun such as "die Nummer 2." ends this context.
+    if (!/^\p{Ll}+(?:e|en|er|es|em)$/u.test(word)) return false;
+  }
+  return false;
+}
 
 /**
  * Where each sentence of the text starts and ends: up to a line break, or a

@@ -107,7 +107,7 @@ describe('sentenceFixes', () => {
     expect(fixes[0]!.corrected.slice(...fixes[0]!.fixes[0]!.to)).toBe('bekommen');
   });
 
-  it.each(['Das war 1989.', 'Das kostet 2.', 'Wir fahren um 8.'])('still ends a sentence at a number that closes it: %s', (first) => {
+  it.each(['Das war 1989.', 'Das kostet 2.', 'Wir fahren um 8.', 'Das Auto hat die Nummer 2.'])('still ends a sentence at a number that closes it: %s', (first) => {
     const text = `${first} Damals wir hatten kein Handy.`;
     const { marks } = markMistakes(text, { language: 'de', mistakes: [mistake('Damals wir hatten', 'Damals hatten wir')] });
     expect(sentenceFixes(text, marks).map((fix) => fix.written)).toEqual(['Damals wir hatten kein Handy.']);
