@@ -85,6 +85,12 @@ describe('sentenceFixes', () => {
     expect(sentenceFixes(text, marks).map((fix) => fix.written)).toEqual(['Ich habe z.B. 3.5 Kilo Äpfel gekauft und es war ein gute Tag.']);
   });
 
+  it('does not end a sentence at spaced short forms or ordinals', () => {
+    const text = 'Am 1. Januar hat es z. B. viel geschneit und wir hat gespielt. Das war schön.';
+    const { marks } = markMistakes(text, { language: 'de', mistakes: [mistake('wir hat', 'wir haben')] });
+    expect(sentenceFixes(text, marks).map((fix) => fix.written)).toEqual(['Am 1. Januar hat es z. B. viel geschneit und wir hat gespielt.']);
+  });
+
   it('keeps a mark that runs across two sentences whole', () => {
     const text = 'Ich bin müde. weil ich spät ins Bett ging.';
     const { marks } = markMistakes(text, { language: 'de', mistakes: [mistake('müde. weil', 'müde, weil')] });

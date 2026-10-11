@@ -140,7 +140,8 @@ const ABBREVIATIONS = new Set([
 /**
  * Where each sentence of the text starts and ends: up to a line break, or a
  * . ! ? followed by a space or the end, with the space after. A full stop
- * inside a number (3.5) or after a short form (z.B., usw.) is not an end.
+ * inside a number (3.5), after a short form (z.B., z. B., usw.) or an
+ * ordinal (1. Januar), or before a word in lower case, is not an end.
  */
 function sentences(text: string): [number, number][] {
   const out: [number, number][] = [];
@@ -154,7 +155,14 @@ function sentences(text: string): [number, number][] {
       let after = at + 1;
       while (after < text.length && /[.!?"'»“”)]/.test(text[after]!)) after++;
       const word = text.slice(start, at).match(/(\S+)$/)?.[1]?.toLowerCase() ?? '';
-      const short = char === '.' && after === at + 1 && ABBREVIATIONS.has(word.replace(/^[^\p{L}]+/u, ''));
+      const bare = word.replace(/^[^\p{L}\p{N}]+/u, '');
+      const next = text.slice(after).match(/^\s*(\S)/)?.[1] ?? '';
+      // After a short form, a lone letter (z. B., d. h.) or a number (1. Januar), or
+      // before a word in lower case, a full stop is not the end.
+      const short =
+        char === '.' &&
+        after === at + 1 &&
+        (ABBREVIATIONS.has(bare) || /^\p{L}$/u.test(bare) || /^\d+$/.test(bare) || /\p{Ll}/u.test(next));
       if ((after === text.length || /\s/.test(text[after]!)) && !short) {
         end = after;
         while (end < text.length && /[ \t]/.test(text[end]!)) end++;
