@@ -1,6 +1,6 @@
 import type { Env } from './env.ts';
 import { cookie, json, problem, randomToken, readCookie, sameOrigin, sha256 } from './http.ts';
-import { startGoogleSignIn } from './auth.ts';
+import { startGoogleSignIn, type User } from './auth.ts';
 
 const VERIFIER = 'blitz_dev_verifier';
 const SESSION = 'blitz_session';
@@ -135,4 +135,17 @@ export async function proxyAccountRequest(request: Request, env: Env): Promise<R
     responseHeaders.append('Set-Cookie', cookie(SESSION, '', 0));
   }
   return new Response(result.body, { status: result.status, headers: responseHeaders });
+}
+
+/**
+ * Local development: who production says this browser is signed in as. For
+ * what runs on this Worker rather than production (checks, before they are
+ * deployed), with production's account.
+ */
+export async function upstreamUser(request: Request, env: Env): Promise<User | null> {
+  const me = new Request(new URL('/api/me', request.url), { headers: request.headers });
+  const response = await proxyAccountRequest(me, env);
+  if (!response.ok) return null;
+  const { account } = (await response.json()) as { account: User | null };
+  return account;
 }

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { type Change, MAX_PUSH, type SyncResponse, type WireWord } from '../domain/sync.ts';
+import { type Change, type ChangeKind, MAX_PUSH, type SyncResponse, type WireWord } from '../domain/sync.ts';
 import type { Word } from '../domain/word.ts';
 import { db } from './db.ts';
 
@@ -21,6 +21,8 @@ interface SyncState {
 }
 
 const ROUND_LIMIT = 50;
+/** Everything besides words that this device keeps in step. */
+const KINDS: ChangeKind[] = ['correction'];
 const DEBOUNCE_MS = 800;
 const INTERVAL_MS = 60_000;
 
@@ -122,7 +124,7 @@ async function round(): Promise<void> {
       const response = await request('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cursor, changes: sent }),
+        body: JSON.stringify({ cursor, changes: sent, kinds: KINDS }),
       });
       const result = (await response.json()) as SyncResponse;
       await applyRemote(sent, result);
@@ -151,7 +153,12 @@ async function request(url: string, init?: RequestInit): Promise<Response> {
 async function pendingChanges(): Promise<Change[]> {
   const pending = await db.pending.limit(MAX_PUSH).toArray();
   const changes: Change[] = [];
-  for (const { id, at } of pending) {
+  for (const { id, at, kind } of pending) {
+    if (kind === 'correction') {
+      const correction = await db.corrections.get(id);
+      changes.push({ id, updatedAt: correction?.updatedAt ?? at, kind, word: null, correction: correction ?? null });
+      continue;
+    }
     const word = await db.words.get(id);
     if (!word) {
       changes.push({ id, updatedAt: at, word: null });
@@ -192,6 +199,7 @@ async function applyRemote(sent: Change[], result: SyncResponse): Promise<void> 
   // as soon as they wait on anything but IndexedDB.
   const photos = new Map<string, Blob | null>();
   for (const change of result.changes) {
+    if (change.kind) continue;
     const key = change.word?.photo;
     if (!key || photos.has(key)) continue;
     const local = await db.words.get(change.id);
@@ -199,7 +207,7 @@ async function applyRemote(sent: Change[], result: SyncResponse): Promise<void> 
     photos.set(key, await downloadPhoto(key));
   }
 
-  await db.transaction('rw', db.words, db.pending, db.meta, async () => {
+  await db.transaction('rw', [db.words, db.corrections, db.pending, db.meta], async () => {
     // Sent writes are done, unless the word was written again meanwhile.
     for (const change of sent) {
       const pending = await db.pending.get(change.id);
@@ -207,6 +215,12 @@ async function applyRemote(sent: Change[], result: SyncResponse): Promise<void> 
     }
 
     for (const change of result.changes) {
+      if (change.kind === 'correction') {
+        await applyCorrection(change);
+        continue;
+      }
+      // Not a kind this device knows: left alone.
+      if (change.kind) continue;
       const pending = await db.pending.get(change.id);
       const local = await db.words.get(change.id);
       const localAt = Math.max(pending?.at ?? 0, local?.updatedAt ?? 0);
@@ -224,6 +238,16 @@ async function applyRemote(sent: Change[], result: SyncResponse): Promise<void> 
 
     await db.meta.put({ key: 'cursor', value: result.cursor });
   });
+}
+
+/** A correction from elsewhere, inside the sync transaction. Last write wins, as for words. */
+async function applyCorrection(change: Change): Promise<void> {
+  const pending = await db.pending.get(change.id);
+  const local = await db.corrections.get(change.id);
+  if (Math.max(pending?.at ?? 0, local?.updatedAt ?? 0) >= change.updatedAt) return;
+  if (pending) await db.pending.delete(change.id);
+  if (change.correction) await db.corrections.put(change.correction);
+  else await db.corrections.delete(change.id);
 }
 
 async function downloadPhoto(key: string): Promise<Blob | null> {
@@ -248,8 +272,9 @@ export async function flush(): Promise<boolean> {
 
 /** Forgets this account's words on this device. They stay in the account. */
 export async function clearLocalData(): Promise<void> {
-  await db.transaction('rw', db.words, db.pending, db.meta, async () => {
+  await db.transaction('rw', [db.words, db.corrections, db.pending, db.meta], async () => {
     await db.words.clear();
+    await db.corrections.clear();
     await db.pending.clear();
     await db.meta.clear();
   });

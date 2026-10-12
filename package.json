@@ -6,7 +6,7 @@
   "type": "module",
   "packageManager": "pnpm@12.10.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/migrate-local.ts && vite",
     "build": "pnpm check && vite build",
     "preview": "vite preview",
     "check": "tsc --noEmit && tsc --noEmit -p worker",
@@ -38,6 +38,6 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.3",
     "vitest": "^5.0.3",
-    "wrangler": "^4.148.0"
+    "wrangler": "^4.149.0"
   }
 }

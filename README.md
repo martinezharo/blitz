@@ -35,6 +35,46 @@ Words live in this browser's IndexedDB first, so the app works offline and
 without an account. Signing in with Google syncs them, pictures included, to
 every other device signed in to the same account.
 
+## Write
+
+The Write page is free writing in the language of the space. Press Check (or
+Ctrl/⌘+Enter) and `POST /api/correct` asks GPT-6 Luna with low reasoning to mark the mistakes:
+spelling in red, grammar in blue, each with the fix and a one-line reason.
+Only pieces really in the text are marked (`src/domain/writing.ts`), so the
+model cannot invent a mistake that is not there. A word written wrong can be
+added to the words once corrected, looked up in the dictionary by its
+dictionary form or its plural. Each sentence with a grammar mistake goes into
+the grammar history, as written and as it should be, and syncs like the words.
+
+Before asking the model, the browser guesses the language from its most common
+little words (`src/domain/detect-language.ts`); the model says what it thinks
+too. A text in the other language Blitz has can be moved there and checked; one
+in another language, or no language at all, is not checked. Checking sends what
+was typed to the model, so it is for accounts only, up to 1,500 characters,
+with its own daily allowance (`worker/correct.ts`). The text being written is
+kept on the device, per language.
+
+Writing checks use the OpenAI Responses API, a strict JSON schema and the
+conservative prompt in `worker/correction-prompt.ts`. It preserves valid
+metaphors and independent subjects and checks repeated errors separately.
+The Worker maps the model's `original/replacement` fields to the existing
+`wrong/right` response and history format. Calls have a 30-second timeout,
+a 4,000-token output cap, no automatic retries and `store: false`.
+The daily limits remain 30 per account and 150 overall; writing checks are
+billed through OpenAI separately from the definitions' Workers AI allowance.
+Configure `OPENAI_API_KEY` in `.dev.vars` locally and with
+`pnpm wrangler secret put OPENAI_API_KEY` for the deployed Worker.
+Worker Previews keep separate secrets: configure their shared base with
+`pnpm wrangler preview base-config secret put OPENAI_API_KEY` for new previews.
+For an existing preview, also use
+`pnpm wrangler preview secret put OPENAI_API_KEY --name <preview-name>`.
+Wrangler 4.149.0 or later preserves those secrets across subsequent deployments;
+earlier versions could discard them on a code build.
+
+On phones, a bar along the bottom holds Words, Practice, Write and the menu
+that the top-right corner has on wide screens; wide screens switch pages from
+a pill at the top.
+
 ## Install
 
 Blitz is an installable web app. Where the browser offers it, an install
@@ -111,9 +151,11 @@ reads the word from the dictionary itself, so the browser never sends text for
 the model to read, and a daily allowance (per account and overall) keeps it
 inside Workers AI's free neurons. Guests see what is already written.
 
-`pnpm dev` runs the Worker too, on local D1 and R2 (`.wrangler/state`). The AI
-binding always runs on Cloudflare, so development needs `wrangler login`. Apply
-the schema once with `pnpm wrangler d1 migrations apply blitz --local`.
+`pnpm dev` applies pending migrations to the local database before starting
+Vite, then runs the Worker too, on local D1 and R2 (`.wrangler/state`). Each
+worktree has its own local database, including when development sign-in uses
+the production account. The AI binding always runs on Cloudflare, so
+development needs `wrangler login`.
 Google sign-in needs `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, in
 `.dev.vars` locally and as Worker secrets in production. In isolated local
 mode, Google only accepts HTTPS or `localhost` redirects; the authorised
@@ -184,7 +226,7 @@ repeated `callMain` calls on the same instance eventually corrupt memory.
 
 ## Sync
 
-Each local write also leaves a row in `pending`. A sync round sends those to
+Words and the grammar history sync the same way. Each local write also leaves a row in `pending`. A sync round sends those to
 `POST /api/sync` and pulls everything past the device's cursor; each word
 resolves on its own, last write (`updatedAt`) wins, and deletions travel as
 changes. Pictures go to R2 under the SHA-256 of their bytes. Signing out sends
@@ -195,9 +237,9 @@ what is left and clears the device; the words stay in the account.
 ```text
 src/domain/    Framework-free rules: languages, word types, the sync wire format
 src/data/      IndexedDB (Dexie), sync, account, photo resizing, preferences
-src/features/  Screens: word list and sheet, language menu, account, practice entry
+src/features/  Screens: word list and sheet, writing, navigation, language menu, account, practice entry
 src/shared/    Reusable UI: the sheet, the morph into it, object URLs, sound effects, speech
-worker/        Cloudflare Worker: Google sign-in, sessions, sync (D1), photos (R2)
+worker/        Cloudflare Worker: Google sign-in, sessions, sync (D1), photos (R2), definitions (Workers AI), writing checks (OpenAI)
 migrations/    D1 schema
 mockups/       Static design sketches that led here
 ```

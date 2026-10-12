@@ -90,4 +90,33 @@ describe('development sign-in', () => {
       vi.stubGlobal('fetch', productionFetch);
     }
   });
+
+  it("checks writing on this Worker with production's account", async () => {
+    const localEnv = { ...server.env, OPENAI_API_KEY: 'test-openai-key', DEVELOPMENT_UPSTREAM: 'https://blitz.test' };
+    const token = await server.signUp('writer');
+    const productionFetch = globalThis.fetch;
+    // Production only answers who is signed in; it knows nothing of checks.
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input instanceof Request ? input.url : input));
+      if (url.pathname === '/api/me') return server.as(null)(input, init);
+      if (url.href === 'https://api.openai.com/v1/responses') {
+        return new Response(JSON.stringify({ status: 'completed', output: [{ type: 'message', status: 'completed', content: [{ type: 'output_text', text: '{"language":"en","mistakes":[]}' }] }] }));
+      }
+      return new Response('Not found', { status: 404 });
+    });
+    const check = (cookie?: string) =>
+      worker.fetch(new Request(`${origin}/api/correct`, {
+        method: 'POST',
+        headers: { Origin: origin, 'Content-Type': 'application/json', ...(cookie ? { Cookie: cookie } : {}) },
+        body: JSON.stringify({ language: 'en', text: 'We were late.' }),
+      }) as never, localEnv);
+    try {
+      expect((await check()).status).toBe(401);
+      const response = await check(`blitz_session=${token}`);
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ language: 'en', marks: [] });
+    } finally {
+      vi.stubGlobal('fetch', productionFetch);
+    }
+  });
 });

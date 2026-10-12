@@ -1,0 +1,696 @@
+.page {
+  --spelling: var(--danger);
+  --grammar: light-dark(#2f6fdb, #6da0ff);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-black);
+  letter-spacing: -0.03em;
+}
+
+.lede {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: var(--text-md);
+  line-height: 1.45;
+}
+
+/* The page written on: one card for the text and what to do with it. */
+/* An idea to write about, only if one is wanted: a quiet aside, not a task. */
+.prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1.3rem;
+  padding: 0.65rem 0.55rem 0.65rem 0.85rem;
+  border-radius: var(--radius-tail-lg);
+  background: color-mix(in srgb, var(--accent) 9%, var(--background));
+}
+
+/* A lit bulb. */
+.bulb {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: none;
+  align-self: flex-start;
+  margin-top: 0.1rem;
+  color: var(--accent);
+  stroke-width: 2.4;
+}
+
+.prompt p {
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.idea {
+  display: block;
+  /* The accent, deepened towards the text so small type reads on the tint (5.6:1 in light). */
+  color: color-mix(in srgb, var(--accent) 70%, var(--foreground));
+  font-size: var(--text-sm);
+  font-weight: var(--weight-strong);
+}
+
+.prompt strong {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-strong);
+}
+
+.prompt small {
+  display: block;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-body);
+}
+
+.another {
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--background);
+  color: var(--muted);
+  cursor: pointer;
+  transition: background var(--motion-standard), color var(--motion-standard), transform var(--motion-spring);
+}
+
+.another:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+  transform: rotate(-20deg);
+}
+
+.another:active {
+  transform: rotate(-20deg) scale(0.9);
+}
+
+.another svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  stroke-width: 2.4;
+}
+
+.paper {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.8rem;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-tail-xl);
+  background: var(--background);
+  transition: border-color var(--motion-standard), box-shadow var(--motion-standard);
+}
+
+.paper:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.3rem color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+/* Ruled like a notebook: a line under every line of text. */
+.field,
+.marked {
+  --rule: 2.1rem;
+  min-height: calc(5 * var(--rule) + 1rem);
+  margin: 0;
+  padding: 0.55rem 1.15rem 0.45rem;
+  /* Tile one rule: a repeating gradient can drop its 1px lines when the
+     rem-based line height falls between device pixels. */
+  background-image: linear-gradient(
+    to bottom,
+    transparent calc(100% - 1px),
+    var(--line) 0
+  );
+  background-size: 100% var(--rule);
+  background-repeat: repeat-y;
+  background-origin: content-box;
+  background-clip: content-box;
+  font-size: max(var(--text-field-min), 1.15rem);
+  font-weight: 750;
+  line-height: var(--rule);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.field {
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  background-color: transparent;
+  caret-color: var(--accent);
+  resize: none;
+  field-sizing: content;
+}
+
+.field:focus-visible {
+  outline: none;
+}
+
+.field::placeholder {
+  color: var(--faint);
+}
+
+.paper[data-checking] .field {
+  color: var(--muted);
+}
+
+/* A marked piece: tinted in its kind's colour, underlined, and a button to its card. */
+.mark {
+  padding: 0 0.1rem;
+  border: 0;
+  /* Paint the underline without making marked rows taller than the rules. */
+  box-shadow: inset 0 -2px var(--kind);
+  border-radius: 0.3rem 0.3rem 0 0;
+  background: color-mix(in srgb, var(--kind) 12%, transparent);
+  font: inherit;
+  cursor: pointer;
+  transition: background var(--motion-standard);
+}
+
+.mark[data-kind='spelling'],
+.card[data-kind='spelling'],
+.summary [data-kind='spelling'] {
+  --kind: var(--spelling);
+}
+
+.mark[data-kind='grammar'],
+.card[data-kind='grammar'],
+.summary [data-kind='grammar'] {
+  --kind: var(--grammar);
+}
+
+.mark:hover,
+.mark[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--kind) 26%, transparent);
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.count {
+  margin-right: auto;
+  padding-left: 0.7rem;
+  color: var(--faint);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.count[data-near] {
+  color: var(--accent);
+}
+
+/* The practice button's look, smaller: dark, with the accent circle. */
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.35rem 0.35rem 0.35rem 1.1rem;
+  border: 0;
+  border-radius: var(--radius-tail-lg);
+  background: var(--button-background);
+  color: var(--button-foreground);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-black);
+  cursor: pointer;
+  transition: transform var(--motion-spring), box-shadow var(--motion-standard), background var(--motion-standard), color var(--motion-standard);
+}
+
+.check:hover:not([aria-disabled='true']) {
+  box-shadow: 0 0.75rem 1.5rem rgb(15 16 13 / 18%);
+  transform: translateY(-2px) rotate(-0.4deg);
+}
+
+.check:hover:not([aria-disabled='true']) .checkIcon {
+  transform: rotate(-12deg);
+}
+
+.check:active:not([aria-disabled='true']) {
+  transform: scale(0.97);
+}
+
+/* Nothing written yet: switched off, not faded. */
+.check[aria-disabled='true'] {
+  background: var(--icon-background);
+  color: var(--faint);
+  cursor: default;
+}
+
+.check[aria-disabled='true'] .checkIcon {
+  background: var(--line);
+  color: var(--faint);
+}
+
+.checkIcon {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  transition: transform var(--motion-spring), background var(--motion-standard);
+}
+
+.checkIcon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  stroke-width: 2.6;
+}
+
+.spin {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.95rem;
+  border: 0;
+  border-radius: var(--radius-tail-md);
+  background: var(--icon-background);
+  color: var(--foreground);
+  font-size: var(--text-md);
+  font-weight: var(--weight-black);
+  cursor: pointer;
+  transition: background var(--motion-standard), transform var(--motion-spring);
+}
+
+.quiet:hover {
+  background: var(--icon-hover);
+}
+
+.quiet:active {
+  transform: scale(0.97);
+}
+
+.quiet svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--muted);
+  stroke-width: 2.6;
+}
+
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  margin: 0.8rem 0 0;
+  padding: 0.75rem 0.75rem 0.75rem 1rem;
+  border-radius: var(--radius-tail-md);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--foreground);
+  font-size: var(--text-md);
+  font-weight: var(--weight-strong);
+  line-height: 1.4;
+}
+
+.notice p {
+  flex: 1 1 14rem;
+  margin: 0;
+}
+
+.notice .quiet {
+  background: var(--background);
+}
+
+.clean {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 1.2rem 0 0;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-tail-lg);
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+  font-weight: var(--weight-black);
+}
+
+.clean svg {
+  width: 1.3rem;
+  height: 1.3rem;
+  color: var(--success);
+  stroke-width: 3;
+}
+
+.results {
+  margin-top: 1.4rem;
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.75rem;
+}
+
+.summary strong {
+  margin-right: 0.3rem;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-black);
+}
+
+.summary span {
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-tail-pill);
+  background: color-mix(in srgb, var(--kind) 13%, transparent);
+  color: var(--kind);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-black);
+}
+
+.cards {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  position: relative;
+  padding: 0.85rem 1rem 0.9rem 1.15rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-tail-lg);
+  background: var(--background);
+  scroll-margin: 6rem 0 7rem;
+  transition: border-color var(--motion-standard), box-shadow var(--motion-standard);
+}
+
+/* A stripe of the kind's colour down the side. */
+.card::before {
+  position: absolute;
+  inset: 0.85rem auto 0.85rem 0;
+  width: 0.22rem;
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  background: var(--kind);
+  content: '';
+}
+
+.card[aria-current] {
+  border-color: color-mix(in srgb, var(--kind) 55%, var(--line));
+  box-shadow: 0 0.4rem 1.2rem color-mix(in srgb, var(--kind) 14%, transparent);
+}
+
+.kind {
+  color: var(--kind);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-black);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.change {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+  margin: 0.15rem 0 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-black);
+}
+
+.change s {
+  color: var(--muted);
+  text-decoration-color: color-mix(in srgb, var(--kind) 70%, transparent);
+  text-decoration-thickness: 2px;
+}
+
+.change > span {
+  color: var(--faint);
+}
+
+.change ins {
+  color: var(--success);
+  text-decoration: none;
+}
+
+.why {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: var(--text-md);
+  line-height: 1.4;
+}
+
+.save {
+  margin-top: 0.65rem;
+}
+
+.add,
+.saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem 0.5rem 0.55rem;
+  border-radius: var(--radius-tail-pill);
+  font-size: var(--text-md);
+  font-weight: var(--weight-strong);
+}
+
+.add {
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 0.35rem 0.9rem var(--accent-shadow);
+  cursor: pointer;
+  transition: transform var(--motion-spring);
+}
+
+.add:active {
+  transform: scale(0.97);
+}
+
+.saved {
+  background: var(--icon-background);
+  color: var(--muted);
+}
+
+.add svg,
+.saved svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: none;
+  stroke-width: 2.8;
+}
+
+.saved svg {
+  color: var(--success);
+}
+
+.add strong,
+.saved strong {
+  font-weight: var(--weight-black);
+}
+
+.saved strong {
+  color: var(--foreground);
+}
+
+/* The history: every sentence that had a grammar mistake. */
+.history {
+  margin-top: 2.6rem;
+  padding-top: 1.6rem;
+  border-top: 2px solid var(--line);
+}
+
+.historyTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-black);
+  letter-spacing: -0.02em;
+}
+
+.historyCount {
+  padding: 0.1rem 0.55rem;
+  border-radius: var(--radius-tail-pill);
+  background: var(--icon-background);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.entries {
+  display: grid;
+  gap: 0.7rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry {
+  padding: 0.9rem 1rem 0.55rem;
+  border-radius: var(--radius-tail-lg);
+  background: var(--icon-background);
+}
+
+.written,
+.corrected {
+  position: relative;
+  margin: 0;
+  padding-left: 1.4rem;
+  font-size: var(--text-lg);
+  line-height: 1.5;
+}
+
+.written {
+  color: var(--muted);
+}
+
+.corrected {
+  margin-top: 0.25rem;
+  font-weight: var(--weight-strong);
+}
+
+.written::before,
+.corrected::before {
+  position: absolute;
+  left: 0;
+  font-weight: var(--weight-black);
+}
+
+.written::before {
+  color: var(--danger);
+  content: '✕';
+}
+
+.corrected::before {
+  color: var(--success);
+  content: '✓';
+}
+
+.was {
+  background: none;
+  color: var(--foreground);
+  text-decoration: underline wavy var(--danger);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.2em;
+}
+
+.now {
+  padding: 0 0.12rem;
+  border-radius: 0.3rem;
+  background: color-mix(in srgb, var(--success) 18%, transparent);
+  color: inherit;
+}
+
+.whys {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.65rem 0 0;
+  padding: 0.6rem 0 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+  font-size: var(--text-md);
+  line-height: 1.4;
+}
+
+.whys strong {
+  margin-right: 0.45rem;
+  font-weight: var(--weight-black);
+}
+
+.whys span {
+  color: var(--muted);
+}
+
+.entryFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.35rem;
+  color: var(--faint);
+  font-size: var(--text-sm);
+}
+
+.forget {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem;
+  border: 0;
+  border-radius: var(--radius-tail-md);
+  background: transparent;
+  color: var(--faint);
+  font-weight: var(--weight-black);
+  cursor: pointer;
+  transition: background var(--motion-standard), color var(--motion-standard);
+}
+
+.forget:hover {
+  color: var(--danger);
+}
+
+.forget[data-confirming] {
+  padding-inline: 0.6rem;
+  background: var(--danger);
+  /* As the word sheet's delete: the page colour reads on the danger red in both themes. */
+  color: var(--background);
+}
+
+.forget svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.more {
+  margin-top: 0.8rem;
+}
+
+/* The language sheet. */
+.sheetText {
+  margin: 0.2rem 0 0.4rem;
+  color: var(--muted);
+  font-size: var(--text-lg);
+  line-height: 1.5;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.95rem 1.3rem;
+  border: 0;
+  border-radius: var(--radius-tail-lg);
+  font-size: 1rem;
+  font-weight: var(--weight-black);
+  cursor: pointer;
+  transition: transform var(--motion-spring);
+}
+
+.button:active {
+  transform: scale(0.97);
+}
+
+.buttonQuiet {
+  background: var(--icon-background);
+}
+
+.buttonMain {
+  min-width: 0;
+  flex: 1;
+  background: var(--button-background);
+  color: var(--button-foreground);
+  white-space: nowrap;
+}

@@ -4,18 +4,21 @@ import { useLanguage, useSounds, useTheme, useWordSort } from './data/preference
 import { fillCounterparts, useWords } from './data/words.ts';
 import type { Word } from './domain/word.ts';
 import styles from './app.module.css';
-import { AccountBadge } from './features/account/account-badge.tsx';
+import { storeDraft } from './data/writing.ts';
+import { AccountBadge, AppMenu } from './features/account/account-badge.tsx';
 import { AuthModal } from './features/account/auth-modal.tsx';
 import { InstallButton } from './features/account/install.tsx';
 import { LanguageMenu } from './features/language/language-menu.tsx';
 import { ListsPill } from './features/lists/lists-entry.tsx';
 import { ListsPage } from './features/lists/lists-page.tsx';
+import { TabBar, type View, ViewSwitch } from './features/nav/nav.tsx';
 import { PreferencesModal } from './features/preferences/preferences-modal.tsx';
 import { PracticeDock } from './features/practice/practice-dock.tsx';
 import { PracticeSession } from './features/practice/practice-session.tsx';
 import { Composer, composerAddButton, type NewWord } from './features/words/composer.tsx';
 import { WordList, wordRow } from './features/words/word-list.tsx';
 import { WordSheet } from './features/words/word-sheet.tsx';
+import { WritingPage } from './features/writing/writing-page.tsx';
 import { sounds } from './shared/sound.ts';
 import { morph, morphEndsIn, waitFor } from './shared/ui/morph.ts';
 import { openSheetEnds } from './shared/ui/sheet.tsx';
@@ -55,6 +58,12 @@ export function App() {
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [practicing, setPracticing] = useState(false);
   const [browsingLists, setBrowsingLists] = useState(false);
+  const [view, setView] = useState<View>('words');
+  // A text just moved here from the other language's page, to be checked on arrival.
+  const [autoCheck, setAutoCheck] = useState(false);
+  useEffect(() => {
+    if (autoCheck) setAutoCheck(false);
+  }, [autoCheck]);
 
   useEffect(() => {
     if (words) void fillCounterparts(words);
@@ -76,12 +85,23 @@ export function App() {
       from,
       () => setEditing(null),
       async () => {
+        // Words added while writing have no row on screen to settle into.
+        if (view !== 'words') return null;
         if (landOn) return morphEndsIn(await waitFor(() => wordRow(landOn)));
         if (fresh) return morphEndsIn(composerAddButton());
         return null;
       },
     );
   }
+
+  const openSignIn = () => {
+    sounds.open();
+    setAuth({ open: true, error: null });
+  };
+  const openPreferences = () => {
+    sounds.open();
+    setPreferencesOpen(true);
+  };
 
   function openLists() {
     sounds.open();
@@ -95,36 +115,51 @@ export function App() {
       </div>
       <div className={styles.cornerEnd}>
         <InstallButton />
-        <AccountBadge
-          state={account}
-          onSignIn={() => {
-            sounds.open();
-            setAuth({ open: true, error: null });
-          }}
-          onSignOut={signOut}
-          onOpenPreferences={() => {
-            sounds.open();
-            setPreferencesOpen(true);
-          }}
-        />
+        <AccountBadge state={account} onSignIn={openSignIn} onSignOut={signOut} onOpenPreferences={openPreferences} />
       </div>
+      <ViewSwitch view={view} onView={setView} />
 
       <main className={styles.page}>
-        <Composer language={language} onAdd={setEditing} />
-        {words && words.length > 0 && <ListsPill onOpen={openLists} />}
-        {words && (
-          <WordList
+        {view === 'words' ? (
+          <>
+            <Composer language={language} onAdd={setEditing} />
+            {words && words.length > 0 && <ListsPill onOpen={openLists} />}
+            {words && (
+              <WordList
+                language={language}
+                words={words}
+                sort={sort}
+                onSortChange={setSort}
+                onOpen={(word) => setEditing({ word })}
+                onBrowseLists={openLists}
+              />
+            )}
+          </>
+        ) : (
+          <WritingPage
+            // Each language has its own page and its own text.
+            key={language}
             language={language}
             words={words}
-            sort={sort}
-            onSortChange={setSort}
-            onOpen={(word) => setEditing({ word })}
-            onBrowseLists={openLists}
+            account={account}
+            onSignIn={openSignIn}
+            onAddWord={(word, from) => {
+              sounds.open();
+              morph({ box: from }, () => setEditing(word), openSheetEnds);
+            }}
+            onSwitchLanguage={(to, text) => {
+              storeDraft(to, { text, marks: null });
+              setLanguage(to);
+              setAutoCheck(true);
+            }}
+            autoCheck={autoCheck}
           />
         )}
       </main>
 
-      <PracticeDock words={active?.length ?? 0} onStart={() => setPracticing(true)} />
+      {view === 'words' && <PracticeDock words={active?.length ?? 0} onStart={() => setPracticing(true)} />}
+      <TabBar view={view} onView={setView} practice={(active?.length ?? 0) > 0} onPractice={() => setPracticing(true)} />
+      <AppMenu state={account} onSignIn={openSignIn} onSignOut={signOut} onOpenPreferences={openPreferences} />
 
       {practicing && active && (
         <PracticeSession

@@ -1,5 +1,7 @@
 .dock {
   position: fixed;
+  /* Phones start practice from the tab bar. */
+  display: none;
   left: 50%;
   bottom: max(1rem, env(safe-area-inset-bottom));
   z-index: 50;
@@ -60,4 +62,10 @@
 .go svg {
   width: 1.4rem;
   height: 1.4rem;
+}
+
+@media (min-width: 48rem) {
+  .dock {
+    display: block;
+  }
 }

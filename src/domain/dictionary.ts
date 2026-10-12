@@ -186,6 +186,22 @@ export function suggest(typed: string, files: readonly (readonly DictEntry[])[])
   return out;
 }
 
+/**
+ * The word whose plural is `form` (Hunde: der Hund), from the files it would
+ * be in. For a correction that names a word as it was used, not as the
+ * dictionary lists it.
+ */
+export function wordOfPlural(form: string, entries: readonly DictEntry[]): Suggestion | null {
+  const query = normalize(form);
+  let best: Match | null = null;
+  for (const entry of entries) {
+    const position = entry.s.findIndex((sense) => sense.p !== undefined && normalize(sense.p) === query);
+    if (position === -1 || (best && best.entry.r <= entry.r)) continue;
+    best = { entry, sense: entry.s[position]!, via: 0, exact: true, position };
+  }
+  return best && suggestionOf(best);
+}
+
 /** The article and word, as they read in a list: "die Bank". */
 export function suggestionTitle(language: Language, suggestion: Suggestion): string {
   const article = LANGUAGES[language].articles && suggestion.article;

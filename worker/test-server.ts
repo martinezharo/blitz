@@ -10,7 +10,7 @@ import worker from './index.ts';
  */
 export async function testServer(overrides: Partial<Env> = {}) {
   const proxy = await getPlatformProxy<Env>({ configPath: 'wrangler.jsonc', persist: false, remoteBindings: false });
-  const env = { ...proxy.env, GOOGLE_CLIENT_ID: 'client', GOOGLE_CLIENT_SECRET: 'secret', DEVELOPMENT_BRIDGE_SECRET: 'test-bridge-secret', DEVELOPMENT_UPSTREAM: undefined, ...overrides } as Env;
+  const env = { ...proxy.env, GOOGLE_CLIENT_ID: 'client', GOOGLE_CLIENT_SECRET: 'secret', OPENAI_API_KEY: undefined, DEVELOPMENT_BRIDGE_SECRET: 'test-bridge-secret', DEVELOPMENT_UPSTREAM: undefined, ...overrides } as Env;
 
   for (const file of readdirSync('migrations').sort()) {
     const sql = readFileSync(`migrations/${file}`, 'utf8').replace(/--.*$/gm, '');

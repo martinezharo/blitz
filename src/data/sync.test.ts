@@ -6,6 +6,7 @@ import { type Draft, emptyDraft } from '../domain/word.ts';
 import { db } from './db.ts';
 import { clearLocalData, startSync, stopSync, syncNow } from './sync.ts';
 import { addWord, deleteWord, updateWord } from './words.ts';
+import { deleteCorrection, saveCorrections } from './writing.ts';
 
 const bank: Draft = { ...emptyDraft('Bank'), type: 'noun', article: 'die', translation: 'bench' };
 
@@ -35,6 +36,11 @@ afterEach(() => stopSync());
 
 async function remote(cursor = 0, changes: Change[] = []): Promise<SyncResponse> {
   const response = await otherDevice('/api/sync', { method: 'POST', body: JSON.stringify({ cursor, changes }) });
+  return response.json() as Promise<SyncResponse>;
+}
+
+async function remoteKinds(): Promise<SyncResponse> {
+  const response = await otherDevice('/api/sync', { method: 'POST', body: JSON.stringify({ cursor: 0, changes: [], kinds: ['correction'] }) });
   return response.json() as Promise<SyncResponse>;
 }
 
@@ -100,6 +106,41 @@ describe('sync', () => {
     const pulled = await db.words.get(word.id);
     expect(pulled?.photoKey).toBe(key);
     expect(await pulled?.photo?.text()).toBe('jpeg bytes');
+  });
+
+  it('sends the grammar history, and its deletions', async () => {
+    await signIn();
+    await saveCorrections('de', [
+      { written: 'Ich habe ein Hund.', corrected: 'Ich habe einen Hund.', fixes: [{ wrong: 'ein Hund', right: 'einen Hund', why: '', from: [9, 17], to: [9, 19] }] },
+    ]);
+    await syncNow();
+    const sent = (await remoteKinds()).changes;
+    expect(sent.map((change) => [change.kind, change.correction?.corrected])).toEqual([['correction', 'Ich habe einen Hund.']]);
+    // Checking the same text again does not keep it twice.
+    await saveCorrections('de', [{ written: 'Ich habe ein Hund.', corrected: 'Ich habe einen Hund.', fixes: [] }]);
+    expect(await db.corrections.count()).toBe(1);
+
+    await deleteCorrection(sent[0]!.id);
+    await syncNow();
+    expect((await remoteKinds()).changes[0]?.correction).toBeNull();
+    expect(await db.pending.count()).toBe(0);
+  });
+
+  it('pulls the grammar history from another device', async () => {
+    await signIn();
+    const now = Date.now();
+    const id = crypto.randomUUID();
+    await remote(0, [
+      {
+        id,
+        updatedAt: now,
+        kind: 'correction',
+        word: null,
+        correction: { id, language: 'en', written: 'We was late.', corrected: 'We were late.', fixes: [], createdAt: now, updatedAt: now },
+      },
+    ]);
+    await syncNow();
+    expect(await db.corrections.get(id)).toMatchObject({ corrected: 'We were late.' });
   });
 
   it("drops another account's words before syncing", async () => {
