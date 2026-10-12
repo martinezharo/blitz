@@ -65,9 +65,11 @@ billed through OpenAI separately from the definitions' Workers AI allowance.
 Configure `OPENAI_API_KEY` in `.dev.vars` locally and with
 `pnpm wrangler secret put OPENAI_API_KEY` for the deployed Worker.
 Worker Previews keep separate secrets: configure their shared base with
-`pnpm wrangler preview base-config secret put OPENAI_API_KEY`. A secret added
-only to one preview can be replaced by the next build; the base supplies it to
-subsequent preview deployments.
+`pnpm wrangler preview base-config secret put OPENAI_API_KEY` for new previews.
+For an existing preview, also use
+`pnpm wrangler preview secret put OPENAI_API_KEY --name <preview-name>`.
+Wrangler 4.149.0 or later preserves those secrets across subsequent deployments;
+earlier versions could discard them on a code build.
 
 On phones, a bar along the bottom holds Words, Practice, Write and the menu
 that the top-right corner has on wide screens; wide screens switch pages from
