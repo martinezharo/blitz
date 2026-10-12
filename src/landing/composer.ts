@@ -76,20 +76,22 @@ export function startComposer(root: HTMLElement, startWith: string) {
   async function search() {
     const typed = input.value;
     const ask = ++asked;
-    const found = typed.trim() ? await lookup(language, typed) : [];
+    // What it finds belongs to this language, even if the switch moves on meanwhile.
+    const searched = language;
+    const found = typed.trim() ? await lookup(searched, typed) : [];
     // A slower answer to an older keystroke changes nothing.
     if (ask !== asked) return;
     list.replaceChildren(
       ...found.slice(0, SHOWN).map((suggestion) => {
-        const key = `${language}|${suggestion.article}|${suggestion.term}|${suggestion.translation ?? suggestion.definition}`;
+        const key = `${searched}|${suggestion.article}|${suggestion.term}|${suggestion.translation ?? suggestion.definition}`;
         const done = added.has(key);
         const button = h(
           'button',
-          { type: 'button', class: 'suggestion', 'data-article': suggestion.article ?? '', 'aria-label': `Add ${suggestionTitle(language, suggestion)}` },
-          ...wordRow(language, suggestion, h('span', { class: 'suggestion-add' }, icon(done ? 'check' : 'plus'))),
+          { type: 'button', class: 'suggestion', 'data-article': suggestion.article ?? '', 'aria-label': `Add ${suggestionTitle(searched, suggestion)}` },
+          ...wordRow(searched, suggestion, h('span', { class: 'suggestion-add' }, icon(done ? 'check' : 'plus'))),
         ) as HTMLButtonElement;
         button.disabled = done;
-        button.addEventListener('click', () => void add(suggestion, key, button));
+        button.addEventListener('click', () => void add(searched, suggestion, key, button));
         return h('li', {}, button);
       }),
     );
@@ -97,7 +99,7 @@ export function startComposer(root: HTMLElement, startWith: string) {
       typed.trim().length < 2 ? '' : found.length === 0 ? `Nothing for “${typed.trim()}” in the dictionary. In Blitz you can add it with your own meaning.` : '';
   }
 
-  async function add(suggestion: Suggestion, key: string, button: HTMLButtonElement) {
+  async function add(language: Language, suggestion: Suggestion, key: string, button: HTMLButtonElement) {
     button.disabled = true;
     try {
       const { addWord } = await import('../data/words.ts');
@@ -125,6 +127,7 @@ export function startComposer(root: HTMLElement, startWith: string) {
     button.addEventListener('click', () => {
       language = button.dataset.language as Language;
       showLanguage();
+      list.replaceChildren();
       void search();
       input.focus();
     });

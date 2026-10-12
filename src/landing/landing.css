@@ -207,6 +207,8 @@ main > section,
 /* A warm light over the top of the page, as on Akin's. */
 body {
   position: relative;
+  /* So the light below paints over the body's own background, not under it. */
+  isolation: isolate;
   overflow-x: clip;
 }
 
