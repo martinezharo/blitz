@@ -11,6 +11,8 @@ import { emptyDraft, LANGUAGES, type Language } from '../domain/word.ts';
 
 const LANGUAGE_KEY = 'blitz.language';
 const SHOWN = 3;
+/** A word half typed in each language, so the composer shows what it does before anyone types. */
+const STARTERS: Record<Language, string> = { de: 'Schmett', en: 'wande' };
 
 function h(tag: string, attributes: Record<string, string> = {}, ...children: (Node | string)[]): HTMLElement {
   const element = document.createElement(tag);
@@ -56,7 +58,7 @@ function wordRow(language: Language, suggestion: Suggestion, ...end: Node[]): No
   ];
 }
 
-export function startComposer(root: HTMLElement, startWith: string) {
+export function startComposer(root: HTMLElement) {
   const input = root.querySelector<HTMLInputElement>('#composer-input')!;
   const list = root.querySelector<HTMLElement>('#suggestions')!;
   const status = root.querySelector<HTMLElement>('#composer-status')!;
@@ -69,6 +71,8 @@ export function startComposer(root: HTMLElement, startWith: string) {
 
   function showLanguage() {
     for (const button of switches) button.setAttribute('aria-pressed', String(button.dataset.language === language));
+    // The pill slides under the language picked, as the app's Words / Write switch does.
+    root.querySelector<HTMLElement>('.switch')!.dataset.language = language;
     input.placeholder = `Add ${language === 'en' ? 'an' : 'a'} ${LANGUAGES[language].name} word`;
     input.lang = language;
   }
@@ -125,7 +129,11 @@ export function startComposer(root: HTMLElement, startWith: string) {
 
   for (const button of switches) {
     button.addEventListener('click', () => {
+      const from = language;
       language = button.dataset.language as Language;
+      if (language === from) return;
+      // The other language's starter word means nothing here: this one's takes its place.
+      if (!input.value.trim() || input.value === STARTERS[from]) input.value = STARTERS[language];
       showLanguage();
       list.replaceChildren();
       void search();
@@ -141,7 +149,7 @@ export function startComposer(root: HTMLElement, startWith: string) {
     (entries) => {
       if (!entries.some((entry) => entry.isIntersecting)) return;
       near.disconnect();
-      if (!input.value) input.value = language === 'de' ? startWith : 'butterf';
+      if (!input.value) input.value = STARTERS[language];
       void search();
     },
     { rootMargin: '400px' },

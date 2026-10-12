@@ -13,7 +13,7 @@ import { startLesson } from './lesson.ts';
  */
 
 startLesson(document.getElementById('lesson')!);
-startComposer(document.getElementById('composer')!, 'Schmett');
+startComposer(document.getElementById('composer')!);
 
 /** The same colours the app gives each tint (src/features/lists/list-look.tsx). */
 const COLOUR: Record<ListTint, string> = { orange: 'accent', red: 'die', blue: 'der', green: 'das' };
