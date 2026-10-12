@@ -6,7 +6,7 @@ import { sameText, shuffle } from '../domain/practice.ts';
  * all five in a minute; a wrong one drops a level, as in the app.
  */
 
-const WORD = { article: 'der', term: 'Regenschirm', translation: 'umbrella', definition: 'A folding cover held overhead to keep off rain' };
+const WORD = { article: 'die', term: 'Katze', translation: 'cat', definition: 'A small furry animal often kept as a pet' };
 const ARTICLES = ['der', 'die', 'das'];
 const TOP = 5;
 
@@ -59,8 +59,9 @@ function articlePicker(answer: HTMLElement, onPick: (article: string) => void) {
 }
 
 function choices(count: number, withArticle: boolean): Level['build'] {
-  const pool = ['Bildschirm', 'Sonnenschirm', 'Regenjacke', 'Regenbogen', 'Fallschirm', 'Regentropfen', 'Schirmmütze'];
-  const gender: Record<string, string> = { Regenjacke: 'die', Schirmmütze: 'die' };
+  // Spelled most like it, as the app picks them, and first the other form: der Kater, the tomcat.
+  const pool = ['Kater', 'Kasse', 'Tatze', 'Glatze', 'Kette', 'Kanne', 'Mütze'];
+  const gender: Record<string, string> = { Kater: 'der' };
   return (answer, ready) => {
     let article = withArticle ? WORD.article : '';
     let term = '';
@@ -71,7 +72,7 @@ function choices(count: number, withArticle: boolean): Level['build'] {
     pickOne(
       list,
       terms.map((option) => {
-        const shown = withArticle ? [h('b', { 'data-article': gender[option] ?? 'der' }, gender[option] ?? 'der'), ` ${option}`] : [option];
+        const shown = withArticle ? [h('b', { 'data-article': gender[option] ?? 'die' }, gender[option] ?? 'die'), ` ${option}`] : [option];
         return h('button', { class: 'option', 'data-value': option }, ...shown) as HTMLButtonElement;
       }),
       (picked) => ((term = picked), update()),
@@ -86,7 +87,8 @@ const letters: Level['build'] = (answer, ready) => {
   let article = '';
   articlePicker(answer, (picked) => ((article = picked), update()));
   const chars = [...WORD.term];
-  const given = chars.map((_, index) => index === 1 || index === 5 || index === 9 || index === 10);
+  // A third of the letters, as in the app.
+  const given = chars.map((_, index) => index === 1 || index === 3);
   const free = chars.filter((_, index) => !given[index]);
   let order = shuffle(free.map((_, index) => index));
   while (order.every((value, index) => value === index)) order = shuffle(order);
@@ -152,12 +154,12 @@ const LEVELS: Level[] = [
   { question: 'Which word is it?', clue: 'photo', build: choices(4, true) },
   { question: 'Which word is it, with its article?', clue: 'translation', build: choices(8, false) },
   { question: 'Spell it, with its article.', clue: 'photo', build: letters },
-  { question: 'Write it, with its article.', clue: 'translation', build: written(WORD.term.slice(0, 3)) },
+  { question: 'Write it, with its article.', clue: 'translation', build: written(WORD.term.slice(0, 1)) },
   { question: 'Write it, with its article.', clue: 'definition', build: written(WORD.term.slice(0, 1)) },
 ];
 
 function clue(kind: Clue): HTMLElement {
-  if (kind === 'photo') return h('div', { class: 'clue-photo', role: 'img', 'aria-label': 'A picture of an umbrella' }, icon('umbrella'));
+  if (kind === 'photo') return h('div', { class: 'clue-photo', role: 'img', 'aria-label': 'A picture of a cat' }, icon('cat'));
   if (kind === 'translation') return h('p', { class: 'clue-text' }, h('small', {}, 'In English'), WORD.translation);
   return h('p', { class: 'clue-text clue-definition' }, h('small', {}, 'Meaning'), WORD.definition);
 }
@@ -191,7 +193,7 @@ export function startLesson(root: HTMLElement) {
     root.dataset.level = 'learned';
     delete foot.dataset.result;
     levelName.textContent = 'Learned';
-    question.textContent = 'der Regenschirm is yours.';
+    question.textContent = 'die Katze is yours.';
     clueBox.replaceChildren();
     answer.replaceChildren(
       h('p', { class: 'learned' }, 'From picking it out of four to writing it from one letter. Now imagine that with every word you looked up this month.'),

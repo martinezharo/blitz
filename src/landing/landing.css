@@ -204,6 +204,24 @@ main > section,
 
 /* The hero. */
 
+/* A warm light over the top of the page, as on Akin's. */
+body {
+  position: relative;
+  overflow-x: clip;
+}
+
+body::before {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: 56rem;
+  background:
+    radial-gradient(42rem 26rem at 88% 4%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+    radial-gradient(36rem 22rem at 8% -6%, color-mix(in srgb, var(--selection) 34%, transparent), transparent 70%);
+  content: '';
+  pointer-events: none;
+}
+
 .hero {
   display: grid;
   align-items: center;
@@ -250,10 +268,117 @@ h1 {
   font-size: var(--text-md);
 }
 
+/* Words from a German day, stuck around the lesson. Wide screens only. */
+
+.hero-stage {
+  position: relative;
+}
+
+@media (min-width: 62rem) {
+  /* Room above and to the left of the card for the stickers. */
+  .hero-stage {
+    padding-top: 3.2rem;
+  }
+
+  .hero-stage .demo {
+    max-width: 29rem;
+    margin-left: auto;
+  }
+}
+
+/* Phones: a few of them, in a row above the card. */
+@media (max-width: 61.99rem) {
+  .stickers {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0 0 1.2rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .stickers li:nth-child(n + 4) {
+    display: none;
+  }
+
+  .stickers li {
+    padding: 0.35rem 0.75rem 0.4rem;
+    border: 2px solid color-mix(in srgb, var(--gender, var(--faint)) 26%, var(--background));
+    border-radius: var(--radius-tail-pill);
+    background: color-mix(in srgb, var(--gender, var(--muted)) 9%, var(--background));
+    font-weight: var(--weight-strong);
+    transform: rotate(var(--turn));
+  }
+
+  .stickers b {
+    color: var(--gender);
+    font-weight: var(--weight-black);
+  }
+}
+
+@media (min-width: 62rem) {
+  .stickers {
+    position: absolute;
+    inset: 0;
+    display: block;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    pointer-events: none;
+  }
+
+  .stickers li {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    padding: 0.45rem 0.85rem 0.5rem;
+    border: 2px solid color-mix(in srgb, var(--gender, var(--faint)) 26%, var(--background));
+    border-radius: var(--radius-tail-pill);
+    background: color-mix(in srgb, var(--gender, var(--muted)) 9%, var(--background));
+    box-shadow: var(--shadow-raised);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-strong);
+    white-space: nowrap;
+    transform: translateY(-50%) rotate(var(--turn));
+  }
+
+  .stickers b {
+    color: var(--gender);
+    font-weight: var(--weight-black);
+  }
+}
+
+/* The page's one entrance: the stickers land around the card, one after another. */
+@media (min-width: 62rem) and (prefers-reduced-motion: no-preference) {
+  .stickers li {
+    animation: stick 520ms cubic-bezier(0.2, 0.9, 0.25, 1.35) both;
+  }
+
+  .stickers li:nth-child(2) { animation-delay: 90ms; }
+  .stickers li:nth-child(3) { animation-delay: 180ms; }
+  .stickers li:nth-child(4) { animation-delay: 270ms; }
+  .stickers li:nth-child(5) { animation-delay: 360ms; }
+  .stickers li:nth-child(6) { animation-delay: 450ms; }
+
+  @keyframes stick {
+    from {
+      opacity: 0;
+      transform: translateY(-50%) rotate(calc(var(--turn) * -2)) scale(1.35);
+    }
+  }
+}
+
 /* The lesson in the hero, a small copy of the practice screen. */
 
 .demo {
+  position: relative;
   margin: 0;
+}
+
+.demo .lesson {
+  position: relative;
+  z-index: 1;
 }
 
 .lesson {
@@ -301,8 +426,8 @@ h1 {
   height: 7.5rem;
   place-items: center;
   border-radius: var(--radius-tail-xl);
-  background: color-mix(in srgb, var(--der) 12%, var(--icon-background));
-  color: var(--der);
+  background: color-mix(in srgb, var(--accent) 12%, var(--icon-background));
+  color: var(--accent);
 }
 
 .clue-photo svg {
@@ -730,86 +855,235 @@ h2 {
   font-size: var(--text-md);
 }
 
-/* The composer, mid-word, with what the dictionary offers. */
+/* The composer, working: the app's field, its suggestions, and the words added. */
+
 .composer {
-  padding: 1.6rem;
+  padding: 1.4rem;
   border-radius: var(--radius-tail-2xl);
   background: var(--icon-background);
+}
+
+/* The app's Words / Write switch. */
+.switch {
+  display: inline-flex;
+  gap: 0.2rem;
+  margin-bottom: 1.2rem;
+  padding: 0.25rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--icon-background));
+}
+
+.switch button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--text-md);
+  font-weight: var(--weight-black);
+  cursor: pointer;
+  transition: background var(--motion-standard), color var(--motion-standard), box-shadow var(--motion-standard);
+}
+
+.switch button[aria-pressed='true'] {
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow: 0 0.2rem 0.6rem light-dark(rgb(38 27 15 / 10%), rgb(0 0 0 / 40%));
 }
 
 .composer-field {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding-bottom: 0.8rem;
-  border-bottom: 2px solid var(--foreground);
-  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
-  font-weight: var(--weight-black);
+  padding-bottom: 0.7rem;
+  border-bottom: 2px solid var(--line);
+  transition: border-color var(--motion-standard);
+}
+
+.composer-field:focus-within {
+  border-color: var(--foreground);
 }
 
 .composer-field > svg {
   width: 1.6rem;
   height: 1.6rem;
+  flex: none;
   color: var(--muted);
 }
 
-.typed {
-  flex: 1;
+.composer-field input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  font-weight: var(--weight-black);
+  outline: none;
 }
 
-.caret {
-  display: inline-block;
-  width: 2px;
-  height: 1.1em;
-  margin-left: 1px;
-  background: var(--accent);
-  vertical-align: -0.15em;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .caret {
-    animation: blink 1.1s steps(1) infinite;
-  }
-
-  @keyframes blink {
-    50% { opacity: 0; }
-  }
-}
-
-.composer-add {
-  display: grid;
-  width: 2.8rem;
-  height: 2.8rem;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-.composer-add svg {
-  width: 1.3rem;
-  height: 1.3rem;
+.composer-field input::placeholder {
+  color: var(--muted);
 }
 
 .suggestions {
   display: grid;
-  gap: 0.35rem;
-  margin: 1rem 0 0;
+  gap: 0.3rem;
+  min-height: 12.5rem;
+  margin: 0.9rem 0 0;
   padding: 0;
   list-style: none;
 }
 
-.suggestions li {
+.suggestion,
+.mine li {
   display: flex;
+  width: 100%;
   align-items: flex-start;
   gap: 0.9rem;
-  padding: 0.75rem;
+  padding: 0.7rem;
+  border: 0;
   border-radius: var(--radius-tail-lg);
+  background: transparent;
+  text-align: left;
 }
 
-.suggestions li:first-child {
+.suggestion {
+  cursor: pointer;
+  transition: background var(--motion-standard), box-shadow var(--motion-standard), transform var(--motion-spring);
+}
+
+.suggestion:hover:not(:disabled),
+.suggestion:focus-visible {
   background: var(--background);
   box-shadow: var(--shadow-raised);
+}
+
+.suggestion:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.suggestion:disabled {
+  cursor: default;
+}
+
+.suggestion-add {
+  display: grid;
+  width: 2.3rem;
+  height: 2.3rem;
+  flex: none;
+  place-items: center;
+  align-self: center;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  transition: transform var(--motion-spring), background var(--motion-standard);
+}
+
+.suggestion-add svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  stroke-width: 2.6;
+}
+
+.suggestion:hover:not(:disabled) .suggestion-add {
+  transform: rotate(90deg);
+}
+
+.suggestion:disabled .suggestion-add {
+  background: var(--success);
+  color: var(--background);
+}
+
+.composer-status {
+  color: var(--muted);
+  font-size: var(--text-md);
+}
+
+.composer-status:empty {
+  display: none;
+}
+
+.mine {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  border-radius: var(--radius-tail-xl);
+  background: var(--background);
+  box-shadow: var(--shadow-raised);
+}
+
+.mine-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0 0.3rem 0.4rem;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-black);
+}
+
+.mine-head a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-tail-pill);
+  background: var(--button-background);
+  color: var(--button-foreground);
+  text-decoration: none;
+}
+
+.mine-head svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--accent);
+  stroke-width: 3;
+}
+
+.mine ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mine li {
+  align-items: center;
+  padding: 0.45rem 0.3rem;
+}
+
+.mine li .meta.definition {
+  display: none;
+}
+
+@media (max-width: 30rem) {
+  .suggestion .definition {
+    display: none;
+  }
+}
+
+.mine .level i {
+  width: 0.38rem;
+  height: 1.05rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mine li:first-child {
+    animation: arrive 420ms cubic-bezier(0.2, 0.9, 0.25, 1.2);
+  }
+
+  @keyframes arrive {
+    from {
+      opacity: 0;
+      transform: translateY(-0.6rem) scale(0.97);
+    }
+  }
 }
 
 .thumb {
@@ -819,20 +1093,21 @@ h2 {
   flex: none;
   place-items: center;
   border-radius: var(--radius-tail-md);
-  background: color-mix(in srgb, var(--gender) 12%, var(--background));
-  color: var(--gender);
+  background: color-mix(in srgb, var(--gender, var(--muted)) 12%, var(--background));
+  color: var(--gender, var(--muted));
   font-size: 1.3rem;
   font-weight: var(--weight-black);
 }
 
 .suggestion-text {
   display: grid;
-  gap: 0.15rem;
+  flex: 1;
+  gap: 0.1rem;
   min-width: 0;
 }
 
 .term {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: var(--weight-strong);
 }
 
@@ -842,10 +1117,10 @@ h2 {
 }
 
 .term small {
-  margin-left: 0.3rem;
+  margin-left: 0.15rem;
   padding: 0.05rem 0.4rem;
   border-radius: var(--radius-pill);
-  background: var(--icon-background);
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
   color: var(--muted);
   font-size: 0.6rem;
   font-weight: 900;
@@ -863,24 +1138,77 @@ h2 {
   color: var(--foreground);
 }
 
-/* The ladder: five steps that really do climb. */
+/* The ladder: a dark band where five steps really do climb, warming as they go. */
 
 .section-head {
   max-width: 44rem;
 }
 
+main > section.band {
+  width: min(100% - 2 * var(--landing-gutter) + 2rem, var(--landing-column) + 8rem);
+  margin-block: clamp(2rem, 5vw, 4rem);
+  padding-inline: 0;
+  border-radius: 3.2rem 3.2rem 3.2rem 1.2rem;
+  /* Dark in either theme: every colour inside takes its dark half. */
+  color-scheme: dark;
+  background: var(--icon-background);
+  color: var(--foreground);
+}
+
+.band-inner {
+  width: min(100% - 2.5rem, var(--landing-column));
+  margin-inline: auto;
+}
+
+.band .section-head p,
+.band .clues {
+  color: var(--muted);
+}
+
 .steps {
   display: grid;
-  gap: 1rem;
+  gap: 0.8rem;
   margin: 3rem 0 0;
   padding: 0;
   list-style: none;
 }
 
 .steps li {
+  --heat: 10%;
   padding: 1.3rem 1.3rem 1.5rem;
   border-radius: var(--radius-tail-xl);
-  background: var(--icon-background);
+  background: color-mix(in srgb, var(--accent) var(--heat), var(--icon-background));
+  color: var(--foreground);
+}
+
+.steps li:nth-child(2) { --heat: 24%; }
+.steps li:nth-child(3) { --heat: 42%; }
+.steps li:nth-child(4) { --heat: 66%; }
+
+.steps li:nth-child(5) {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 1rem 3rem var(--accent-shadow);
+}
+
+.steps .level i {
+  background: color-mix(in srgb, currentColor 22%, transparent);
+}
+
+.steps .level[data-on] i {
+  transition: none;
+}
+
+.steps li:nth-child(-n + 3) {
+  --on: var(--accent);
+}
+
+.steps .level[data-on='1'] i:nth-child(-n + 1),
+.steps .level[data-on='2'] i:nth-child(-n + 2),
+.steps .level[data-on='3'] i:nth-child(-n + 3),
+.steps .level[data-on='4'] i:nth-child(-n + 4),
+.steps .level[data-on='5'] i {
+  background: var(--on, currentColor);
 }
 
 .steps h3 {
@@ -892,14 +1220,18 @@ h2 {
 
 .steps p {
   margin-top: 0.4rem;
-  color: var(--muted);
   font-size: var(--text-md);
   line-height: 1.5;
+  opacity: 0.78;
 }
 
 @media (min-width: 40rem) and (max-width: 63.99rem) {
   .steps {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .steps li:last-child {
+    grid-column: 1 / -1;
   }
 }
 
@@ -917,38 +1249,37 @@ h2 {
   .steps li:nth-child(5) { min-height: 23rem; }
 }
 
-.steps li:last-child {
-  background: var(--button-background);
-  color: var(--button-foreground);
-}
-
-.steps li:last-child p {
-  color: var(--button-muted);
-}
-
-.steps li:last-child .level i {
-  background: var(--accent);
-}
-
 .clues {
   margin-top: 1.6rem;
-  color: var(--muted);
   font-size: var(--text-md);
 }
 
-/* der, die, das. */
+/* der, die, das: three stickers, slapped on a little crooked. */
 
 .articles {
   display: grid;
-  gap: 0.2rem;
+  justify-items: start;
+  gap: 0.7rem;
 }
 
-.articles > p {
-  font-size: clamp(2.2rem, 1.5rem + 3vw, 4rem);
+.articles > p:not(.pair) {
+  padding: 0.12em 0.45em 0.18em;
+  border-radius: var(--radius-tail-xl);
+  background: color-mix(in srgb, var(--gender) 13%, var(--background));
+  font-size: clamp(2.1rem, 1.4rem + 3vw, 3.8rem);
   font-weight: var(--weight-black);
   letter-spacing: -0.04em;
   line-height: 1.08;
   overflow-wrap: anywhere;
+  transition: transform var(--motion-spring);
+}
+
+.articles > p:nth-child(1) { transform: rotate(-2.5deg); }
+.articles > p:nth-child(2) { margin-left: clamp(1rem, 4vw, 3rem); transform: rotate(1.5deg); }
+.articles > p:nth-child(3) { margin-left: clamp(0.4rem, 1.5vw, 1.2rem); transform: rotate(-1deg); }
+
+.articles > p:not(.pair):hover {
+  transform: rotate(0) scale(1.03);
 }
 
 .articles b {
@@ -961,10 +1292,9 @@ h2 {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.2rem 0.9rem;
-  margin-top: 1.4rem;
-  padding-top: 1.4rem;
-  border-top: 1px solid var(--line);
+  margin-top: 1rem;
   font-size: clamp(1.4rem, 1.1rem + 1.2vw, 2rem);
+  font-weight: var(--weight-black);
   letter-spacing: -0.02em;
 }
 
@@ -975,14 +1305,30 @@ h2 {
   background: linear-gradient(90deg, var(--der), var(--die));
 }
 
-/* Writing, checked. */
+/* Writing, checked: a sheet set down slightly askew. */
 
 .sheet {
-  padding: 1.6rem;
+  padding: 1.5rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-tail-2xl);
   background: var(--background);
-  box-shadow: var(--shadow-raised);
+  box-shadow: var(--shadow-floating);
+  transform: rotate(1.2deg);
+}
+
+.sheet-prompt {
+  margin-bottom: 1.1rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-tail-lg);
+  background: color-mix(in srgb, var(--accent) 10%, var(--background));
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.sheet-prompt b {
+  display: block;
+  color: var(--foreground);
+  font-size: var(--text-lg);
 }
 
 .sheet-text {
@@ -1053,22 +1399,34 @@ mark {
   stroke-width: 3;
 }
 
-/* Ready-made lists, the app's cards made small. */
+/* Ready-made lists, the app's cards. Only whole rows are shown (main.ts). */
 
 .list-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100% / 2 - 0.4rem, 13rem), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.8rem;
   margin: 2.6rem 0 0;
   padding: 0;
   list-style: none;
 }
 
+@media (min-width: 40rem) {
+  .list-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .list-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 .list-grid li {
   position: relative;
   isolation: isolate;
   display: flex;
-  min-height: 8.5rem;
+  min-height: 9rem;
   flex-direction: column;
   align-items: flex-start;
   overflow: hidden;
@@ -1077,6 +1435,12 @@ mark {
   background:
     radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--tint) 30%, transparent), transparent 62%),
     color-mix(in srgb, var(--tint) 9%, var(--icon-background));
+  transition: transform var(--motion-spring), box-shadow var(--motion-standard);
+}
+
+.list-grid li:hover {
+  box-shadow: var(--shadow-raised);
+  transform: translateY(-2px);
 }
 
 .list-grid strong {
@@ -1112,33 +1476,54 @@ mark {
   opacity: 0.45;
   stroke-width: 1.3;
   transform: rotate(-14deg);
+  transition: transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity var(--motion-standard);
 }
 
-/* Four facts, quietly. */
+.list-grid li:hover svg {
+  opacity: 0.7;
+  transform: rotate(-4deg) scale(1.08);
+}
+
+.more-lists {
+  display: flex;
+  width: fit-content;
+  margin: 1.4rem auto 0;
+}
+
+.more-lists[hidden] {
+  display: none;
+}
+
+/* Four facts, each in one of the app's colours. */
 
 .facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
   gap: 2.4rem 2rem;
-  border-top: 1px solid var(--line);
 }
 
-.fact > svg,
+.fact-icon {
+  display: grid;
+  width: 3.2rem;
+  height: 3.2rem;
+  place-items: center;
+  border-radius: var(--radius-tail-md);
+  background: color-mix(in srgb, var(--tint) 14%, var(--background));
+  color: var(--tint);
+}
+
+.fact-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
 .flags {
-  display: block;
-  width: 1.6rem;
-  height: 1.6rem;
-  color: var(--accent);
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   line-height: 1;
 }
 
-.flags {
-  width: auto;
-}
-
 .fact h3 {
-  margin-top: 0.9rem;
+  margin-top: 1rem;
   font-size: var(--text-xl);
   font-weight: var(--weight-black);
 }
@@ -1150,24 +1535,44 @@ mark {
   line-height: 1.55;
 }
 
-/* The way in, once more. */
+/* The way in, once more: the logo's own shape, as big as the page allows. */
 
-.closing {
+main > section.closing {
+  position: relative;
+  isolation: isolate;
   display: grid;
   justify-items: center;
+  overflow: hidden;
+  margin-block: clamp(2rem, 5vw, 4rem);
+  padding: clamp(3.5rem, 9vw, 6.5rem) 1.5rem;
+  border-radius: 3.2rem 3.2rem 3.2rem 1.2rem;
+  background: var(--accent);
+  color: var(--accent-ink);
   text-align: center;
 }
 
+.bolt {
+  position: absolute;
+  top: 50%;
+  right: -4%;
+  z-index: -1;
+  width: clamp(16rem, 40vw, 30rem);
+  height: auto;
+  fill: color-mix(in srgb, var(--accent-ink) 9%, transparent);
+  stroke: none;
+  transform: translateY(-50%) rotate(12deg);
+}
+
 .closing h2 {
-  max-width: none;
+  max-width: 12ch;
   font-size: var(--display);
   letter-spacing: -0.05em;
 }
 
 .closing p {
   margin: 1rem 0 2.2rem;
-  color: var(--muted);
   font-size: var(--text-xl);
+  opacity: 0.8;
 }
 
 .footer {
@@ -1177,7 +1582,6 @@ mark {
   justify-content: space-between;
   gap: 0.8rem 2rem;
   padding: 1.6rem 0 max(1.6rem, env(safe-area-inset-bottom));
-  border-top: 1px solid var(--line);
   color: var(--muted);
   font-size: var(--text-sm);
 }

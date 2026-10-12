@@ -61,7 +61,7 @@ async function openPage(request) {
   } catch {
     const shell = await caches.open(SHELL);
     const { pathname } = new URL(request.url);
-    const page = pathname === '/learn' || pathname.startsWith('/learn/') ? '/learn' : '/';
+    const page = pathname === '/learn' || pathname === '/learn.html' || pathname.startsWith('/learn/') ? '/learn' : '/';
     return (await shell.match(page)) ?? fetch(request);
   }
 }

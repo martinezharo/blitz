@@ -34,8 +34,12 @@ can be as many as you like without making the app any bigger. `pnpm dev` and
 ## Pages
 
 The front page (`index.html`, `src/landing/`) is at `/`: static HTML with a
-small script for the lesson in its hero and the ready-made lists, read from
-`/lists/index.json`, so it never names a list that is gone. It loads no React.
+small script for the lesson in its hero, a working composer and the
+ready-made lists, read from `/lists/index.json`, so it never names a list that
+is gone. The composer searches the same dictionary as the app, and a word
+added there is saved where the app keeps its words, so it is waiting in
+`/learn`; the storage code only loads on the first add, so the page itself
+loads no React.
 The app itself (`learn.html`, `src/main.tsx`) is at `/learn`, and signing in
 lands there. The installed app starts at `/learn` too, and the front page sends
 an installed app opened at `/` (an older home-screen icon) on to it.
