@@ -5,6 +5,9 @@ export function json(body: unknown, init: ResponseInit = {}): Response {
   return new Response(JSON.stringify(body), { ...init, headers });
 }
 
+/** Where the app lives; the front page has /. Signing in, or failing to, lands here. */
+export const APP_PATH = '/learn';
+
 export const problem = (status: number, message: string) => json({ error: message }, { status });
 
 export function readCookie(request: Request, name: string): string | null {

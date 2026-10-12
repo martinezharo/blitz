@@ -1,5 +1,5 @@
 import type { Env } from './env.ts';
-import { cookie, json, problem, randomToken, readCookie, sameOrigin, sha256 } from './http.ts';
+import { APP_PATH, cookie, json, problem, randomToken, readCookie, sameOrigin, sha256 } from './http.ts';
 import { startGoogleSignIn, type User } from './auth.ts';
 
 const VERIFIER = 'blitz_dev_verifier';
@@ -95,7 +95,7 @@ export async function finishLocalSignIn(request: Request, env: Env): Promise<Res
   const ticket = url.searchParams.get('ticket');
   const verifier = readCookie(request, VERIFIER);
   const remote = upstream(env, url.origin);
-  const home = new URL('/', url);
+  const home = new URL(APP_PATH, url);
   if (!remote || !ticket || !TOKEN.test(ticket) || !verifier || !TOKEN.test(verifier)) {
     home.searchParams.set('signin', 'failed');
     return Response.redirect(home.toString(), 303);

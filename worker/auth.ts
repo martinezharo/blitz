@@ -1,6 +1,6 @@
 import type { Account } from '../src/domain/sync.ts';
 import type { Env } from './env.ts';
-import { cookie, json, randomToken, readCookie, sha256 } from './http.ts';
+import { APP_PATH, cookie, json, randomToken, readCookie, sha256 } from './http.ts';
 
 const SESSION = 'blitz_session';
 const STATE = 'blitz_oauth_state';
@@ -19,7 +19,7 @@ const callbackUrl = (request: Request) => new URL('/api/auth/callback', request.
 /** Sends the browser to Google's account chooser. */
 export function startGoogleSignIn(request: Request, env: Env, state = randomToken()): Response {
   if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
-    return Response.redirect(new URL('/?signin=unavailable', request.url).toString(), 303);
+    return Response.redirect(new URL(`${APP_PATH}?signin=unavailable`, request.url).toString(), 303);
   }
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   url.searchParams.set('client_id', env.GOOGLE_CLIENT_ID);
@@ -37,7 +37,7 @@ export function startGoogleSignIn(request: Request, env: Env, state = randomToke
 /** Google's redirect back: trade the code for an identity and open a session. */
 export async function finishGoogleSignIn(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
-  const home = (outcome?: string) => new URL(outcome ? `/?signin=${outcome}` : '/', request.url).toString();
+  const home = (outcome?: string) => new URL(outcome ? `${APP_PATH}?signin=${outcome}` : APP_PATH, request.url).toString();
   const clearState = cookie(STATE, '', 0, '/api/auth');
   const fail = (outcome: string) =>
     new Response(null, { status: 303, headers: { Location: home(outcome), 'Set-Cookie': clearState } });

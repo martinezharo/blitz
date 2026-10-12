@@ -31,6 +31,15 @@ of them and one file per list, which the app loads when it is opened, so there
 can be as many as you like without making the app any bigger. `pnpm dev` and
 `pnpm build` make them, and fail (or warn, in dev) naming what is missing.
 
+## Pages
+
+The front page (`index.html`, `src/landing/`) is at `/`: static HTML with a
+small script for the lesson in its hero and the ready-made lists, read from
+`/lists/index.json`, so it never names a list that is gone. It loads no React.
+The app itself (`learn.html`, `src/main.tsx`) is at `/learn`, and signing in
+lands there. The installed app starts at `/learn` too, and the front page sends
+an installed app opened at `/` (an older home-screen icon) on to it.
+
 Words live in this browser's IndexedDB first, so the app works offline and
 without an account. Signing in with Google syncs them, pictures included, to
 every other device signed in to the same account.
@@ -82,7 +91,7 @@ button sits left of the account menu on wide screens, and inside the account
 menu on narrow ones (guests find it in Preferences). iPhones and iPads have no
 install prompt, so the menu says to use Share, then Add to Home Screen. A
 service worker (`src/shared/sw.js`, emitted as `/sw.js` by the build) keeps the
-app shell, fonts and speech runtime on the device, so Blitz opens offline; it
+app shell, the front page, fonts and speech runtime on the device, so Blitz opens offline; it
 is only registered in production builds. A new build takes over once every
 open window is closed.
 
@@ -180,7 +189,7 @@ must never be added to the deployed Worker.
 
 ### Seed words
 
-In development, open the app with `?seed` to fill this browser with words that
+In development, open the app with `/learn?seed` to fill this browser with words that
 only have a photo, at a mix of levels, so practice shows every exercise with a
 photo clue. `?seed=3` puts every seed word at level 3, and `?seed=clear`
 removes them. It does nothing on a signed-in device: practising a seed word
@@ -238,6 +247,7 @@ what is left and clears the device; the words stay in the account.
 src/domain/    Framework-free rules: languages, word types, the sync wire format
 src/data/      IndexedDB (Dexie), sync, account, photo resizing, preferences
 src/features/  Screens: word list and sheet, writing, navigation, language menu, account, practice entry
+src/landing/   The front page at /: its styles and the lesson in its hero
 src/shared/    Reusable UI: the sheet, the morph into it, object URLs, sound effects, speech
 worker/        Cloudflare Worker: Google sign-in, sessions, sync (D1), photos (R2), definitions (Workers AI), writing checks (OpenAI)
 migrations/    D1 schema

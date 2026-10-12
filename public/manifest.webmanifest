@@ -3,7 +3,7 @@
   "short_name": "Blitz",
   "description": "Learn the German and English words you pick.",
   "id": "/",
-  "start_url": "/",
+  "start_url": "/learn",
   "scope": "/",
   "display": "standalone",
   "background_color": "#fefefd",

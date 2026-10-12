@@ -50,14 +50,19 @@ self.addEventListener('fetch', (event) => {
   else event.respondWith(fromCacheOrNetwork(request, url));
 });
 
-/** The page itself: the network when it answers, the stored shell when it does not. */
+/**
+ * The page itself: the network when it answers, the stored copy when it does
+ * not. The app lives at /learn; anything else is the front page.
+ */
 async function openPage(request) {
   try {
     const patience = new Promise((_, reject) => setTimeout(reject, NETWORK_PATIENCE_MS));
     return await Promise.race([fetch(request), patience]);
   } catch {
     const shell = await caches.open(SHELL);
-    return (await shell.match('/')) ?? fetch(request);
+    const { pathname } = new URL(request.url);
+    const page = pathname === '/learn' || pathname.startsWith('/learn/') ? '/learn' : '/';
+    return (await shell.match(page)) ?? fetch(request);
   }
 }
 

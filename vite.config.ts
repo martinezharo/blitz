@@ -73,7 +73,7 @@ function generated(): Plugin {
 
 /**
  * Emits /sw.js from src/shared/sw.js, with this build's file names filled in.
- * The version is a hash of those names (they carry content hashes), the page
+ * The version is a hash of those names (they carry content hashes), the pages
  * and the logo, which keep their names, so a new build is a new service worker
  * and an unchanged one is not.
  */
@@ -81,7 +81,7 @@ function serviceWorker(): Plugin {
   return {
     name: 'blitz:service-worker',
     apply: 'build',
-    // After Vite's own plugins, which emit the page last.
+    // After Vite's own plugins, which emit the pages last.
     generateBundle: {
       order: 'post',
       handler(_, bundle) {
@@ -90,11 +90,13 @@ function serviceWorker(): Plugin {
           .filter((name) => !name.endsWith('.map'))
           .map((name) => `/${name}`)
           .sort();
-        const shell = ['/', '/logo.svg', ...files.filter((name) => /\.(js|css|woff2)$/.test(name))];
-        const page = (bundle['index.html'] as { source?: string | Uint8Array } | undefined)?.source ?? '';
+        // The app at /learn and the front page at /, both of which open offline.
+        const shell = ['/', '/learn', '/logo.svg', ...files.filter((name) => /\.(js|css|woff2)$/.test(name))];
+        const page = (name: string) => (bundle[name] as { source?: string | Uint8Array } | undefined)?.source ?? '';
         const version = createHash('sha256')
           .update(files.join('\n'))
-          .update(page)
+          .update(page('index.html'))
+          .update(page('learn.html'))
           .update(readFileSync(new URL('./public/logo.svg', import.meta.url)))
           .digest('hex')
           .slice(0, 12);
@@ -111,6 +113,11 @@ function serviceWorker(): Plugin {
 export default defineConfig({
   // The Worker (/api) runs inside the dev server, on local D1 and R2.
   plugins: [generated(), secureOrigin(), react(), cloudflare(), serviceWorker()],
+  // The front page at /, and the app at /learn. Only the browser's build has
+  // pages; the Worker's keeps its own entry.
+  environments: {
+    client: { build: { rollupOptions: { input: { landing: resolve('index.html'), app: resolve('learn.html') } } } },
+  },
   server: {
     // The dev box publishes this server over HTTPS on its Tailscale hostname,
     // the secure origin development sign-in needs. Vite rejects Host headers it
