@@ -121,12 +121,16 @@
   min-height: calc(5 * var(--rule) + 1rem);
   margin: 0;
   padding: 0.55rem 1.15rem 0.45rem;
-  background-image: repeating-linear-gradient(
+  /* Tile one rule: a repeating gradient can drop its 1px lines when the
+     rem-based line height falls between device pixels. */
+  background-image: linear-gradient(
     to bottom,
-    transparent 0 calc(var(--rule) - 1px),
-    var(--line) calc(var(--rule) - 1px) var(--rule)
+    transparent calc(100% - 1px),
+    var(--line) 0
   );
-  background-position: 0 0.55rem;
+  background-size: 100% var(--rule);
+  background-repeat: repeat-y;
+  background-origin: content-box;
   background-clip: content-box;
   font-size: max(var(--text-field-min), 1.15rem);
   font-weight: 750;
@@ -160,9 +164,10 @@
 
 /* A marked piece: tinted in its kind's colour, underlined, and a button to its card. */
 .mark {
-  padding: 0.05rem 0.1rem;
+  padding: 0 0.1rem;
   border: 0;
-  border-bottom: 2px solid var(--kind);
+  /* Paint the underline without making marked rows taller than the rules. */
+  box-shadow: inset 0 -2px var(--kind);
   border-radius: 0.3rem 0.3rem 0 0;
   background: color-mix(in srgb, var(--kind) 12%, transparent);
   font: inherit;
