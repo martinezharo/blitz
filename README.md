@@ -38,7 +38,7 @@ every other device signed in to the same account.
 ## Write
 
 The Write page is free writing in the language of the space. Press Check (or
-Ctrl/⌘+Enter) and `POST /api/correct` asks Gemma 4 to mark the mistakes:
+Ctrl/⌘+Enter) and `POST /api/correct` asks GPT-6 Luna with low reasoning to mark the mistakes:
 spelling in red, grammar in blue, each with the fix and a one-line reason.
 Only pieces really in the text are marked (`src/domain/writing.ts`), so the
 model cannot invent a mistake that is not there. A word written wrong can be
@@ -53,6 +53,17 @@ in another language, or no language at all, is not checked. Checking sends what
 was typed to the model, so it is for accounts only, up to 1,500 characters,
 with its own daily allowance (`worker/correct.ts`). The text being written is
 kept on the device, per language.
+
+Writing checks use the OpenAI Responses API, a strict JSON schema and the
+conservative prompt in `worker/correction-prompt.ts`. It preserves valid
+metaphors and independent subjects and checks repeated errors separately.
+The Worker maps the model's `original/replacement` fields to the existing
+`wrong/right` response and history format. Calls have a 30-second timeout,
+a 4,000-token output cap, no automatic retries and `store: false`.
+The daily limits remain 30 per account and 150 overall; writing checks are
+billed through OpenAI separately from the definitions' Workers AI allowance.
+Configure `OPENAI_API_KEY` in `.dev.vars` locally and with
+`pnpm wrangler secret put OPENAI_API_KEY` for the deployed Worker.
 
 On phones, a bar along the bottom holds Words, Practice, Write and the menu
 that the top-right corner has on wide screens; wide screens switch pages from
@@ -220,7 +231,7 @@ src/domain/    Framework-free rules: languages, word types, the sync wire format
 src/data/      IndexedDB (Dexie), sync, account, photo resizing, preferences
 src/features/  Screens: word list and sheet, writing, navigation, language menu, account, practice entry
 src/shared/    Reusable UI: the sheet, the morph into it, object URLs, sound effects, speech
-worker/        Cloudflare Worker: Google sign-in, sessions, sync (D1), photos (R2), definitions and checks (Workers AI)
+worker/        Cloudflare Worker: Google sign-in, sessions, sync (D1), photos (R2), definitions (Workers AI), writing checks (OpenAI)
 migrations/    D1 schema
 mockups/       Static design sketches that led here
 ```

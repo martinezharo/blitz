@@ -92,15 +92,18 @@ describe('development sign-in', () => {
   });
 
   it("checks writing on this Worker with production's account", async () => {
-    const ai = { run: async () => ({ response: '{"language": "en", "mistakes": []}' }) };
-    const localEnv = { ...server.env, AI: ai as never, DEVELOPMENT_UPSTREAM: 'https://blitz.test' };
+    const localEnv = { ...server.env, OPENAI_API_KEY: 'test-openai-key', DEVELOPMENT_UPSTREAM: 'https://blitz.test' };
     const token = await server.signUp('writer');
     const productionFetch = globalThis.fetch;
     // Production only answers who is signed in; it knows nothing of checks.
-    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) =>
-      new URL(String(input instanceof Request ? input.url : input)).pathname === '/api/me'
-        ? server.as(null)(input, init)
-        : new Response('Not found', { status: 404 }));
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input instanceof Request ? input.url : input));
+      if (url.pathname === '/api/me') return server.as(null)(input, init);
+      if (url.href === 'https://api.openai.com/v1/responses') {
+        return new Response(JSON.stringify({ status: 'completed', output: [{ type: 'message', status: 'completed', content: [{ type: 'output_text', text: '{"language":"en","mistakes":[]}' }] }] }));
+      }
+      return new Response('Not found', { status: 404 });
+    });
     const check = (cookie?: string) =>
       worker.fetch(new Request(`${origin}/api/correct`, {
         method: 'POST',

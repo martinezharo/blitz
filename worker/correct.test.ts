@@ -1,24 +1,22 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MAX_TEXT } from '../src/domain/writing.ts';
-import { type CheckResponse, DAILY_LIMIT, messagesFor, readAnswer } from './correct.ts';
+import { type CheckResponse, DAILY_LIMIT, MODEL, correctionRequest, messagesFor, readAnswer } from './correct.ts';
 import { sha256 } from './http.ts';
 import { testServer } from './test-server.ts';
 
 let server: Awaited<ReturnType<typeof testServer>>;
 let asked: unknown[] = [];
 let answer: unknown;
-const reply = (value: unknown) => ({ choices: [{ message: { content: JSON.stringify(value) } }] });
-
-const ai = {
-  async run(_model: string, input: unknown) {
-    asked.push(input);
-    if (answer instanceof Error) throw answer;
-    return answer;
-  },
+const reply = (value: unknown) => {
+  const result = value as { language: string; mistakes: { wrong: string; right: string; kind: string; word: string; why: string }[] };
+  const content = { ...result, mistakes: result.mistakes.map(({ wrong, right, ...rest }) => ({ original: wrong, replacement: right, ...rest })) };
+  return { status: 'completed', output: [{ type: 'message', status: 'completed', content: [{ type: 'output_text', text: JSON.stringify(content) }] }] };
 };
+const realFetch = globalThis.fetch;
+let providerStatus = 200;
 
 beforeAll(async () => {
-  server = await testServer({ AI: ai as never });
+  server = await testServer({ OPENAI_API_KEY: 'test-openai-key' });
 });
 
 afterAll(() => server.dispose());
@@ -26,24 +24,49 @@ afterAll(() => server.dispose());
 beforeEach(() => {
   asked = [];
   answer = reply({ language: 'de', mistakes: [] });
+  providerStatus = 200;
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+    if (String(input) !== 'https://api.openai.com/v1/responses') return realFetch(input, init);
+    asked.push(JSON.parse(init!.body as string));
+    expect(new Headers(init!.headers).get('Authorization')).toBe('Bearer test-openai-key');
+    expect(init!.signal).toBeInstanceOf(AbortSignal);
+    if (answer instanceof Error) throw answer;
+    return new Response(JSON.stringify(answer), { status: providerStatus });
+  });
 });
+
+afterEach(() => vi.restoreAllMocks());
 
 const check = (fetcher: typeof fetch, body: unknown) =>
   fetcher('/api/correct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 const today = () => new Date().toISOString().slice(0, 10);
 
 describe('readAnswer', () => {
-  it('reads the JSON, also when the model talks around it', () => {
+  it('reads completed JSON and ignores reasoning output', () => {
     expect(readAnswer(reply({ language: 'de', mistakes: [] }))).toEqual({ language: 'de', mistakes: [] });
-    expect(readAnswer({ response: 'Sure! {"language": "en", "mistakes": []} Hope it helps.' })).toEqual({ language: 'en', mistakes: [] });
-    expect(readAnswer({ response: 'no json here' })).toBeNull();
+    const response = reply({ language: 'en', mistakes: [] });
+    expect(readAnswer({ ...response, output: [{ type: 'reasoning', summary: [] }, ...response.output] })).toEqual({ language: 'en', mistakes: [] });
+  });
+
+  it('rejects incomplete answers, refusals and missing replacement fields', () => {
+    const response = reply({ language: 'en', mistakes: [] });
+    expect(readAnswer({ ...response, status: 'incomplete' })).toBeNull();
+    expect(readAnswer({ status: 'completed', output: [{ type: 'message', status: 'completed', content: [{ type: 'refusal', refusal: 'No' }] }] })).toBeNull();
+    response.output[0]!.content[0]!.text = JSON.stringify({ language: 'en', mistakes: [{ original: 'word', kind: 'grammar', word: '', why: 'Rule' }] });
+    expect(readAnswer(response)).toBeNull();
+    response.output[0]!.content[0]!.text = '{"language":"en","mistakes":[';
+    expect(readAnswer(response)).toBeNull();
+  });
+
+  it('preserves explicit deletions when normalizing the model fields', () => {
+    expect(readAnswer(reply({ language: 'en', mistakes: [{ wrong: 'extra', right: '', kind: 'grammar', word: '', why: 'Remove the extra word' }] }))).toEqual({ language: 'en', mistakes: [{ wrong: 'extra', right: '', kind: 'grammar', word: '', why: 'Remove the extra word' }] });
   });
 });
 
 describe('messagesFor', () => {
   it('names the language and puts the text last', () => {
     const messages = messagesFor('de', 'Ich habe ein Hund.');
-    expect(messages[0]!.content).toContain('learners of German');
+    expect(messages[0]!.content).toContain("learner's German writing");
     expect(messages.at(-1)).toEqual({ role: 'user', content: 'Ich habe ein Hund.' });
   });
 });
@@ -85,7 +108,7 @@ describe('/api/correct', () => {
 
   it('marks nothing in a text that is not in the language of the page', async () => {
     const fetcher = server.as(await server.signUp('ada'));
-    answer = reply({ language: 'other', mistakes: [{ wrong: 'Hola', right: 'Hallo', kind: 'spelling', word: 'Hallo', why: '' }] });
+    answer = reply({ language: 'other', mistakes: [{ wrong: 'Hola', right: 'Hallo', kind: 'spelling', word: 'Hallo', why: 'Another language' }] });
     const body = (await (await check(fetcher, { language: 'de', text: 'Hola, me llamo Ada.' })).json()) as CheckResponse;
     expect(body).toEqual({ language: 'other', marks: [] });
   });
@@ -94,8 +117,34 @@ describe('/api/correct', () => {
     const fetcher = server.as(await server.signUp('ada'));
     answer = new Error('busy');
     expect((await check(fetcher, { language: 'de', text: 'Hallo Welt' })).status).toBe(502);
-    answer = { response: 'I cannot help with that.' };
+    answer = { status: 'incomplete', output: [] };
     expect((await check(fetcher, { language: 'de', text: 'Hallo Welt' })).status).toBe(502);
+  });
+
+  it('uses Luna low with the tested request, bounded output and no stored response', async () => {
+    const fetcher = server.as(await server.signUp('ada'));
+    expect((await check(fetcher, { language: 'de', text: 'Hallo Welt' })).status).toBe(200);
+    expect(asked).toEqual([correctionRequest('de', 'Hallo Welt')]);
+    expect(asked[0]).toMatchObject({ model: MODEL, reasoning: { effort: 'low' }, max_output_tokens: 4000, store: false, text: { format: { type: 'json_schema', strict: true } } });
+  });
+
+  it('fails without using allowance or calling OpenAI when the key is missing', async () => {
+    const token = await server.signUp('ada');
+    const savedKey = server.env.OPENAI_API_KEY;
+    const before = await server.env.DB.prepare("SELECT count(*) AS count FROM definition_usage WHERE scope LIKE 'correct:%'").first<{ count: number }>();
+    server.env.OPENAI_API_KEY = undefined;
+    try {
+      expect((await check(server.as(token), { language: 'en', text: 'Hello' })).status).toBe(503);
+      expect(asked).toHaveLength(0);
+      expect(await server.env.DB.prepare("SELECT count(*) AS count FROM definition_usage WHERE scope LIKE 'correct:%'").first<{ count: number }>()).toEqual(before);
+    } finally { server.env.OPENAI_API_KEY = savedKey; }
+  });
+
+  it('returns a failure after one attempt for provider HTTP errors', async () => {
+    const fetcher = server.as(await server.signUp('ada'));
+    providerStatus = 429;
+    expect((await check(fetcher, { language: 'de', text: 'Hallo Welt' })).status).toBe(502);
+    expect(asked).toHaveLength(1);
   });
 
   it('stops an account at its daily allowance, apart from definitions', async () => {
