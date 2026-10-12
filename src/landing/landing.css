@@ -1149,7 +1149,14 @@ main > section.band {
   margin-block: clamp(2rem, 5vw, 4rem);
   padding-inline: 0;
   border-radius: 3.2rem 3.2rem 3.2rem 1.2rem;
-  /* Dark in either theme: every colour inside takes its dark half. */
+  /* Dark in either theme. The build turns light-dark() into values settled
+     on :root, so a color-scheme here would not reach the tokens: the dark
+     halves of the ones used inside are set here instead (global.css). */
+  --icon-background: #171815;
+  --foreground: #f7f8f3;
+  --muted: #8b8e87;
+  --accent: #ff7540;
+  --accent-shadow: rgb(255 117 64 / 28%);
   color-scheme: dark;
   background: var(--icon-background);
   color: var(--foreground);
