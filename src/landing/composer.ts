@@ -64,7 +64,7 @@ export function startComposer(root: HTMLElement) {
   const status = root.querySelector<HTMLElement>('#composer-status')!;
   const mine = root.querySelector<HTMLElement>('#mine')!;
   const mineList = root.querySelector<HTMLElement>('#mine-list')!;
-  const switches = [...root.querySelectorAll<HTMLButtonElement>('[data-language]')];
+  const switches = [...root.querySelectorAll<HTMLButtonElement>('button[data-language]')];
   let language = storedLanguage();
   let asked = 0;
   const added = new Set<string>();
