@@ -56,6 +56,14 @@ describe('development sign-in', () => {
     expect((await exchange(verifier)).status).toBe(401);
   });
 
+  it('sends a failed sign-in back to the app, not the front page', async () => {
+    const response = await server.as(null)('/api/auth/callback?state=forged&code=google-code');
+    expect(response.status).toBe(303);
+    const destination = new URL(response.headers.get('Location')!);
+    expect(destination.pathname).toBe('/learn');
+    expect(destination.searchParams.get('signin')).toBe('failed');
+  });
+
   it('rejects browser calls to the ticket exchange', async () => {
     const response = await server.as(null)('/api/auth/dev/exchange', { method: 'POST', body: '{}' });
     expect(response.status).toBe(403);

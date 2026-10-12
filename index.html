@@ -5,25 +5,290 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#fefefd" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#050505" media="(prefers-color-scheme: dark)" />
-    <meta name="description" content="Learn the German and English words you pick." />
+    <meta
+      name="description"
+      content="Add the German or English words you keep running into. Blitz fills in the article, plural and meaning, then quizzes you until you can write each one from memory."
+    />
+    <meta property="og:title" content="Blitz: your words, not a course's" />
+    <meta
+      property="og:description"
+      content="Add the German or English words you keep running into. Blitz quizzes you until you can write each one from memory."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/icons/icon-512.png" />
     <link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="icon" href="/logo.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Blitz" />
-    <title>Blitz</title>
+    <title>Blitz: learn the German and English words you pick</title>
     <script>
-      // Pins an explicit theme before first paint; with none stored the page follows the system.
+      // The installed app opened from an older home-screen icon lands here: send it on to the app.
+      if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) location.replace('/learn');
+      // Same theme as the app: an explicit choice pins it, otherwise the page follows the system.
       try {
         var theme = localStorage.getItem('blitz.theme');
-        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+        if (theme === 'light' || theme === 'dark') {
+          document.documentElement.dataset.theme = theme;
+          // The browser's bar too, which would otherwise follow the system.
+          document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) {
+            meta.content = theme === 'dark' ? '#050505' : '#fefefd';
+          });
+        }
       } catch (e) {}
     </script>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="i-arrow-up-right" viewBox="0 0 24 24"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></symbol>
+      <symbol id="i-cat" viewBox="0 0 24 24"><path d="M12 5c.67 0 1.35.09 2 .26 1.78-2 5.03-2.84 6.42-2.26 1.4.58-.42 7-.42 7 .57 1.07 1 2.24 1 3.44C21 17.9 16.97 21 12 21s-9-3-9-7.56c0-1.25.5-2.4 1-3.44 0 0-1.89-6.42-.5-7 1.39-.58 4.72.23 6.5 2.23A9.04 9.04 0 0 1 12 5Z"/><path d="M8 14v.5"/><path d="M16 14v.5"/><path d="M11.25 16.25h1.5L12 17l-.75-.75Z"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+      <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+      <symbol id="i-refresh-cw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+      <symbol id="i-rotate-ccw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+      <symbol id="i-volume-2" viewBox="0 0 24 24"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/></symbol>
+      <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="M12 20h.01"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/><path d="M5 12.859a10 10 0 0 1 5.17-2.69"/><path d="M19 12.859a10 10 0 0 0-2.007-1.523"/><path d="M2 8.82a15 15 0 0 1 4.177-2.643"/><path d="M22 8.82a15 15 0 0 0-11.288-3.764"/><path d="m2 2 20 20"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    </svg>
+
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="header">
+      <a class="brand" href="/" aria-label="Blitz, home">
+        <img src="/logo.svg" alt="" width="34" height="34" />
+        <span>Blitz</span>
+      </a>
+      <a class="button button-small" href="/learn">Open Blitz</a>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <h1 id="hero-title">Your words, not a course's.</h1>
+          <p class="lede">
+            Add the German or English words you keep running into. Blitz fills in the article, plural and meaning, then
+            asks you about each one until you can write it from memory.
+          </p>
+          <div class="actions">
+            <a class="go" href="/learn">
+              <span>Open Blitz</span>
+              <span class="go-circle"><svg><use href="#i-play" /></svg></span>
+            </a>
+            <a class="button button-quiet" href="#add">Add a word here</a>
+          </div>
+          <p class="note">No account needed. Your words stay on this device until you sign in.</p>
+        </div>
+
+        <div class="hero-stage">
+          <!-- Words from a German day: the bill, the stop, the hour work ends. -->
+          <ul class="stickers" aria-hidden="true">
+            <li data-article="die" style="--x: 14%; --y: 0.9rem; --turn: -8deg"><b>die</b> Rechnung</li>
+            <li data-article="der" style="--x: 50%; --y: 1.6rem; --turn: 5deg"><b>der</b> Feierabend</li>
+            <li data-article="der" style="--x: 84%; --y: 0.6rem; --turn: -9deg"><b>der</b> Stau</li>
+            <li data-article="das" style="--x: -5.6rem; --y: 36%; --turn: -5deg"><b>das</b> Frühstück</li>
+            <li style="--x: -2.6rem; --y: 55%; --turn: 6deg">gemütlich</li>
+            <li data-article="die" style="--x: -6.2rem; --y: 74%; --turn: -3deg"><b>die</b> Haltestelle</li>
+          </ul>
+
+          <figure class="demo" aria-labelledby="demo-caption">
+            <div class="lesson" id="lesson" data-level="1">
+              <div class="lesson-top">
+                <span class="level" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+                <span class="level-name" id="level-name" aria-live="polite">Level 1</span>
+              </div>
+              <p class="question" id="question">Which word is it?</p>
+              <div class="lesson-body">
+                <div class="clue" id="clue"></div>
+                <div class="answer" id="answer">
+                  <!-- Without JavaScript, the first question still shows what a lesson looks like. -->
+                  <div class="options">
+                    <span class="option">der Kater</span><span class="option">die Katze</span>
+                    <span class="option">die Tatze</span><span class="option">die Kasse</span>
+                  </div>
+                </div>
+              </div>
+              <div class="lesson-foot" id="foot">
+                <p class="feedback" id="feedback" aria-live="polite"></p>
+                <button class="check" id="check" type="button" disabled>Check</button>
+              </div>
+            </div>
+            <figcaption id="demo-caption">
+              Try it: one word, all five levels. In Blitz a word climbs after three right answers in a row; here one is
+              enough. A wrong answer sends it down, just like the real thing.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="feature add" id="add" aria-labelledby="add-title">
+        <div class="feature-copy">
+          <h2 id="add-title">Type a word. The rest is already there.</h2>
+          <p>
+            Pick a suggestion and its article, plural, translation and a short definition come with it. The most common
+            words were rewritten one clear meaning at a time, so <em>Schloss</em> the castle and <em>Schloss</em> the lock
+            stay apart. Prefer your own meaning, or a photo? Write it, or snap it.
+          </p>
+          <p class="small">Go on, add a few. They'll be waiting for you in Blitz.</p>
+        </div>
+        <div class="composer" id="composer">
+          <div class="switch" role="group" aria-label="Language" data-language="de">
+            <button type="button" data-language="de" aria-pressed="true"><span aria-hidden="true">🇩🇪</span> German</button>
+            <button type="button" data-language="en" aria-pressed="false"><span aria-hidden="true">🇬🇧</span> English</button>
+          </div>
+          <label class="composer-field">
+            <svg><use href="#i-pencil" /></svg>
+            <span class="sr-only">A word to add</span>
+            <input id="composer-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Add a German word" />
+          </label>
+          <ul class="suggestions" id="suggestions" aria-live="polite"></ul>
+          <p class="composer-status" id="composer-status" aria-live="polite"></p>
+          <div class="mine" id="mine" hidden>
+            <p class="mine-head"><span><span id="mine-count">1 word is</span> waiting in Blitz</span> <a href="/learn">Practise now <svg><use href="#i-arrow-up-right" /></svg></a></p>
+            <ul id="mine-list"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="ladder band" aria-labelledby="ladder-title">
+        <div class="band-inner">
+          <div class="section-head">
+            <h2 id="ladder-title">Every word climbs five steps.</h2>
+            <p>
+              From spotting it among four to writing it with nothing to lean on. Three right answers in a row move a word
+              up; one miss moves it down. Lower levels come up more often, so the shaky words get the practice.
+            </p>
+          </div>
+          <ol class="steps">
+            <li>
+              <span class="level" data-on="1" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+              <h3>Pick it from four</h3>
+              <p>The article is shown, so you just have to know the word.</p>
+            </li>
+            <li>
+              <span class="level" data-on="2" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+              <h3>Pick it from eight</h3>
+              <p>The wrong ones are spelled most like it, and now you choose der, die or das too.</p>
+            </li>
+            <li>
+              <span class="level" data-on="3" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+              <h3>Put its letters in order</h3>
+              <p>A third of them already sit in place. Drag the rest, or type them.</p>
+            </li>
+            <li>
+              <span class="level" data-on="4" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+              <h3>Write it with a head start</h3>
+              <p>The first letters are given. The article is yours to write.</p>
+            </li>
+            <li>
+              <span class="level" data-on="5" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+              <h3>Write it from one letter</h3>
+              <p>Or hear it said aloud and write it down. Six right in a row and it's offered for the archive.</p>
+            </li>
+          </ol>
+          <p class="clues">Each question shows one of the word's clues: its photo, its translation, its definition, or its sound.</p>
+        </div>
+      </section>
+
+      <section class="feature genders" aria-labelledby="genders-title">
+        <div class="feature-copy">
+          <h2 id="genders-title">der, die, das, in colour.</h2>
+          <p>
+            Every noun keeps its article and its colour wherever it shows up: in your list, in the options, on the
+            buttons. Words for people and animals come in pairs, and half the time practice asks for the other one.
+          </p>
+        </div>
+        <div class="articles" aria-label="Examples">
+          <p data-article="der"><b>der</b> Kater</p>
+          <p data-article="die"><b>die</b> Katze</p>
+          <p data-article="das"><b>das</b> Kätzchen</p>
+          <p class="pair">
+            <span data-article="der"><b>der</b> Lehrer</span>
+            <span class="pair-joint" aria-hidden="true"></span>
+            <span data-article="die"><b>die</b> Lehrerin</span>
+          </p>
+        </div>
+      </section>
+
+      <section class="feature write" aria-labelledby="write-title">
+        <div class="feature-copy">
+          <h2 id="write-title">Write anything. See what to fix.</h2>
+          <p>
+            Write a few lines and press Check. Spelling mistakes turn red and grammar blue, each with its fix and a
+            one-line reason. A misspelled word goes into your words in one tap, and every sentence you corrected is kept
+            to look back on.
+          </p>
+          <p class="small">Checking your writing needs you to be signed in.</p>
+        </div>
+        <div class="sheet" aria-label="A checked text">
+          <p class="sheet-prompt"><b>Erzähl von deinem Wochenende.</b> Tell me about your weekend.</p>
+          <p class="sheet-text">
+            Am Samstag <mark data-kind="grammar">ich bin</mark> mit <mark data-kind="grammar">mein Katze</mark> zum
+            <mark data-kind="spelling">Tierartzt</mark> gegangen. Sie hatte keine Lust und hat den ganzen Weg miaut.
+          </p>
+          <div class="fix" data-kind="spelling">
+            <p class="fix-line"><s>Tierartzt</s> <b>Tierarzt</b></p>
+            <p class="fix-why">Arzt has no t before the z.</p>
+            <span class="fix-add"><svg><use href="#i-plus" /></svg> Add to my words</span>
+          </div>
+          <div class="fix" data-kind="grammar">
+            <p class="fix-line"><s>ich bin</s> <b>bin ich</b></p>
+            <p class="fix-why">After Am Samstag, the verb comes second.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="lists" id="lists" aria-labelledby="lists-title">
+        <div class="section-head">
+          <h2 id="lists-title">Or start from a list.</h2>
+          <p>Ready-made lists by theme, in German and English. Open one, untick what you know already, and add the rest.</p>
+        </div>
+        <ul class="list-grid" id="list-grid"></ul>
+        <a class="button button-quiet more-lists" id="more-lists" href="/learn" hidden></a>
+      </section>
+
+      <section class="facts" aria-label="More about Blitz">
+        <div class="fact" style="--tint: var(--accent)">
+          <span class="fact-icon"><svg><use href="#i-wifi-off" /></svg></span>
+          <h3>Works offline</h3>
+          <p>Install it like an app. Your words live on your device first, so Blitz opens without a connection.</p>
+        </div>
+        <div class="fact" style="--tint: var(--der)">
+          <span class="fact-icon"><svg><use href="#i-volume-2" /></svg></span>
+          <h3>Hear every word</h3>
+          <p>Natural German and English voices run in your browser, and keep working offline once downloaded.</p>
+        </div>
+        <div class="fact" style="--tint: var(--das)">
+          <span class="fact-icon"><svg><use href="#i-refresh-cw" /></svg></span>
+          <h3>On every device</h3>
+          <p>Sign in with Google when you want your words and photos on your phone and your laptop.</p>
+        </div>
+        <div class="fact" style="--tint: var(--die)">
+          <span class="fact-icon flags" aria-hidden="true">🇩🇪</span>
+          <h3>German and English</h3>
+          <p>Each language is its own space, with its own words, lists and writing page.</p>
+        </div>
+      </section>
+
+      <section class="closing" aria-labelledby="closing-title">
+        <svg class="bolt" viewBox="0 0 512 512" aria-hidden="true"><path d="M290 88L170 286H252L218 424L352 226H266Z" /></svg>
+        <h2 id="closing-title">Start with one word.</h2>
+        <p>The one you looked up today will do.</p>
+        <a class="go" href="/learn">
+          <span>Open Blitz</span>
+          <span class="go-circle"><svg><use href="#i-play" /></svg></span>
+        </a>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span class="footer-brand"><img src="/logo.svg" alt="" width="22" height="22" /> Blitz</span>
+      <span>
+        Dictionary from <a href="https://en.wiktionary.org">Wiktionary</a>, CC BY-SA. Voices from
+        <a href="https://github.com/rhasspy/piper">Piper</a>.
+      </span>
+    </footer>
+
+    <script type="module" src="/src/landing/main.ts"></script>
   </body>
 </html>
