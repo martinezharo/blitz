@@ -9,18 +9,59 @@
       name="description"
       content="Add the German or English words you keep running into. Blitz fills in the article, plural and meaning, then quizzes you until you can write each one from memory."
     />
+    <link rel="canonical" href="https://blitz.4oli.com/" />
     <meta property="og:title" content="Blitz: your words, not a course's" />
     <meta
       property="og:description"
       content="Add the German or English words you keep running into. Blitz quizzes you until you can write each one from memory."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/icons/icon-512.png" />
+    <meta property="og:url" content="https://blitz.4oli.com/" />
+    <meta property="og:site_name" content="Blitz" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content="https://blitz.4oli.com/icons/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Blitz: your words, not a course's" />
+    <meta
+      name="twitter:description"
+      content="Add the German or English words you keep running into. Blitz quizzes you until you can write each one from memory."
+    />
+    <meta name="twitter:image" content="https://blitz.4oli.com/icons/icon-512.png" />
     <link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="icon" href="/logo.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>Blitz: learn the German and English words you pick</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://blitz.4oli.com/#website",
+            "url": "https://blitz.4oli.com/",
+            "name": "Blitz",
+            "description": "Learn the German and English words you pick.",
+            "inLanguage": "en"
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://blitz.4oli.com/#app",
+            "name": "Blitz",
+            "url": "https://blitz.4oli.com/learn",
+            "description": "Add the German or English words you keep running into. Blitz fills in the article, plural and meaning, then quizzes you until you can write each one from memory.",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Web",
+            "inLanguage": ["en", "de"],
+            "isAccessibleForFree": true,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+            "sameAs": "https://github.com/martinezharo/blitz"
+          }
+        ]
+      }
+    </script>
     <script>
       // The installed app opened from an older home-screen icon lands here: send it on to the app.
       if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) location.replace('/learn');

@@ -1,0 +1,11 @@
+# Blitz — https://blitz.4oli.com
+# The front page is at /, the app at /learn. Everything under /api is private.
+
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://blitz.4oli.com/sitemap.xml
+
+# Guide for AI agents and assistants:
+# https://blitz.4oli.com/llms.txt

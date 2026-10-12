@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#fefefd" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#050505" media="(prefers-color-scheme: dark)" />
+    <title>Page not found — Blitz</title>
+    <link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --background: light-dark(#fefefd, #050505);
+        --foreground: light-dark(#121311, #f7f8f3);
+        --muted: light-dark(#74776f, #8b8e87);
+        --button-background: light-dark(#161714, #f4f5f0);
+        --button-foreground: light-dark(#ffffff, #0b0c0a);
+        --accent: light-dark(#e84b1b, #ff7540);
+        --radius-tail-2xl: 2.2rem 2.2rem 2.2rem 0.85rem;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 1.5rem;
+        background: var(--background);
+        color: var(--foreground);
+        font-family: Nunito, ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
+        font-weight: 700;
+      }
+      main {
+        max-width: 32rem;
+        text-align: center;
+      }
+      img {
+        width: 56px;
+        height: 56px;
+      }
+      h1 {
+        margin: 0.75rem 0 0.5rem;
+        font-size: 1.9rem;
+        font-weight: 950;
+      }
+      p {
+        margin: 0 0 1.5rem;
+        color: var(--muted);
+      }
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+      }
+      a {
+        padding: 0.7rem 1.2rem;
+        border-radius: var(--radius-tail-2xl);
+        text-decoration: none;
+      }
+      a.go {
+        background: var(--button-background);
+        color: var(--button-foreground);
+      }
+      a.quiet {
+        border: 2px solid var(--accent);
+        color: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/logo.svg" alt="" width="56" height="56" />
+      <h1>Nothing here.</h1>
+      <p>That page does not exist. The words are the other way.</p>
+      <nav>
+        <a class="go" href="/">Go to the front page</a>
+        <a class="quiet" href="/learn">Open Blitz</a>
+      </nav>
+    </main>
+  </body>
+</html>

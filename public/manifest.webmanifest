@@ -6,6 +6,9 @@
   "start_url": "/learn",
   "scope": "/",
   "display": "standalone",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["education"],
   "background_color": "#fefefd",
   "theme_color": "#fefefd",
   "icons": [

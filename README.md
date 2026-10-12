@@ -42,7 +42,9 @@ added there is saved where the app keeps its words, so it is waiting in
 loads no React.
 The app itself (`learn.html`, `src/main.tsx`) is at `/learn`, and signing in
 lands there. The installed app starts at `/learn` too, and the front page sends
-an installed app opened at `/` (an older home-screen icon) on to it.
+an installed app opened at `/` (an older home-screen icon) on to it. Search
+engines and agents read `public/robots.txt`, `public/sitemap.xml` and
+`public/llms.txt`, and an unknown path is a real 404 (`public/404.html`).
 
 Words live in this browser's IndexedDB first, so the app works offline and
 without an account. Signing in with Google syncs them, pictures included, to
@@ -175,7 +177,7 @@ mode, Google only accepts HTTPS or `localhost` redirects; the authorised
 redirect URI is `<origin>/api/auth/callback`.
 
 To sign in to the production account from development on any localhost port,
-put `DEVELOPMENT_UPSTREAM=https://blitz.olma.workers.dev` and the shared
+put `DEVELOPMENT_UPSTREAM=https://blitz.4oli.com` and the shared
 `DEVELOPMENT_BRIDGE_SECRET` in `.dev.vars`. The same secret must be set in the
 production Worker with `wrangler secret put DEVELOPMENT_BRIDGE_SECRET`. Open
 the app on any HTTPS development origin or `http://localhost:<port>`. On the

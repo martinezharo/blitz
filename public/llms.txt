@@ -1,0 +1,30 @@
+# Blitz
+
+> Blitz is a free web app for learning the German and English words you choose. Add a word you keep running into and Blitz fills in its article, plural, translation and a short definition, then quizzes it through five levels until you can write it from memory. Words live on your device first, so practice works offline; signing in with Google syncs them across devices.
+
+- Home: https://blitz.4oli.com/
+- App: https://blitz.4oli.com/learn
+- Source: https://github.com/martinezharo/blitz
+- Languages: German and English
+- Price: free, no ads; Google sign-in is optional and only needed for sync and for writing checks
+
+## Pages
+
+- [Home](https://blitz.4oli.com/): What Blitz is, a playable sample lesson, a working word composer and the themed lists. Static HTML.
+- [App](https://blitz.4oli.com/learn): The vocabulary app: add words, practise them at five levels with photos, translations, meanings and speech, and write free text with spelling and grammar mistakes marked.
+
+## Data
+
+The site serves its dictionary and word lists as static JSON, no key needed:
+
+- [Ready-made lists](https://blitz.4oli.com/lists/index.json): every themed list (food, travel, jobs, household, ...) with its id, name and a sample of its words.
+- [One list's words](https://blitz.4oli.com/lists/food.json): each list at `/lists/<id>.json`, with both sides (German and English); every word has its type, article, plural, counterpart, translation and definition.
+- [German dictionary](https://blitz.4oli.com/dict/de/ka.json): one file per two first letters of the word, at `/dict/de/<xy>.json` (the `_` in a shard name stands for a short word). Each entry has `w` (the word) and `s` (its meanings: type, article, plural, translations, definition).
+- [English dictionary](https://blitz.4oli.com/dict/en/ka.json): the same shape, at `/dict/en/<xy>.json`.
+- [English to German lookup](https://blitz.4oli.com/dict/de-rev/ka.json): at `/dict/de-rev/<xy>.json`, entries found by `k`, an English word that translates them.
+
+## Notes
+
+- The dictionary is built from [Wiktionary](https://en.wiktionary.org) (CC BY-SA), with the most common meanings rewritten for learners.
+- Words and the writing history stay in the browser (IndexedDB) unless the person signs in; account data is only reachable through private `/api` routes, which agents should not call.
+- The app is an installable PWA and works offline after the first visit.

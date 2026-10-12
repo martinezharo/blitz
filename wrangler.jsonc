@@ -11,7 +11,9 @@
     "directory": "./dist",
     // The Worker reads the dictionary from here to know which meanings exist.
     "binding": "ASSETS",
-    "not_found_handling": "single-page-application",
+    // Only / and /learn are pages, so an unknown path is a real 404
+    // (public/404.html), not the app shell at an address that does not exist.
+    "not_found_handling": "404-page",
     "run_worker_first": ["/api/*"]
   },
   "d1_databases": [
