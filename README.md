@@ -64,6 +64,8 @@ The daily limits remain 30 per account and 150 overall; writing checks are
 billed through OpenAI separately from the definitions' Workers AI allowance.
 Configure `OPENAI_API_KEY` in `.dev.vars` locally and with
 `pnpm wrangler secret put OPENAI_API_KEY` for the deployed Worker.
+Worker Previews keep separate secrets: configure the preview with
+`pnpm wrangler preview secret put OPENAI_API_KEY --name <preview-name>`.
 
 On phones, a bar along the bottom holds Words, Practice, Write and the menu
 that the top-right corner has on wide screens; wide screens switch pages from
