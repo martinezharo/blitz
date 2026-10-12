@@ -151,9 +151,11 @@ reads the word from the dictionary itself, so the browser never sends text for
 the model to read, and a daily allowance (per account and overall) keeps it
 inside Workers AI's free neurons. Guests see what is already written.
 
-`pnpm dev` runs the Worker too, on local D1 and R2 (`.wrangler/state`). The AI
-binding always runs on Cloudflare, so development needs `wrangler login`. Apply
-the schema once with `pnpm wrangler d1 migrations apply blitz --local`.
+`pnpm dev` applies pending migrations to the local database before starting
+Vite, then runs the Worker too, on local D1 and R2 (`.wrangler/state`). Each
+worktree has its own local database, including when development sign-in uses
+the production account. The AI binding always runs on Cloudflare, so
+development needs `wrangler login`.
 Google sign-in needs `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, in
 `.dev.vars` locally and as Worker secrets in production. In isolated local
 mode, Google only accepts HTTPS or `localhost` redirects; the authorised

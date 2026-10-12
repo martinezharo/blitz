@@ -6,7 +6,7 @@
   "type": "module",
   "packageManager": "pnpm@12.10.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/migrate-local.ts && vite",
     "build": "pnpm check && vite build",
     "preview": "vite preview",
     "check": "tsc --noEmit && tsc --noEmit -p worker",
