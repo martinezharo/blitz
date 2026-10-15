@@ -304,12 +304,10 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
     if (clue.kind === 'audio') listen();
   }, []);
 
-  // Letters and writing are said once the answer is complete and right, and
-  // only then: a wrong one stays silent.
-  const solved = answer.kind !== 'choice' && isCorrect(exercise, article, built);
+  // Letters and writing are said only after a correct answer is confirmed.
   useEffect(() => {
-    if (solved) void speak(language, solution);
-  }, [solved]);
+    if (answer.kind !== 'choice' && result?.correct) void speak(language, solution);
+  }, [result]);
 
   // A new question loses the focus of the one before; without a place to land
   // it falls to the first button, the close one, and the next Enter ends the lesson.
