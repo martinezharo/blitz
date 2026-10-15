@@ -12068,5 +12068,12 @@
 "denmark":[{"type":"noun","definition":"A small country in northern Europe"}],
 "finland":[{"type":"noun","definition":"A country in northern Europe with many lakes"}],
 "austria":[{"type":"noun","definition":"A country in central Europe with the Alps"}],
-"switzerland":[{"type":"noun","definition":"A neutral country in central Europe"}]
+"switzerland":[{"type":"noun","definition":"A neutral country in central Europe"}],
+"monday":[{"type":"noun","definition":"The first day of the working week"}],
+"tuesday":[{"type":"noun","definition":"The second day of the working week"}],
+"wednesday":[{"type":"noun","definition":"The middle day of the working week"}],
+"thursday":[{"type":"noun","definition":"The fourth day of the working week"}],
+"friday":[{"type":"noun","definition":"The last day of the working week"}],
+"saturday":[{"type":"noun","definition":"The first day of the weekend"}],
+"sunday":[{"type":"noun","definition":"The last day of the weekend"}]
 }
