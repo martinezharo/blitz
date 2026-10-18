@@ -90,6 +90,22 @@ On phones, a bar along the bottom holds Words, Practice, Write and the menu
 that the top-right corner has on wide screens; wide screens switch pages from
 a pill at the top.
 
+## Streak
+
+The flame in the top-right corner (alone on phones, left of install and the
+account on wide screens) counts the days in a row with at least one practice
+question answered, in any language. Until today is practised it shows
+yesterday's count, greyed out; a missed day starts it again from zero. Opening
+it shows the last seven days and the longest streak.
+
+The day's first answer grows it (`src/data/streak.ts`). Once the lesson is
+closed, the new count is celebrated in the middle of the screen, with its own
+sound on the same scale as the rest, and flies into the corner. A day
+practised on another device just shows up, uncelebrated. Days are calendar
+days on the device in hand; each one syncs as a change of its own kind, with
+an id made from the date, so two devices never count a day twice
+(`src/domain/streak.ts`).
+
 ## Install
 
 Blitz is an installable web app. Where the browser offers it, an install
@@ -241,7 +257,7 @@ repeated `callMain` calls on the same instance eventually corrupt memory.
 
 ## Sync
 
-Words and the grammar history sync the same way. Each local write also leaves a row in `pending`. A sync round sends those to
+Words, the grammar history and the days practised sync the same way. Each local write also leaves a row in `pending`. A sync round sends those to
 `POST /api/sync` and pulls everything past the device's cursor; each word
 resolves on its own, last write (`updatedAt`) wins, and deletions travel as
 changes. Pictures go to R2 under the SHA-256 of their bytes. Signing out sends

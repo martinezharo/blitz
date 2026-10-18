@@ -229,6 +229,30 @@ export const sounds = {
     });
   },
 
+  /**
+   * The streak growing by a day, timed to its celebration: a flame catching
+   * with a warm swell, then the count turning over on a knock, a bell and a
+   * sparkle. Only ever played once the lesson's own sounds are over.
+   */
+  streak() {
+    sound((ctx, out, now) => {
+      noise(ctx, out, { at: now, length: 0.5, volume: 0.07, filter: 'bandpass', freq: 250, to: 2600, q: 0.9 });
+      tone(ctx, out, { freq: 196, to: 392, glide: 0.35, at: now, length: 0.45, volume: 0.06, attack: 0.03 });
+      pluck(ctx, out, note(3), now + 0.55, 0.09, 0.18);
+      bell(ctx, out, note(5), now + 0.6, 0.12, 0.8);
+      bell(ctx, out, note(7), now + 0.6, 0.06, 0.6);
+      [7, 9, 12].forEach((step, index) => bell(ctx, out, note(step), now + 0.74 + index * 0.06, 0.035, 0.4));
+    });
+  },
+
+  /** The new count landing in its corner: one soft knock. */
+  streakLand() {
+    sound((ctx, out, now) => {
+      pluck(ctx, out, note(5), now, 0.08, 0.2);
+      noise(ctx, out, { at: now, length: 0.04, volume: 0.04, filter: 'lowpass', freq: 1200 });
+    });
+  },
+
   /** Into a lesson: a quick rush up and two notes. */
   start() {
     sound((ctx, out, now) => {

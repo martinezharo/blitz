@@ -1,3 +1,4 @@
+import { type Day, dayFromId, isDay } from './streak.ts';
 import { LANGUAGES, MAX_LEVEL, WORD_TYPES, type Word } from './word.ts';
 import type { Correction, Fix } from './writing.ts';
 
@@ -8,16 +9,16 @@ import type { Correction, Fix } from './writing.ts';
  * Conflicts resolve per word, last write wins by `updatedAt`. A deletion is a
  * change too (`word: null`), so it reaches every device.
  *
- * Sentences of the grammar history travel the same way, as changes of their
- * own kind. Devices from before they existed do not ask for them, and so are
- * never sent any.
+ * Sentences of the grammar history and the days practised travel the same
+ * way, as changes of their own kind. Devices from before a kind existed do not
+ * ask for it, and so are never sent any.
  */
 
 /** A word as it travels: the photo is the SHA-256 of its bytes, fetched apart. */
 export type WireWord = Omit<Word, 'photo' | 'photoKey'> & { photo: string | null };
 
 /** What else than words a device can sync. */
-export type ChangeKind = 'correction';
+export type ChangeKind = 'correction' | 'day';
 
 export interface Change {
   id: string;
@@ -28,6 +29,8 @@ export interface Change {
   word: WireWord | null;
   /** A correction's change only: null when it was deleted. */
   correction?: Correction | null;
+  /** A practised day's change only. Days are never taken back. */
+  day?: Day;
 }
 
 export interface SyncRequest {
@@ -77,6 +80,10 @@ export function parseChange(value: unknown): Change | null {
     if (correction === null) return { id, updatedAt, kind, word: null, correction: null };
     const parsed = parseCorrection(correction);
     return parsed && parsed.id === id && parsed.updatedAt === updatedAt ? { id, updatedAt, kind, word: null, correction: parsed } : null;
+  }
+  if (kind === 'day') {
+    const { day } = value as Record<string, unknown>;
+    return isDay(day) && dayFromId(id) === day ? { id, updatedAt, kind, word: null, day } : null;
   }
   if (kind !== undefined) return null;
   if (word === null) return { id, updatedAt, word: null };

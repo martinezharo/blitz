@@ -13,6 +13,7 @@ import { ListsPill } from './features/lists/lists-entry.tsx';
 import { ListsPage } from './features/lists/lists-page.tsx';
 import { TabBar, type View, ViewSwitch } from './features/nav/nav.tsx';
 import { PreferencesModal } from './features/preferences/preferences-modal.tsx';
+import { StreakBadge } from './features/streak/streak-badge.tsx';
 import { PracticeDock } from './features/practice/practice-dock.tsx';
 import { PracticeSession } from './features/practice/practice-session.tsx';
 import { Composer, composerAddButton, type NewWord } from './features/words/composer.tsx';
@@ -114,8 +115,11 @@ export function App() {
         <LanguageMenu language={language} onChange={setLanguage} />
       </div>
       <div className={styles.cornerEnd}>
-        <InstallButton />
-        <AccountBadge state={account} onSignIn={openSignIn} onSignOut={signOut} onOpenPreferences={openPreferences} />
+        <StreakBadge hold={practicing} />
+        <div className={styles.wideOnly}>
+          <InstallButton />
+          <AccountBadge state={account} onSignIn={openSignIn} onSignOut={signOut} onOpenPreferences={openPreferences} />
+        </div>
       </div>
       <ViewSwitch view={view} onView={setView} />
 
