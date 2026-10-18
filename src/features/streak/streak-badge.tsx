@@ -191,7 +191,7 @@ function Celebration({ growth, target, onLanded }: { growth: Growth; target: Ref
               />
             ))}
             <Flame className={styles.bigFlame} aria-hidden="true" />
-            <span className={styles.count} aria-hidden="true">
+            <span className={styles.count} data-digits={Math.min(4, String(growth.to).length)} aria-hidden="true">
               <span className={styles.old}>{growth.from}</span>
               <span className={styles.new}>{growth.to}</span>
             </span>
