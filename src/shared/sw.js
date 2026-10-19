@@ -13,31 +13,78 @@ const PRECACHE = '__PRECACHE__';
 const SHELL = `blitz-shell-${VERSION}`;
 const ASSETS = 'blitz-assets';
 const DICTIONARY = 'blitz-dictionary';
+// Which build is in charge, and its files, so the next one knows what to keep.
+const BUILD = 'blitz-build';
+
+// How long an open page has to say it reloads by itself (app-update.ts).
+const ANSWER_MS = 1500;
 
 // Past this, an offline-first load serves the shell rather than keep waiting.
 const NETWORK_PATIENCE_MS = 4000;
 
 self.addEventListener('install', (event) => {
-  // No skipWaiting: a new build takes over once every open window is closed, so
-  // a page never loses the hashed files it is still running on.
-  event.waitUntil(caches.open(SHELL).then((cache) => cache.addAll(PRECACHE.map((url) => new Request(url, { cache: 'reload' })))));
+  // A new build takes over as soon as it is stored, rather than once every
+  // window is closed: an installed app can stay open for days.
+  event.waitUntil(
+    caches
+      .open(SHELL)
+      .then((cache) => cache.addAll(PRECACHE.map((url) => new Request(url, { cache: 'reload' }))))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
-      for (const name of await caches.keys()) {
-        if (name.startsWith('blitz-shell-') && name !== SHELL) await caches.delete(name);
+      const builds = await caches.open(BUILD);
+      const previous = await builds
+        .match('/current')
+        .then((response) => response?.json())
+        .catch(() => undefined);
+      await builds.put('/current', new Response(JSON.stringify({ version: VERSION, known: KNOWN })));
+      const updating = previous !== undefined || (await caches.keys()).some((name) => name.startsWith('blitz-shell-') && name !== SHELL);
+
+      await self.clients.claim();
+      // Pages still on an older build move to this one. Those that answer
+      // reload by themselves once nothing would be lost; the rest, from builds
+      // before pages could answer, are reloaded now. Not awaited: their
+      // reloads are fetches, which wait for this activation to end.
+      if (updating) {
+        const windows = await self.clients.matchAll({ type: 'window' });
+        await Promise.all(
+          windows.map(async (client) => {
+            if (!(await answers(client))) client.navigate(client.url).catch(() => {});
+          }),
+        );
       }
-      // Hashed files from past builds would only pile up.
+
+      // The build before stays until the next one, for the pages still on it
+      // until they reload. Anything older would only pile up.
+      const kept = new Set([SHELL, previous && `blitz-shell-${previous.version}`]);
+      for (const name of await caches.keys()) {
+        if (name.startsWith('blitz-shell-') && !kept.has(name)) await caches.delete(name);
+      }
+      const files = new Set([...KNOWN, ...(previous?.known ?? [])]);
       const assets = await caches.open(ASSETS);
       for (const request of await assets.keys()) {
-        if (!KNOWN.includes(new URL(request.url).pathname)) await assets.delete(request);
+        if (!files.has(new URL(request.url).pathname)) await assets.delete(request);
       }
-      await self.clients.claim();
     })(),
   );
 });
+
+/** Whether the page answers that it reloads by itself when it is safe to. */
+function answers(client) {
+  return new Promise((resolve) => {
+    const channel = new MessageChannel();
+    const timer = setTimeout(() => resolve(false), ANSWER_MS);
+    channel.port1.onmessage = () => {
+      clearTimeout(timer);
+      resolve(true);
+    };
+    client.postMessage({ type: 'blitz:updated' }, [channel.port2]);
+  });
+}
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
