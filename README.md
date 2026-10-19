@@ -50,6 +50,11 @@ Words live in this browser's IndexedDB first, so the app works offline and
 without an account. Signing in with Google syncs them, pictures included, to
 every other device signed in to the same account.
 
+A page in the background stays off IndexedDB: it closes the database, its live
+queries pause and sync waits until it is shown again (`src/data/live.ts`).
+Android freezes background pages, and one frozen mid-transaction would hold the
+other tab's or the installed app's writes until it was shown again.
+
 ## Write
 
 The Write page is free writing in the language of the space. Press Check (or
@@ -114,8 +119,13 @@ menu on narrow ones (guests find it in Preferences). iPhones and iPads have no
 install prompt, so the menu says to use Share, then Add to Home Screen. A
 service worker (`src/shared/sw.js`, emitted as `/sw.js` by the build) keeps the
 app shell, the front page, fonts and speech runtime on the device, so Blitz opens offline; it
-is only registered in production builds. A new build takes over once every
-open window is closed.
+is only registered in production builds. A new build takes over as soon as
+it is downloaded: an open app looks for one whenever it comes back to the
+screen and every hour, and reloads into it once nothing would be lost: no
+lesson, sheet or menu open, and nothing being typed unless it is hidden
+(`src/shared/app-update.ts`). Pages from builds before that, which cannot
+reload themselves, the new service worker reloads at once. The build before
+stays cached until the next one, for the pages still on it.
 
 The logo is `public/logo.svg`. The PNG icons in `public/icons/` come from it:
 run `CHROMIUM=/path/to/chromium node scripts/build-icons.ts` after changing it.

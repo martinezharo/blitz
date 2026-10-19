@@ -21,7 +21,7 @@ beforeAll(async () => {
   server = await testServer();
   vi.stubGlobal('isSecureContext', true);
   vi.stubGlobal('window', new EventTarget());
-  vi.stubGlobal('document', Object.assign(new EventTarget(), { visibilityState: 'hidden' }));
+  vi.stubGlobal('document', Object.assign(new EventTarget(), { visibilityState: 'visible' }));
 });
 
 afterAll(() => server.dispose());
@@ -55,6 +55,21 @@ describe('sync', () => {
   it('uploads words written before signing in', async () => {
     const word = await addWord('de', bank);
     await signIn();
+    expect((await remote()).changes.map((change) => change.word?.term)).toEqual([word.term]);
+    expect(await db.pending.count()).toBe(0);
+  });
+
+  it('waits while the page is hidden, and syncs once it is shown', async () => {
+    const word = await addWord('de', bank);
+    Object.assign(document, { visibilityState: 'hidden' });
+    try {
+      await signIn();
+      expect((await remote()).changes).toEqual([]);
+      expect(await db.pending.count()).toBe(1);
+    } finally {
+      Object.assign(document, { visibilityState: 'visible' });
+    }
+    await syncNow();
     expect((await remote()).changes.map((change) => change.word?.term)).toEqual([word.term]);
     expect(await db.pending.count()).toBe(0);
   });
