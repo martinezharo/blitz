@@ -3,6 +3,7 @@ import type { Day } from '../domain/streak.ts';
 import type { ChangeKind } from '../domain/sync.ts';
 import type { Word } from '../domain/word.ts';
 import type { Correction } from '../domain/writing.ts';
+import { pageHidden } from './live.ts';
 
 /** A local write sync has not sent yet. `at` is the write's `updatedAt`. */
 export interface Pending {
@@ -60,3 +61,11 @@ db.version(4)
     // As for corrections: days other devices practised are behind the cursor.
     await tx.table<Meta>('meta').delete('cursor');
   });
+
+// A hidden page lets go of the database (see live.ts); the next read, once it
+// is shown again, opens it anew. Transactions already running still finish.
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (pageHidden()) db.close({ disableAutoOpen: false });
+  });
+}

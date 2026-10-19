@@ -50,6 +50,11 @@ Words live in this browser's IndexedDB first, so the app works offline and
 without an account. Signing in with Google syncs them, pictures included, to
 every other device signed in to the same account.
 
+A page in the background stays off IndexedDB: it closes the database, its live
+queries pause and sync waits until it is shown again (`src/data/live.ts`).
+Android freezes background pages, and one frozen mid-transaction would hold the
+other tab's or the installed app's writes until it was shown again.
+
 ## Write
 
 The Write page is free writing in the language of the space. Press Check (or

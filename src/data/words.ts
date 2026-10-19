@@ -1,15 +1,15 @@
 import Dexie from 'dexie';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { normalize } from '../domain/dictionary.ts';
 import { progress } from '../domain/practice.ts';
 import { type Draft, hasCounterpart, type Language, sexOf, type Word, wordFields } from '../domain/word.ts';
 import { db } from './db.ts';
+import { pageHidden, useLiveData } from './live.ts';
 import { lookup } from './dictionary.ts';
 import { requestSync } from './sync.ts';
 
 /** Newest first. `undefined` while the first read is in flight. */
 export function useWords(language: Language): Word[] | undefined {
-  return useLiveQuery(
+  return useLiveData(
     () =>
       db.words
         .where('[language+createdAt]')
@@ -104,6 +104,8 @@ export async function fillCounterparts(words: Word[]): Promise<void> {
   filling = true;
   try {
     for (const word of missing) {
+      // Left for when the page is shown again (live.ts).
+      if (pageHidden()) break;
       const found = (await lookup(word.language, word.term)).find(
         (suggestion) =>
           !suggestion.translated &&

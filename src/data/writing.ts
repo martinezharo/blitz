@@ -1,8 +1,8 @@
 import Dexie from 'dexie';
-import { useLiveQuery } from 'dexie-react-hooks';
 import type { Language } from '../domain/word.ts';
 import { type Correction, type Mark, MAX_TEXT, type SentenceFix, type Verdict } from '../domain/writing.ts';
 import { db } from './db.ts';
+import { useLiveData } from './live.ts';
 import { requestSync } from './sync.ts';
 import { newId } from './words.ts';
 
@@ -38,7 +38,7 @@ export async function checkText(language: Language, text: string): Promise<Check
 
 /** The grammar history of a language, newest first. `undefined` while it loads. */
 export function useCorrections(language: Language): Correction[] | undefined {
-  return useLiveQuery(
+  return useLiveData(
     () =>
       db.corrections
         .where('[language+createdAt]')

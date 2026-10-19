@@ -1,7 +1,7 @@
-import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { type Day, dayId, dayOf, streakOf } from '../domain/streak.ts';
 import { db } from './db.ts';
+import { useLiveData } from './live.ts';
 import { requestSync } from './sync.ts';
 
 /** A streak that has just grown, from one count to the next, waiting to be shown. */
@@ -69,5 +69,5 @@ export function useToday(): Day {
 
 /** The days practised, every language together. `undefined` while they load. */
 export function usePracticeDays(): Day[] | undefined {
-  return useLiveQuery(() => db.days.toCollection().primaryKeys(), []);
+  return useLiveData(() => db.days.toCollection().primaryKeys(), []);
 }

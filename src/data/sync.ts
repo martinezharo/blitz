@@ -3,6 +3,7 @@ import { dayFromId } from '../domain/streak.ts';
 import { type Change, type ChangeKind, MAX_PUSH, type SyncResponse, type WireWord } from '../domain/sync.ts';
 import type { Word } from '../domain/word.ts';
 import { db } from './db.ts';
+import { pageHidden } from './live.ts';
 
 /**
  * Keeps this device's words in step with the account's.
@@ -117,6 +118,9 @@ export async function syncNow(): Promise<void> {
 }
 
 async function round(): Promise<void> {
+  // A hidden page stays off the database (live.ts); being shown asks for a round.
+  if (pageHidden()) return;
+  const before = state;
   setState({ status: 'syncing' });
   try {
     for (let i = 0; i < ROUND_LIMIT; i++) {
@@ -128,6 +132,9 @@ async function round(): Promise<void> {
         body: JSON.stringify({ cursor, changes: sent, kinds: KINDS }),
       });
       const result = (await response.json()) as SyncResponse;
+      // Hidden meanwhile: the same changes come back in the next round, and
+      // what was sent is sent again, which last write wins makes harmless.
+      if (pageHidden()) return setState(before);
       await applyRemote(sent, result);
       if (!result.more && (await db.pending.count()) === 0) break;
     }
