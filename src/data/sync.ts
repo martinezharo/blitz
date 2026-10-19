@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { dayFromId } from '../domain/streak.ts';
 import { type Change, type ChangeKind, MAX_PUSH, type SyncResponse, type WireWord } from '../domain/sync.ts';
 import type { Word } from '../domain/word.ts';
 import { db } from './db.ts';
@@ -22,7 +23,7 @@ interface SyncState {
 
 const ROUND_LIMIT = 50;
 /** Everything besides words that this device keeps in step. */
-const KINDS: ChangeKind[] = ['correction'];
+const KINDS: ChangeKind[] = ['correction', 'day'];
 const DEBOUNCE_MS = 800;
 const INTERVAL_MS = 60_000;
 
@@ -159,6 +160,13 @@ async function pendingChanges(): Promise<Change[]> {
       changes.push({ id, updatedAt: correction?.updatedAt ?? at, kind, word: null, correction: correction ?? null });
       continue;
     }
+    if (kind === 'day') {
+      // Days are never taken back, so the id alone says which one.
+      const day = dayFromId(id);
+      if (day) changes.push({ id, updatedAt: at, kind, word: null, day });
+      else await db.pending.delete(id);
+      continue;
+    }
     const word = await db.words.get(id);
     if (!word) {
       changes.push({ id, updatedAt: at, word: null });
@@ -207,7 +215,7 @@ async function applyRemote(sent: Change[], result: SyncResponse): Promise<void> 
     photos.set(key, await downloadPhoto(key));
   }
 
-  await db.transaction('rw', [db.words, db.corrections, db.pending, db.meta], async () => {
+  await db.transaction('rw', [db.words, db.corrections, db.days, db.pending, db.meta], async () => {
     // Sent writes are done, unless the word was written again meanwhile.
     for (const change of sent) {
       const pending = await db.pending.get(change.id);
@@ -217,6 +225,11 @@ async function applyRemote(sent: Change[], result: SyncResponse): Promise<void> 
     for (const change of result.changes) {
       if (change.kind === 'correction') {
         await applyCorrection(change);
+        continue;
+      }
+      if (change.kind === 'day') {
+        // A day practised anywhere counts here too; the first stamp is kept.
+        if (change.day && !(await db.days.get(change.day))) await db.days.put({ day: change.day, updatedAt: change.updatedAt });
         continue;
       }
       // Not a kind this device knows: left alone.
@@ -272,9 +285,10 @@ export async function flush(): Promise<boolean> {
 
 /** Forgets this account's words on this device. They stay in the account. */
 export async function clearLocalData(): Promise<void> {
-  await db.transaction('rw', [db.words, db.corrections, db.pending, db.meta], async () => {
+  await db.transaction('rw', [db.words, db.corrections, db.days, db.pending, db.meta], async () => {
     await db.words.clear();
     await db.corrections.clear();
+    await db.days.clear();
     await db.pending.clear();
     await db.meta.clear();
   });

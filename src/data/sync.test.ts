@@ -4,6 +4,8 @@ import { testServer } from '../../worker/test-server.ts';
 import type { Change, SyncResponse } from '../domain/sync.ts';
 import { type Draft, emptyDraft } from '../domain/word.ts';
 import { db } from './db.ts';
+import { dayId } from '../domain/streak.ts';
+import { markPracticed } from './streak.ts';
 import { clearLocalData, startSync, stopSync, syncNow } from './sync.ts';
 import { addWord, deleteWord, updateWord } from './words.ts';
 import { deleteCorrection, saveCorrections } from './writing.ts';
@@ -141,6 +143,22 @@ describe('sync', () => {
     ]);
     await syncNow();
     expect(await db.corrections.get(id)).toMatchObject({ corrected: 'We were late.' });
+  });
+
+  it('sends the days practised, once each, and pulls those of other devices', async () => {
+    const monday = new Date(2026, 9, 19, 9).getTime();
+    await markPracticed(monday);
+    await markPracticed(monday + 3600_000);
+    await signIn();
+    const days = async () => {
+      const response = await otherDevice('/api/sync', { method: 'POST', body: JSON.stringify({ cursor: 0, changes: [], kinds: ['day'] }) });
+      return ((await response.json()) as SyncResponse).changes.map((change) => change.day);
+    };
+    expect(await days()).toEqual(['2026-10-19']);
+
+    await remote(0, [{ id: dayId('2026-10-20'), updatedAt: monday + 86_400_000, kind: 'day', word: null, day: '2026-10-20' }]);
+    await syncNow();
+    expect(await db.days.toCollection().primaryKeys()).toEqual(['2026-10-19', '2026-10-20']);
   });
 
   it("drops another account's words before syncing", async () => {

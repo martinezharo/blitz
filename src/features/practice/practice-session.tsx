@@ -1,5 +1,6 @@
 import { Archive, Check, Download, Mars, Venus, Volume2, X } from 'lucide-react';
 import { type FormEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { markPracticed } from '../../data/streak.ts';
 import { recordAnswer, setArchived } from '../../data/words.ts';
 import { type Answer, buildExercise, type Exercise, fillLetters, isCorrect, offersArchive, pickLesson, STREAK_TO_ARCHIVE } from '../../domain/practice.ts';
 import { LANGUAGES, type Language, type Word } from '../../domain/word.ts';
@@ -56,6 +57,8 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
 
   async function answer(correct: boolean): Promise<Word> {
     const updated = await recordAnswer(latest(exercise!.word), correct);
+    // The day's first answer, right or wrong, keeps the streak; it is celebrated once the lesson closes.
+    markPracticed().catch(() => {});
     setAnswered((map) => new Map(map).set(updated.id, updated));
     setAsked((count) => count + 1);
     if (correct) setRight((count) => count + 1);

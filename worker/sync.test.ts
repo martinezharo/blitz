@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { dayId } from '../src/domain/streak.ts';
 import type { Change, SyncResponse, WireWord } from '../src/domain/sync.ts';
 import { sha256 } from './http.ts';
 import { testServer } from './test-server.ts';
@@ -172,6 +173,39 @@ describe('corrections', () => {
     const bad = { ...sentence, correction: { ...sentence.correction!, fixes: [{ wrong: 'x', right: 'y', why: '', from: [0, 99], to: [0, 1] }] } };
     expect((await post(as, { cursor: 0, changes: [bad] })).status).toBe(400);
     expect((await post(as, { cursor: 0, changes: [{ ...sentence, kind: 'note' }] })).status).toBe(400);
+  });
+});
+
+describe('practised days', () => {
+  const day = (date: string, updatedAt: number): Change => ({ id: dayId(date), updatedAt, kind: 'day', word: null, day: date });
+  const post = (fetcher: typeof fetch, body: unknown) =>
+    fetcher('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+  it('travel to the devices that ask for them, and only to those', async () => {
+    const as = server.as(await server.signUp('ada'));
+    const monday = day('2026-10-19', 10);
+    const bank = change(id(), 11);
+    expect((await post(as, { cursor: 0, changes: [monday, bank], kinds: ['correction', 'day'] })).status).toBe(200);
+
+    const knows = (await (await post(as, { cursor: 0, changes: [], kinds: ['correction', 'day'] })).json()) as SyncResponse;
+    expect(knows.changes).toEqual([monday, bank]);
+    // Devices that know corrections but not days are sent no days.
+    const corrections = (await (await post(as, { cursor: 0, changes: [], kinds: ['correction'] })).json()) as SyncResponse;
+    expect(corrections.changes).toEqual([bank]);
+  });
+
+  it('are one row per day, whichever device practised it', async () => {
+    const as = server.as(await server.signUp('ada'));
+    await post(as, { cursor: 0, changes: [day('2026-10-19', 10)], kinds: ['day'] });
+    await post(as, { cursor: 0, changes: [day('2026-10-19', 20)], kinds: ['day'] });
+    const pulled = (await (await post(as, { cursor: 0, changes: [], kinds: ['day'] })).json()) as SyncResponse;
+    expect(pulled.changes).toEqual([day('2026-10-19', 20)]);
+  });
+
+  it('rejects a day that does not match its id', async () => {
+    const as = server.as(await server.signUp('ada'));
+    expect((await post(as, { cursor: 0, changes: [{ ...day('2026-10-19', 10), day: '2026-10-20' }] })).status).toBe(400);
+    expect((await post(as, { cursor: 0, changes: [{ ...day('2026-10-19', 10), id: id() }] })).status).toBe(400);
   });
 });
 

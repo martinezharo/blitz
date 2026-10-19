@@ -9,6 +9,7 @@ import {
   type SyncResponse,
   type WireWord,
 } from '../src/domain/sync.ts';
+import type { Day } from '../src/domain/streak.ts';
 import type { Correction } from '../src/domain/writing.ts';
 import type { User } from './auth.ts';
 import type { Env } from './env.ts';
@@ -35,6 +36,7 @@ export async function sync(request: Request, env: Env, user: User): Promise<Resp
   if (changes.some((change) => change === null)) return problem(400, 'Malformed change');
   const kinds = Array.isArray(body.kinds) ? body.kinds : [];
   const corrections = kinds.includes('correction' satisfies ChangeKind);
+  const days = kinds.includes('day' satisfies ChangeKind);
 
   if (changes.length > 0) {
     const statements = (changes as Change[]).flatMap((change) => [
@@ -53,9 +55,10 @@ export async function sync(request: Request, env: Env, user: User): Promise<Resp
 
   const { results } = await env.DB.prepare(
     `SELECT id, data, updated_at, version, kind FROM words
-     WHERE user_id = ? AND version > ? AND (kind = 'word' OR ?) ORDER BY version LIMIT ?`,
+     WHERE user_id = ?1 AND version > ?2 AND (kind = 'word' OR (kind = 'correction' AND ?3) OR (kind = 'day' AND ?4))
+     ORDER BY version LIMIT ?5`,
   )
-    .bind(user.id, cursor, corrections ? 1 : 0, MAX_PULL + 1)
+    .bind(user.id, cursor, corrections ? 1 : 0, days ? 1 : 0, MAX_PULL + 1)
     .all<{ id: string; data: string | null; updated_at: number; version: number; kind: string }>();
 
   const page = results.slice(0, MAX_PULL);
@@ -65,6 +68,7 @@ export async function sync(request: Request, env: Env, user: User): Promise<Resp
       if (row.kind === 'correction') {
         return { id: row.id, updatedAt: row.updated_at, kind: 'correction', word: null, correction: row.data === null ? null : (JSON.parse(row.data) as Correction) };
       }
+      if (row.kind === 'day') return { id: row.id, updatedAt: row.updated_at, kind: 'day', word: null, day: JSON.parse(row.data!) as Day };
       return { id: row.id, updatedAt: row.updated_at, word: row.data === null ? null : (JSON.parse(row.data) as WireWord) };
     }),
     more: results.length > MAX_PULL,
@@ -72,9 +76,9 @@ export async function sync(request: Request, env: Env, user: User): Promise<Resp
   return json(response);
 }
 
-/** What a change keeps in the row: its word or correction, or null once deleted. */
+/** What a change keeps in the row: its word, correction or day, or null once deleted. */
 function stored(change: Change): string | null {
-  const data = change.kind === 'correction' ? change.correction : change.word;
+  const data = change.kind === 'correction' ? change.correction : change.kind === 'day' ? change.day : change.word;
   return data ? JSON.stringify(data) : null;
 }
 
