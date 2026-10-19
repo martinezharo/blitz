@@ -5,8 +5,8 @@
  *
  * A new build's service worker takes over at once (see sw.js) and tells every
  * open page. The page then reloads into the new build, but only when that
- * costs nothing: while it is hidden, or as soon as no lesson, sheet or menu is
- * open and nothing is being typed. Answers and words are saved as they happen,
+ * costs nothing: once no lesson, sheet or menu is open, and nothing is being
+ * typed unless the page is hidden. Answers and words are saved as they happen,
  * so a reload loses nothing but a half-done lesson, which is why it waits.
  */
 
@@ -15,8 +15,9 @@ const SAFE_CHECK_MS = 1000;
 
 /** Nothing on screen would be lost by reloading now. */
 function safeToReload(): boolean {
-  if (document.visibilityState === 'hidden') return true;
+  // A lesson left in the background is still there when the app comes back.
   if (document.querySelector('dialog[open]') || openPopover()) return false;
+  if (document.visibilityState === 'hidden') return true;
   const active = document.activeElement;
   return !(active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || (active instanceof HTMLElement && active.isContentEditable));
 }

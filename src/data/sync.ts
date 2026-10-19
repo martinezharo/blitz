@@ -124,6 +124,9 @@ async function round(): Promise<void> {
   setState({ status: 'syncing' });
   try {
     for (let i = 0; i < ROUND_LIMIT; i++) {
+      // Hidden meanwhile: the same changes come back in the next round, and
+      // what was sent is sent again, which last write wins makes harmless.
+      if (pageHidden()) return setState(before);
       const sent = await pendingChanges();
       const cursor = Number((await db.meta.get('cursor'))?.value ?? 0);
       const response = await request('/api/sync', {
@@ -132,11 +135,8 @@ async function round(): Promise<void> {
         body: JSON.stringify({ cursor, changes: sent, kinds: KINDS }),
       });
       const result = (await response.json()) as SyncResponse;
-      // Hidden meanwhile: the same changes come back in the next round, and
-      // what was sent is sent again, which last write wins makes harmless.
-      if (pageHidden()) return setState(before);
-      await applyRemote(sent, result);
-      if (!result.more && (await db.pending.count()) === 0) break;
+      if (!(await applyRemote(sent, result))) return setState(before);
+      if (!result.more && (pageHidden() || (await db.pending.count()) === 0)) break;
     }
     setState({ status: 'synced', syncedAt: Date.now() });
   } catch (error) {
@@ -196,7 +196,9 @@ async function uploadPhoto(word: Word): Promise<string | null> {
   });
   // Remembered without touching `updatedAt`: the word itself did not change.
   // Blobs read back from IndexedDB are fresh objects, so an unchanged
-  // `updatedAt` is what proves the picture is the one just hashed.
+  // `updatedAt` is what proves the picture is the one just hashed. A page
+  // hidden during the upload hashes it again next time instead.
+  if (pageHidden()) return key;
   await db.transaction('rw', db.words, async () => {
     const current = await db.words.get(word.id);
     if (current?.updatedAt === word.updatedAt) await db.words.update(word.id, { photoKey: key });
@@ -209,7 +211,8 @@ function toWire(word: Word, photo: string | null): WireWord {
   return { ...fields, photo };
 }
 
-async function applyRemote(sent: Change[], result: SyncResponse): Promise<void> {
+/** Stores what a round brought back. False, with nothing stored, when the page was hidden first. */
+async function applyRemote(sent: Change[], result: SyncResponse): Promise<boolean> {
   // Pictures are fetched before the transaction: IndexedDB transactions close
   // as soon as they wait on anything but IndexedDB.
   const photos = new Map<string, Blob | null>();
@@ -217,11 +220,13 @@ async function applyRemote(sent: Change[], result: SyncResponse): Promise<void> 
     if (change.kind) continue;
     const key = change.word?.photo;
     if (!key || photos.has(key)) continue;
+    if (pageHidden()) return false;
     const local = await db.words.get(change.id);
     if (local?.photoKey === key) continue;
     photos.set(key, await downloadPhoto(key));
   }
 
+  if (pageHidden()) return false;
   await db.transaction('rw', [db.words, db.corrections, db.days, db.pending, db.meta], async () => {
     // Sent writes are done, unless the word was written again meanwhile.
     for (const change of sent) {
@@ -258,6 +263,7 @@ async function applyRemote(sent: Change[], result: SyncResponse): Promise<void> 
 
     await db.meta.put({ key: 'cursor', value: result.cursor });
   });
+  return true;
 }
 
 /** A correction from elsewhere, inside the sync transaction. Last write wins, as for words. */
