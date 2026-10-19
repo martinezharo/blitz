@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { type DictEntry, normalize, type ReverseEntry, shardKey } from '../../src/domain/dictionary.ts';
+import { type DictEntry, normalize, type ReverseEntry, shardKey } from '@blitz/core/dictionary.ts';
 import { applyCurated, type CuratedLanguage, readCurated, REVERSE_PER_KEY, reverseEntriesOf } from './curated.ts';
 import { readShards, serialised, writeShards } from './shards.ts';
 

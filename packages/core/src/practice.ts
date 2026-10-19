@@ -1,5 +1,5 @@
 import { FILLERS, type Filler } from './fillers.ts';
-import { counterpartArticle, MAX_LEVEL, type Sex, sexOf, type Word } from './word.ts';
+import { counterpartArticle, MAX_LEVEL, type PhotoValue, type Sex, sexOf, type Word } from './word.ts';
 
 /**
  * How practice works. Each word climbs five levels, each one a harder kind of
@@ -75,7 +75,7 @@ export function pickLesson(words: Pick<Word, 'id' | 'level'>[], random: Random =
 }
 
 /** The audio clue has no payload: the word to say is the exercise's own term. */
-export type Clue = { kind: 'photo'; photo: Blob } | { kind: 'translation' | 'definition'; text: string } | { kind: 'audio' };
+export type Clue = { kind: 'photo'; photo: PhotoValue } | { kind: 'translation' | 'definition'; text: string } | { kind: 'audio' };
 
 export type Gender = 'shown' | 'pick' | 'write' | null;
 

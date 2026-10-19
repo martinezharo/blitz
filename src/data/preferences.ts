@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { LANGUAGES, type Language, WORD_SORTS, type WordSort } from '../domain/word.ts';
+import { LANGUAGES, type Language, WORD_SORTS, type WordSort } from '@blitz/core/word.ts';
 import { setSoundsOn, sounds } from '../shared/sound.ts';
 
 const KEY = 'blitz.language';

@@ -1,6 +1,6 @@
 import { ArrowDown01, ArrowDown10, ArrowDownAZ, ArrowDownWideNarrow, ArrowUpAZ, ArrowUpNarrowWide, Check, ChevronDown, type LucideIcon } from 'lucide-react';
 import { useId, useRef } from 'react';
-import { WORD_SORTS, type WordSort } from '../../domain/word.ts';
+import { WORD_SORTS, type WordSort } from '@blitz/core/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import styles from './sort-menu.module.css';
 

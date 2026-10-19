@@ -1,5 +1,5 @@
-import type { Suggestion } from '../domain/dictionary.ts';
-import type { Language } from '../domain/word.ts';
+import type { Suggestion } from '@blitz/core/dictionary.ts';
+import type { Language } from '@blitz/core/word.ts';
 
 /** Asked for once per meaning in a session, unless the failure may pass. */
 const asked = new Map<string, Promise<string | null>>();

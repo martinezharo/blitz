@@ -1,4 +1,4 @@
-import { LANGUAGES, type Language } from '../../domain/word.ts';
+import { LANGUAGES, type Language } from '@blitz/core/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import { Sheet } from '../../shared/ui/sheet.tsx';
 import styles from './writing.module.css';

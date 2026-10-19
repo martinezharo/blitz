@@ -4,7 +4,7 @@ import { compressPhoto } from '../../data/photo.ts';
 import { askDefinition } from '../../data/definitions.ts';
 import { lookupWord } from '../../data/dictionary.ts';
 import { addWord, deleteWord, setArchived, updateWord } from '../../data/words.ts';
-import { fillDraft, normalize, type Suggestion } from '../../domain/dictionary.ts';
+import { fillDraft, normalize, type Suggestion } from '@blitz/core/dictionary.ts';
 import {
   type Draft,
   type DraftProblem,
@@ -19,7 +19,7 @@ import {
   type Language,
   type Word,
   WORD_TYPES,
-} from '../../domain/word.ts';
+} from '@blitz/core/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import { Sheet } from '../../shared/ui/sheet.tsx';
 import { useObjectUrl } from '../../shared/ui/use-object-url.ts';

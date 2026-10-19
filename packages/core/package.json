@@ -1,0 +1,11 @@
+{
+  "name": "@blitz/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Blitz's rules, as plain TypeScript: no browser, no storage, no network.",
+  "type": "module",
+  "exports": {
+    "./*.ts": "./src/*.ts"
+  },
+  "sideEffects": false
+}

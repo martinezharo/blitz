@@ -1,4 +1,4 @@
-import { MAX_LEVEL, type Language, type Word, type WordType } from '../domain/word.ts';
+import { MAX_LEVEL, type Language, type Word, type WordType } from '@blitz/core/word.ts';
 import { db } from './db.ts';
 
 /**

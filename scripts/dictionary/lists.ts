@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { LIST_TINTS, listKey, type ListEntry, type ListSide, type ListSummary, type ListTint, type ListWords } from '../../src/domain/lists.ts';
+import { LIST_TINTS, listKey, type ListEntry, type ListSide, type ListSummary, type ListTint, type ListWords } from '@blitz/core/lists.ts';
 import type { CuratedSense } from './curated.ts';
 
 /**
@@ -130,7 +130,7 @@ async function inputsHash(dir: string): Promise<string> {
   const hash = createHash('sha256');
   for (const [id, source] of await readSources(dir)) hash.update(`${id}${JSON.stringify(source)}`);
   for (const language of ['de', 'en']) hash.update(await readFile(resolve(`scripts/dictionary/curated/${language}.json`)).catch(() => ''));
-  for (const file of ['scripts/dictionary/lists.ts', 'scripts/dictionary/curated.ts', 'src/domain/lists.ts']) hash.update(await readFile(resolve(file)));
+  for (const file of ['scripts/dictionary/lists.ts', 'scripts/dictionary/curated.ts', 'packages/core/src/lists.ts']) hash.update(await readFile(resolve(file)));
   return hash.digest('hex');
 }
 

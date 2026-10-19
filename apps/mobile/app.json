@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Blitz",
+    "slug": "blitz",
+    "scheme": "blitz",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#fefefd",
+    "ios": {
+      "bundleIdentifier": "com.oli.blitz",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.oli.blitz",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#fefefd"
+      }
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-secure-store",
+      "expo-audio",
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Blitz uses a picture as the clue for a word. It never leaves your account unless you sign in."
+        }
+      ],
+      "expo-font",
+      "expo-asset",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#fefefd"
+        }
+      ]
+    ]
+  }
+}

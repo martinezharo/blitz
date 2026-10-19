@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { DictEntry } from '../../src/domain/dictionary.ts';
+import type { DictEntry } from '@blitz/core/dictionary.ts';
 import { applyCurated, cleanSense, cleanWord, packSense, reverseEntriesOf, toDictSense, unpackSense, type CuratedSense } from './curated.ts';
 
 const lock = {

@@ -1,8 +1,8 @@
 import { PencilLine, Plus } from 'lucide-react';
 import { type KeyboardEvent, useEffect, useId, useRef, useState } from 'react';
 import { lookup } from '../../data/dictionary.ts';
-import type { Suggestion } from '../../domain/dictionary.ts';
-import { LANGUAGES, type Language } from '../../domain/word.ts';
+import type { Suggestion } from '@blitz/core/dictionary.ts';
+import { LANGUAGES, type Language } from '@blitz/core/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import { morph } from '../../shared/ui/morph.ts';
 import { openSheetEnds } from '../../shared/ui/sheet.tsx';

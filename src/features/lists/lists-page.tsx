@@ -2,9 +2,9 @@ import { Check, ChevronLeft, LoaderCircle, Plus, RotateCw, X } from 'lucide-reac
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { loadList, useListIndex } from '../../data/lists.ts';
 import { addWords } from '../../data/words.ts';
-import { fillDraft, type Suggestion } from '../../domain/dictionary.ts';
-import { knownWords, type ListSummary, savedKeys, suggestionOf } from '../../domain/lists.ts';
-import { emptyDraft, LANGUAGES, type Language, type Word, wordSummary } from '../../domain/word.ts';
+import { fillDraft, type Suggestion } from '@blitz/core/dictionary.ts';
+import { knownWords, type ListSummary, savedKeys, suggestionOf } from '@blitz/core/lists.ts';
+import { emptyDraft, LANGUAGES, type Language, type Word, wordSummary } from '@blitz/core/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import { ListIcon, listTint } from './list-look.tsx';
 import styles from './lists-page.module.css';

@@ -1,20 +1,24 @@
 import { useLayoutEffect, useState } from 'react';
+import type { PhotoValue } from '@blitz/core/word.ts';
 
 /**
- * A displayable URL for a stored Blob, revoked when the Blob changes. Made in a
- * layout effect so it is there before the first paint: made any later, an image
- * shows up a frame after its question and everything below it jumps.
+ * A displayable URL for a stored picture: a Blob is turned into an object URL,
+ * and a file URI on a device is already one. Revoked when the picture changes.
  */
-export function useObjectUrl(blob: Blob | null): string | null {
+export function useObjectUrl(photo: PhotoValue | null): string | null {
   const [url, setUrl] = useState<string | null>(null);
   useLayoutEffect(() => {
-    if (!blob) {
+    if (!photo) {
       setUrl(null);
       return;
     }
-    const next = URL.createObjectURL(blob);
+    if (typeof photo === 'string') {
+      setUrl(photo);
+      return;
+    }
+    const next = URL.createObjectURL(photo);
     setUrl(next);
     return () => URL.revokeObjectURL(next);
-  }, [blob]);
+  }, [photo]);
   return url;
 }

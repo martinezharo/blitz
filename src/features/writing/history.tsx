@@ -1,8 +1,8 @@
 import { Trash2 } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { deleteCorrection, useCorrections } from '../../data/writing.ts';
-import type { Language } from '../../domain/word.ts';
-import type { Correction } from '../../domain/writing.ts';
+import type { Language } from '@blitz/core/word.ts';
+import type { Correction } from '@blitz/core/writing.ts';
 import { sounds } from '../../shared/sound.ts';
 import styles from './writing.module.css';
 

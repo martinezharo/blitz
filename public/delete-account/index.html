@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Delete your account · Blitz</title>
+    <meta name="description" content="Remove your Blitz account, and every word, picture and correction in it." />
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --background: light-dark(#fefefd, #050505);
+        --foreground: light-dark(#121311, #f7f8f3);
+        --muted: light-dark(#74776f, #8b8e87);
+        --line: light-dark(#e7e8e3, #292b27);
+        --accent: light-dark(#e84b1b, #ff7540);
+      }
+      body {
+        margin: 0 auto;
+        max-width: 40rem;
+        padding: 3rem 1.25rem 6rem;
+        background: var(--background);
+        color: var(--foreground);
+        font-family: ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
+        line-height: 1.6;
+      }
+      h1 { font-size: 2rem; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
+      h2 { font-size: 1.1rem; margin-top: 2.25rem; }
+      .lede, .note { color: var(--muted); }
+      a { color: var(--accent); }
+      ol, ul { padding-left: 1.25rem; }
+      li { margin: 0.4rem 0; }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        padding: 1.25rem 1.5rem;
+        margin-top: 1.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <p class="lede"><a href="/">Blitz</a></p>
+    <h1>Delete your account</h1>
+    <p class="lede">Immediately, and for good.</p>
+
+    <div class="card">
+      <h2 style="margin-top: 0">From the app</h2>
+      <ol>
+        <li>Open <strong>Blitz</strong>.</li>
+        <li>Tap <strong>Preferences</strong> (the gear, top right).</li>
+        <li>Under <strong>Account</strong>, tap <strong>Delete account</strong> and confirm.</li>
+      </ol>
+      <p class="note">
+        This removes your account, your words, your pictures, your grammar history and your streak
+        from our servers, and clears the copy on that device. Nothing is kept.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top: 0">Without the app</h2>
+      <p>
+        Write to <a href="mailto:blitz@4oli.com?subject=Delete%20my%20Blitz%20account">blitz@4oli.com</a>
+        from the email address you signed in with, and ask us to delete the account. We answer within
+        30 days, usually the same day.
+      </p>
+      <p class="note">
+        We ask from that address only so nobody else can delete your words.
+      </p>
+    </div>
+
+    <h2>What is deleted</h2>
+    <ul>
+      <li>Your account: name, email address and profile picture.</li>
+      <li>Every word, with its meanings and pictures.</li>
+      <li>The grammar history and the days you practised.</li>
+      <li>Every signed-in session, on every device.</li>
+    </ul>
+
+    <h2>What is kept</h2>
+    <p>
+      Nothing tied to you. Definitions and speech clips that were made while you used Blitz are
+      shared, anonymous, and belong to the word rather than to you; they stay so the next person
+      does not pay for them again.
+    </p>
+
+    <p class="note">
+      More about what Blitz stores: <a href="/privacy/">Privacy</a>.
+    </p>
+  </body>
+</html>

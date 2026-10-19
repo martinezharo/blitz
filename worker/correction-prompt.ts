@@ -1,4 +1,4 @@
-import type { Language } from '../src/domain/word.ts';
+import type { Language } from '@blitz/core/word.ts';
 
 type Message = { role: 'system' | 'user' | 'assistant'; content: string };
 

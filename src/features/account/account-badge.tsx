@@ -2,7 +2,7 @@ import { Cloud, CloudOff, LoaderCircle, LogIn, LogOut, RefreshCw, Settings2 } fr
 import { useRef, useState } from 'react';
 import type { AccountState } from '../../data/account.ts';
 import { type SyncStatus, syncNow, useSyncState } from '../../data/sync.ts';
-import type { Account } from '../../domain/sync.ts';
+import type { Account } from '@blitz/core/sync.ts';
 import styles from './account.module.css';
 import { InstallOption } from './install.tsx';
 

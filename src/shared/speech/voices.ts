@@ -1,4 +1,4 @@
-import type { Language } from '../../domain/word.ts';
+import type { Language } from '@blitz/core/word.ts';
 
 /**
  * One Piper voice per language, run in the browser so every device speaks

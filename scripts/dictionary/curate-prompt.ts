@@ -1,4 +1,4 @@
-import { DEFINITION_LENGTH, DEFINITION_STYLE } from '../../src/domain/definition-style.ts';
+import { DEFINITION_LENGTH, DEFINITION_STYLE } from '@blitz/core/definition-style.ts';
 
 /**
  * The instructions for the model that writes the dictionary's meanings, kept

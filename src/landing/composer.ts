@@ -1,6 +1,6 @@
 import { lookup } from '../data/dictionary.ts';
-import { fillDraft, type Suggestion, suggestionTitle } from '../domain/dictionary.ts';
-import { emptyDraft, LANGUAGES, type Language } from '../domain/word.ts';
+import { fillDraft, type Suggestion, suggestionTitle } from '@blitz/core/dictionary.ts';
+import { emptyDraft, LANGUAGES, type Language } from '@blitz/core/word.ts';
 
 /**
  * The app's composer, working: type a word, get what the dictionary has for

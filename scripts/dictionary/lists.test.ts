@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import type { ListSummary } from '../../src/domain/lists.ts';
+import type { ListSummary } from '@blitz/core/lists.ts';
 import { type CuratedSense, readCurated } from './curated.ts';
 import { generateLists, listTerms, parseWord, readSources, resolveList, resolveWord } from './lists.ts';
 

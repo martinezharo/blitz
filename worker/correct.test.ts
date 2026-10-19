@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MAX_TEXT } from '../src/domain/writing.ts';
+import { MAX_TEXT } from '@blitz/core/writing.ts';
 import { type CheckResponse, DAILY_LIMIT, MODEL, correctionRequest, messagesFor, readAnswer } from './correct.ts';
 import { sha256 } from './http.ts';
 import { testServer } from './test-server.ts';

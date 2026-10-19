@@ -20,7 +20,7 @@ import { createInterface } from 'node:readline';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { parseArgs } from 'node:util';
-import { type DictEntry, type DictKind, type DictSense, normalize, type ReverseEntry, shardKey } from '../src/domain/dictionary.ts';
+import { type DictEntry, type DictKind, type DictSense, normalize, type ReverseEntry, shardKey } from '@blitz/core/dictionary.ts';
 import { REVERSE_PER_KEY } from './dictionary/curated.ts';
 import { englishDefinition, englishSenses, germanSense, MAX_ENGLISH_SENSES, MAX_GERMAN_SENSES, type RawEntry, reverseKeys } from './dictionary/extract.ts';
 

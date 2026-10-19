@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy · Blitz</title>
+    <meta name="description" content="What Blitz keeps, where it is kept, and how to get rid of it." />
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --background: light-dark(#fefefd, #050505);
+        --foreground: light-dark(#121311, #f7f8f3);
+        --muted: light-dark(#74776f, #8b8e87);
+        --line: light-dark(#e7e8e3, #292b27);
+        --accent: light-dark(#e84b1b, #ff7540);
+      }
+      body {
+        margin: 0 auto;
+        max-width: 40rem;
+        padding: 3rem 1.25rem 6rem;
+        background: var(--background);
+        color: var(--foreground);
+        font-family: ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+      h1 { font-size: 2rem; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
+      h2 { font-size: 1.1rem; margin-top: 2.25rem; }
+      p, li { color: var(--foreground); }
+      .lede, .note { color: var(--muted); }
+      a { color: var(--accent); }
+      hr { border: 0; border-top: 1px solid var(--line); margin: 2.5rem 0; }
+      code { font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+    <p class="lede"><a href="/">Blitz</a></p>
+    <h1>Privacy</h1>
+    <p class="lede">Last updated 19 October 2026.</p>
+
+    <p>
+      Blitz is a vocabulary app. It keeps the words you choose, what they mean, and any picture you
+      give them. This page says exactly what is stored, where, and how to delete it.
+    </p>
+
+    <h2>Without an account</h2>
+    <p>
+      Everything you add stays on your device. Words, pictures, the grammar history and the days you
+      practised are stored in a local database inside the app. None of it leaves the device, and
+      nobody else can see it. Deleting the app deletes it.
+    </p>
+
+    <h2>With an account</h2>
+    <p>Signing in with Google adds three things:</p>
+    <ul>
+      <li>
+        <strong>Who you are.</strong> Google gives us your name, email address and profile picture
+        when you sign in. We keep them to show you which account you are in. We never see your
+        Google password.
+      </li>
+      <li>
+        <strong>Your words.</strong> The words, meanings, pictures and grammar history you save are
+        copied to our servers so they appear on your other devices. Pictures are stored under a hash
+        of their bytes.
+      </li>
+      <li>
+        <strong>When you practised.</strong> The dates on which you answered at least one practice
+        question, so the streak follows you between devices. The questions and answers themselves
+        are not kept.
+      </li>
+    </ul>
+
+    <h2>What is sent to a model</h2>
+    <p>
+      Two features ask a language model for help, and both need an account:
+    </p>
+    <ul>
+      <li>
+        <strong>Writing checks.</strong> When you press Check, the text you wrote in that box is sent
+        to OpenAI to be marked. Nothing else about you is sent, and the text is not stored by us.
+        The sentences with a grammar mistake are kept in your grammar history, on your devices and in
+        your account, so you can look at them again.
+      </li>
+      <li>
+        <strong>Definitions.</strong> When a word you pick has no written definition, our server asks
+        a model for one. Only the word itself is named; the model never receives anything you typed
+        about yourself. The answer is stored for everyone, not tied to your account.
+      </li>
+    </ul>
+    <p class="note">
+      Writing checks are limited per day, and so are definitions. Blitz does not train any model on
+      your text.
+    </p>
+
+    <h2>Speech</h2>
+    <p>
+      Words read aloud are made on our server and the clip is kept so it is never made twice. Only
+      the word and its language are sent; the recording is not tied to any account and carries no
+      information about who asked for it.
+    </p>
+
+    <h2>What is never done</h2>
+    <ul>
+      <li>No advertising, and no advertising identifiers.</li>
+      <li>No analytics or tracking SDKs.</li>
+      <li>No selling or sharing of personal data with anyone beyond the processors named here.</li>
+    </ul>
+
+    <h2>Who processes it</h2>
+    <ul>
+      <li><strong>Cloudflare</strong> hosts the service, the database and the pictures.</li>
+      <li><strong>Google</strong> provides sign-in.</li>
+      <li><strong>OpenAI</strong> checks written texts when you press Check.</li>
+      <li><strong>Workers AI</strong> writes definitions for words that have none.</li>
+    </ul>
+
+    <h2>Deleting everything</h2>
+    <p>
+      In the app: <strong>Preferences → Delete account</strong>. That removes your account, your
+      words, your pictures, your grammar history and your streak from our servers, and clears the
+      copy on the device, immediately and for good. You can also ask from
+      <a href="/delete-account/">this page</a>.
+    </p>
+    <p class="note">Without an account, deleting the app is enough.</p>
+
+    <hr />
+    <p class="note">
+      Questions: <a href="mailto:blitz@4oli.com">blitz@4oli.com</a>.
+    </p>
+  </body>
+</html>

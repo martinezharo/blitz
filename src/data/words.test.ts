@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { type Draft, emptyDraft, type Word } from '../domain/word.ts';
+import { type Draft, emptyDraft, type Word } from '@blitz/core/word.ts';
 import { db } from './db.ts';
 import { addWord, addWords, deleteWord, fillCounterparts, recordAnswer, setArchived, updateWord } from './words.ts';
 

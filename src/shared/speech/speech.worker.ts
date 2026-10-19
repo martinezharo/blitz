@@ -8,7 +8,7 @@ import ortWasm from 'onnxruntime-web/ort-wasm-simd-threaded.wasm?url';
 import createPiperPhonemize from './phonemizer/piper_phonemize.js';
 import phonemizeData from './phonemizer/piper_phonemize.data?url';
 import phonemizeWasm from './phonemizer/piper_phonemize.wasm?url';
-import type { Language } from '../../domain/word.ts';
+import type { Language } from '@blitz/core/word.ts';
 import type { FromSpeech, ToSpeech } from './speech.ts';
 import { VOICE_CACHE, VOICES } from './voices.ts';
 

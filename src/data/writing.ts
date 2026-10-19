@@ -1,6 +1,6 @@
 import Dexie from 'dexie';
-import type { Language } from '../domain/word.ts';
-import { type Correction, type Mark, MAX_TEXT, type SentenceFix, type Verdict } from '../domain/writing.ts';
+import type { Language } from '@blitz/core/word.ts';
+import { type Correction, type Mark, MAX_TEXT, type SentenceFix, type Verdict } from '@blitz/core/writing.ts';
 import { db } from './db.ts';
 import { useLiveData } from './live.ts';
 import { requestSync } from './sync.ts';

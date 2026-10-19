@@ -25,9 +25,24 @@ export function cookie(name: string, value: string, maxAge: number, path = '/'):
 /**
  * Cookies ride along on cross-site form posts, so anything that writes must
  * come from this origin. Browsers always send Origin on POST, PUT and DELETE.
+ *
+ * A native app sends no Origin at all: it has no cookie jar to be tricked into
+ * using, and its session travels in an Authorization header, which no other
+ * site can set on its behalf. So a missing Origin is fine.
  */
 export function sameOrigin(request: Request): boolean {
-  return request.headers.get('Origin') === new URL(request.url).origin;
+  const origin = request.headers.get('Origin');
+  return origin === null || origin === new URL(request.url).origin;
+}
+
+/** The session token of a request: an app's bearer header, or the browser's cookie. */
+export function sessionToken(request: Request, cookieName: string): string | null {
+  const header = request.headers.get('Authorization');
+  if (header?.startsWith('Bearer ')) {
+    const token = header.slice(7).trim();
+    return token || null;
+  }
+  return readCookie(request, cookieName);
 }
 
 export function randomToken(): string {

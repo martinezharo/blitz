@@ -8,9 +8,9 @@ import {
   parseChange,
   type SyncResponse,
   type WireWord,
-} from '../src/domain/sync.ts';
-import type { Day } from '../src/domain/streak.ts';
-import type { Correction } from '../src/domain/writing.ts';
+} from '@blitz/core/sync.ts';
+import type { Day } from '@blitz/core/streak.ts';
+import type { Correction } from '@blitz/core/writing.ts';
 import type { User } from './auth.ts';
 import type { Env } from './env.ts';
 import { json, problem, sha256 } from './http.ts';

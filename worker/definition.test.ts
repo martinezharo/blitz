@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { type DictEntry, normalize, shardKey } from '../src/domain/dictionary.ts';
+import { type DictEntry, normalize, shardKey } from '@blitz/core/dictionary.ts';
 import { DAILY_LIMIT, messagesFor, readDefinition } from './definition.ts';
 import { testServer } from './test-server.ts';
 

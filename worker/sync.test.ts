@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { dayId } from '../src/domain/streak.ts';
-import type { Change, SyncResponse, WireWord } from '../src/domain/sync.ts';
+import { dayId } from '@blitz/core/streak.ts';
+import type { Change, SyncResponse, WireWord } from '@blitz/core/sync.ts';
 import { sha256 } from './http.ts';
 import { testServer } from './test-server.ts';
 

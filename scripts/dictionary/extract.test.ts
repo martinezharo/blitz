@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { DictEntry } from '../../src/domain/dictionary.ts';
+import type { DictEntry } from '@blitz/core/dictionary.ts';
 import { clip, englishDefinition, englishSenses, germanMeaning, germanSense, isLearnable, reverseKeys, type RawEntry } from './extract.ts';
 
 const noun = (extra: Partial<RawEntry> = {}): RawEntry => ({

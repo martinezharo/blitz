@@ -2,7 +2,7 @@ import { Flame } from 'lucide-react';
 import { type CSSProperties, type RefObject, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { type Growth, useGrowth, usePracticeDays, useToday } from '../../data/streak.ts';
-import { type Day, streakOf, weekOf } from '../../domain/streak.ts';
+import { type Day, streakOf, weekOf } from '@blitz/core/streak.ts';
 import { sounds } from '../../shared/sound.ts';
 import account from '../account/account.module.css';
 import styles from './streak.module.css';

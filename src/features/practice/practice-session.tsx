@@ -2,8 +2,8 @@ import { Archive, Check, Download, Mars, Venus, Volume2, X } from 'lucide-react'
 import { type FormEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { markPracticed } from '../../data/streak.ts';
 import { recordAnswer, setArchived } from '../../data/words.ts';
-import { type Answer, buildExercise, type Exercise, fillLetters, isCorrect, offersArchive, pickLesson, STREAK_TO_ARCHIVE } from '../../domain/practice.ts';
-import { LANGUAGES, type Language, type Word } from '../../domain/word.ts';
+import { type Answer, buildExercise, type Exercise, fillLetters, isCorrect, offersArchive, pickLesson, STREAK_TO_ARCHIVE } from '@blitz/core/practice.ts';
+import { LANGUAGES, type Language, type Word } from '@blitz/core/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import { canHear, downloadVoice, preloadSpeech, prepareVoice, speak, useVoice } from '../../shared/speech/speech.ts';
 import { useObjectUrl } from '../../shared/ui/use-object-url.ts';

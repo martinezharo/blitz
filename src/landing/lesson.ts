@@ -1,8 +1,8 @@
-import { sameText, shuffle } from '../domain/practice.ts';
+import { sameText, shuffle } from '@blitz/core/practice.ts';
 
 /**
  * The hero's lesson: one word, asked the way each of the five levels asks it
- * (src/domain/practice.ts). A right answer climbs a level, so a visitor sees
+ * (packages/core/src/practice.ts). A right answer climbs a level, so a visitor sees
  * all five in a minute; a wrong one drops a level, as in the app.
  */
 

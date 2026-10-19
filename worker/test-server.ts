@@ -41,5 +41,17 @@ export async function testServer(overrides: Partial<Env> = {}) {
     };
   }
 
-  return { env, signUp, as, dispose: () => proxy.dispose() };
+  /** A native app: a bearer token, and no Origin header at all. */
+  function asApp(token: string | null): typeof fetch {
+    return async (input, init) => {
+      const request = new Request(new URL(String(input), 'https://blitz.test'), init);
+      const headers = new Headers(request.headers);
+      if (token) headers.set('Authorization', `Bearer ${token}`);
+      headers.delete('Origin');
+      const body = request.body ? await request.arrayBuffer() : undefined;
+      return worker.fetch(new Request(request.url, { method: request.method, headers, body }) as never, env);
+    };
+  }
+
+  return { env, signUp, as, asApp, dispose: () => proxy.dispose() };
 }

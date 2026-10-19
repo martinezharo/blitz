@@ -1,7 +1,7 @@
 import { Archive, ChevronDown } from 'lucide-react';
 import { type CSSProperties, useMemo, useState } from 'react';
-import { mastery } from '../../domain/practice.ts';
-import { LANGUAGES, type Language, MAX_LEVEL, sortWords, type Word, type WordSort, wordSummary } from '../../domain/word.ts';
+import { mastery } from '@blitz/core/practice.ts';
+import { LANGUAGES, type Language, MAX_LEVEL, sortWords, type Word, type WordSort, wordSummary } from '@blitz/core/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import { morph, morphEndsIn } from '../../shared/ui/morph.ts';
 import { openSheetEnds } from '../../shared/ui/sheet.tsx';
