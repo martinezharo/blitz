@@ -128,6 +128,7 @@ async function round(): Promise<void> {
       // what was sent is sent again, which last write wins makes harmless.
       if (pageHidden()) return setState(before);
       const sent = await pendingChanges();
+      if (!sent || pageHidden()) return setState(before);
       const cursor = Number((await db.meta.get('cursor'))?.value ?? 0);
       const response = await request('/api/sync', {
         method: 'POST',
@@ -157,11 +158,13 @@ async function request(url: string, init?: RequestInit): Promise<Response> {
   return response;
 }
 
-/** The next batch of local writes, with any new photos uploaded first. */
-async function pendingChanges(): Promise<Change[]> {
+/** The next batch of local writes, with any new photos uploaded first. Null when the page was hidden meanwhile. */
+async function pendingChanges(): Promise<Change[] | null> {
   const pending = await db.pending.limit(MAX_PUSH).toArray();
   const changes: Change[] = [];
   for (const { id, at, kind } of pending) {
+    // Photo uploads take a while; the page may have gone to the background.
+    if (pageHidden()) return null;
     if (kind === 'correction') {
       const correction = await db.corrections.get(id);
       changes.push({ id, updatedAt: correction?.updatedAt ?? at, kind, word: null, correction: correction ?? null });
