@@ -73,13 +73,14 @@ The icon is `public/icons/icon-512.png` from the web app, copied to
 ```sh
 pnpm add -g eas-cli
 eas login
-eas build --platform android --profile production
+eas build --platform android --profile production   # an .aab, for Play
+eas build --platform android --profile preview      # an .apk, to try it first
 ```
 
-`eas.json` is not in the repository yet: run `eas build:configure` once and set
-the `production` profile to `"buildType": "app-bundle"`. Play needs an `.aab`,
-not an `.apk`. Keep the keystore EAS generates: it is the app's identity, and
-losing it means never updating the app again.
+`eas.json` is already set up: `production` builds an app bundle and bumps the
+version code by itself (`appVersionSource: remote`), `preview` builds an APK
+for the internal track. Keep the keystore EAS generates: it is the app's
+identity, and losing it means never updating the app again.
 
 ### 4. Play Console
 
