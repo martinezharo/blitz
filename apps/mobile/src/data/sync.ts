@@ -317,23 +317,25 @@ function applyCorrection(change: Change): void {
   );
 }
 
-/** A picture from the account, kept on disk under its hash and shown by URI. */
+/**
+ * A picture from the account, kept on disk under its hash and shown by URI.
+ *
+ * Only a 404 means the picture is really gone: it is returned as null so the
+ * word keeps a hole where the picture was. Anything else (offline, a 5xx, a
+ * timeout) is thrown, which stops the round before the cursor moves, so the
+ * next one tries again. Returning null for those would store the word with no
+ * picture and, on the next edit, delete it from the account and every device.
+ */
 async function downloadPhoto(key: string): Promise<string | null> {
   const file = new File(Paths.document, 'photos', `${key}.jpg`);
   if (file.exists) return file.uri;
-  try {
-    const response = await api(`/api/photos/${key}`);
-    if (response.status === 401) throw new Unauthorized();
-    // A picture that never made it up is dropped rather than retried forever.
-    if (response.status === 404) return null;
-    if (!response.ok) throw new Error(`GET photo failed with ${response.status}`);
-    file.parentDirectory.create({ intermediates: true, idempotent: true });
-    file.writeSync(new Uint8Array(await response.arrayBuffer()));
-    return file.uri;
-  } catch (error) {
-    if (error instanceof Unauthorized) throw error;
-    return null;
-  }
+  const response = await api(`/api/photos/${key}`);
+  if (response.status === 401) throw new Unauthorized();
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`GET photo failed with ${response.status}`);
+  file.parentDirectory.create({ intermediates: true, idempotent: true });
+  file.writeSync(new Uint8Array(await response.arrayBuffer()));
+  return file.uri;
 }
 
 /** Sends what is left before signing out. True when nothing is left behind. */

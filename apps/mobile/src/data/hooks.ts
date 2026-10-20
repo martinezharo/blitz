@@ -26,8 +26,8 @@ export function useCorrections(language: Language): Correction[] {
 }
 
 export function usePracticeDays(): Day[] {
-  useRevision();
-  return useMemo(() => practiceDays(), []);
+  const revision = useRevision();
+  return useMemo(() => practiceDays(), [revision]);
 }
 
 export function useSyncStatus(): SyncStatus {

@@ -22,6 +22,7 @@ import shutil
 import subprocess
 import tempfile
 import threading
+import urllib.parse
 import urllib.request
 import wave
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -30,13 +31,30 @@ MODELS = os.environ.get("MODELS_DIR", "/models")
 SECRET = os.environ.get("TTS_SECRET", "")
 PORT = int(os.environ.get("PORT", "8080"))
 
+# The Worker names the model; nobody else may. A caller-supplied URL here would
+# be a server-side request for anything the network can reach, and a way to
+# fill the disk with whatever it returns.
+ALLOWED_MODELS = "huggingface.co"
+ALLOWED_MODELS_PREFIX = "/rhasspy/piper-voices/"
+
 _downloading: dict[str, threading.Lock] = {}
 _lock = threading.Lock()
 
 
+def check_model(url: str) -> str:
+    """The model's name, once the URL is one this service is allowed to fetch."""
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme != "https" or parsed.hostname != ALLOWED_MODELS or not parsed.path.startswith(ALLOWED_MODELS_PREFIX):
+        raise ValueError("model must be a piper-voices file on huggingface.co")
+    name = parsed.path.rsplit("/", 1)[-1]
+    if not name.endswith(".onnx") or "/" in name:
+        raise ValueError("model must name a .onnx file")
+    return name
+
+
 def model_for(url: str) -> str:
     """The model's file, downloaded once and kept under its own name."""
-    name = url.rsplit("/", 1)[-1]
+    name = check_model(url)
     path = os.path.join(MODELS, name)
     if os.path.exists(path):
         return path
@@ -113,8 +131,10 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def authorised(self) -> bool:
+        # Fail closed. Without a secret there is no way to tell the Worker from
+        # anyone else who can reach the port, so nothing is served.
         if not SECRET:
-            return True
+            return False
         return self.headers.get("Authorization") == f"Bearer {SECRET}"
 
     def do_GET(self):
@@ -148,5 +168,7 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     shutil.os.makedirs(MODELS, exist_ok=True)
+    if not SECRET:
+        print("TTS_SECRET is not set: every request will be refused (401).", flush=True)
     print(f"piper for blitz on :{PORT}", flush=True)
     ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()

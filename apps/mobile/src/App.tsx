@@ -133,6 +133,8 @@ function Root() {
           />
         ) : (
           <WritingScreen
+            // Each language has its own page, its own text and its own prompt.
+            key={language}
             language={language}
             words={words}
             account={account.state}

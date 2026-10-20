@@ -11,8 +11,14 @@ tidying as `src/shared/speech/`, so a word sounds the same everywhere.
 
 ```sh
 docker build -t blitz-tts .
-docker run -p 8080:8080 -v blitz-models:/models -e TTS_SECRET=... blitz-tts
+docker run -p 8080:8080 -v blitz-models:/models -e TTS_SECRET=<long random> blitz-tts
 ```
+
+`TTS_SECRET` is required. Without it the service refuses every request
+(`401`) rather than serving anyone who can reach the port: the port is
+reachable from the same network, and a caller names the model to synthesise.
+The only URL it will fetch is a `piper-voices` file on `huggingface.co`, so a
+request cannot make it fetch something else.
 
 Then point the Worker at it:
 
@@ -26,3 +32,6 @@ web app is unaffected, since it makes its own.
 
 The first request for a language downloads its model (about 63 MB) into
 `/models`. Give it a volume, or a cold start pays for it again.
+
+Put it behind HTTPS, or keep it on a private network: the secret travels in a
+plain header.

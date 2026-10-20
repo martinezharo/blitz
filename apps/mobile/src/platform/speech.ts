@@ -34,10 +34,39 @@ export const subscribeVoice = (listener: () => void) => {
 
 export const voiceState = (language: Language) => states.get(language) ?? { status: 'idle' as const };
 
-/** Wakes the voice for a language. Nothing to download: the server has it. */
+/** A word that exists in both languages, only used to ask the server whether it has a voice. */
+const PROBE: Record<Language, string> = { de: 'Hund', en: 'house' };
+const PROBE_TIMEOUT = 5_000;
+
+/**
+ * Wakes the voice for a language. There is nothing to download, but there
+ * still has to be a server that can make one: without it `GET /api/say`
+ * answers 503, and a word asked by ear would be a word nobody can hear.
+ *
+ * So the voice is only ready once the server has said it can speak. Until
+ * then `canHear` is false and practice does not offer the audio clue.
+ */
 export async function prepareVoice(language: Language): Promise<void> {
-  if (states.get(language)?.status === 'ready') return;
-  setState(language, { status: 'ready' });
+  const status = states.get(language)?.status;
+  if (status === 'ready' || status === 'loading') return;
+  setState(language, { status: 'loading' });
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT);
+  try {
+    const response = await fetch(`${API}/api/say?language=${language}&text=${encodeURIComponent(PROBE[language])}`, {
+      method: 'HEAD',
+      signal: controller.signal,
+    });
+    // 404 is "not made yet", which the service makes on demand; 503 is "there
+    // is no service at all". Anything else means the route is there.
+    setState(language, { status: response.status === 503 ? 'failed' : 'ready' });
+  } catch {
+    // Offline, or the server is unreachable: no voice for this session.
+    setState(language, { status: 'failed' });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export function canHear(language: Language): boolean {
@@ -52,20 +81,22 @@ const keyOf = async (language: Language, text: string) =>
 const inFlight = new Map<string, Promise<string | null>>();
 
 /** The clip, on the device, downloading it the first time. */
-function clipFile(language: Language, text: string): Promise<string | null> {
-  const promise = (async () => {
-    const key = await keyOf(language, text);
-    const file = new File(cacheDir, `${language}-${key}.wav`);
-    if (file.exists) return file.uri;
-    if (!cacheDir.exists) cacheDir.create({ intermediates: true, idempotent: true });
-    const downloaded = await File.downloadFileAsync(
-      `${API}/api/say?language=${language}&text=${encodeURIComponent(text)}`,
-      file,
-      { idempotent: true },
-    );
-    return downloaded.uri;
-  })();
-  return promise;
+async function clipFile(language: Language, text: string): Promise<string | null> {
+  const key = await keyOf(language, text);
+  const file = new File(cacheDir, `${language}-${key}.wav`);
+  if (file.exists) return file.uri;
+
+  const response = await fetch(`${API}/api/say?language=${language}&text=${encodeURIComponent(text)}`);
+  // The server has no voice service after all: no more questions by ear.
+  if (response.status === 503) {
+    markVoiceFailed(language);
+    return null;
+  }
+  if (!response.ok) return null;
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (!cacheDir.exists) cacheDir.create({ intermediates: true, idempotent: true });
+  file.writeSync(bytes);
+  return file.uri;
 }
 
 function clip(language: Language, text: string): Promise<string | null> {
@@ -77,6 +108,12 @@ function clip(language: Language, text: string): Promise<string | null> {
   });
   inFlight.set(`${language}\n${text}`, promise);
   return promise;
+}
+
+/** The server said it cannot make the clip it just advertised: stop offering one. */
+export function markVoiceFailed(language: Language): void {
+  if (states.get(language)?.status !== 'ready') return;
+  setState(language, { status: 'failed' });
 }
 
 /** Asks the server to make a lesson's words while the first question is read. */
