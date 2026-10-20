@@ -1,8 +1,12 @@
 export interface Env {
   DB: D1Database;
   PHOTOS: R2Bucket;
-  /** Made speech clips, one per voice and text: `say/<language>/<hash>.wav`. */
-  AUDIO: R2Bucket;
+  /**
+   * Made speech clips, one per voice and text: `say/<language>/<hash>.wav`.
+   * Optional: a preview built before the bucket existed has no binding, and
+   * `/api/say` says so rather than throwing.
+   */
+  AUDIO?: R2Bucket;
   ASSETS: Fetcher;
   AI: Ai;
   /**

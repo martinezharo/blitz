@@ -11,12 +11,15 @@ beforeAll(async () => {
 
 afterAll(() => server.dispose());
 
+/** The test server is configured with the bucket; the route treats it as optional. */
+const bucket = (env: { AUDIO?: R2Bucket }) => env.AUDIO!;
+
 const clipPath = async (language: 'de' | 'en', text: string) => `say/${language}/${await sha256(`${VOICES[language].sha256}\n${text}`)}.wav`;
 
 describe('speech', () => {
   beforeEach(async () => {
-    const { objects } = await server.env.AUDIO.list({ prefix: 'say/' });
-    await Promise.all(objects.map((object) => server.env.AUDIO.delete(object.key)));
+    const { objects } = await bucket(server.env).list({ prefix: 'say/' });
+    await Promise.all(objects.map((object) => bucket(server.env).delete(object.key)));
   });
 
   it('needs a language it has a voice for', async () => {
@@ -36,7 +39,7 @@ describe('speech', () => {
 
   it('serves a clip already made, to anyone, for a year', async () => {
     const path = await clipPath('de', 'Hund');
-    await server.env.AUDIO.put(path, new Uint8Array([82, 73, 70, 70]), { httpMetadata: { contentType: 'audio/wav' } });
+    await bucket(server.env).put(path, new Uint8Array([82, 73, 70, 70]), { httpMetadata: { contentType: 'audio/wav' } });
     // No account, no cookie, no Origin: a plain public request.
     const response = await server.as(null)('/api/say?language=de&text=Hund');
     expect(response.status).toBe(200);
@@ -47,9 +50,21 @@ describe('speech', () => {
 
   it('normalises what it is asked for, so the same word is one clip', async () => {
     const path = await clipPath('de', 'die Katze');
-    await server.env.AUDIO.put(path, new Uint8Array([1]), { httpMetadata: { contentType: 'audio/wav' } });
+    await bucket(server.env).put(path, new Uint8Array([1]), { httpMetadata: { contentType: 'audio/wav' } });
     const response = await server.as(null)(`/api/say?language=de&text=${encodeURIComponent('  die   Katze ')}`);
     expect(response.status).toBe(200);
+  });
+
+  it('says so when the bucket is missing, instead of throwing', async () => {
+    // A preview built before `wrangler r2 bucket create blitz-audio` has no
+    // binding for it: the route must answer, not return a 1101.
+    const without = await testServer({ AUDIO: undefined, TTS_URL: 'https://tts.test' });
+    try {
+      const response = await without.as(null)('/api/say?language=de&text=Hund');
+      expect(response.status).toBe(503);
+    } finally {
+      await without.dispose();
+    }
   });
 
   it('says so when there is no speech service', async () => {
@@ -82,7 +97,7 @@ describe('speech', () => {
       expect(asked).toHaveLength(1);
       expect((asked[0] as { text: string }).text).toBe('Cat');
       // Kept, so the next person's copy costs nothing.
-      expect(await withService.env.AUDIO.head(await clipPath('en', 'Cat'))).not.toBeNull();
+      expect(await bucket(withService.env).head(await clipPath('en', 'Cat'))).not.toBeNull();
     } finally {
       await withService.dispose();
     }

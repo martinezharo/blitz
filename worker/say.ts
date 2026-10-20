@@ -31,6 +31,7 @@ const clipPath = async (language: 'de' | 'en', text: string) =>
 
 /** The clip, made and kept if it was not made yet. Null when it cannot be made. */
 async function clip(env: Env, language: 'de' | 'en', text: string): Promise<Response | null> {
+  if (!env.AUDIO) return null;
   const path = await clipPath(language, text);
   const stored = await env.AUDIO.get(path);
   if (stored) {
@@ -82,6 +83,8 @@ export async function say(request: Request, env: Env): Promise<Response> {
   if (!text) return problem(400, 'Expected a text');
   if (text.length > MAX_SAY_TEXT) return problem(413, `At most ${MAX_SAY_TEXT} characters`);
 
+  if (!env.AUDIO) return problem(503, 'Speech is not set up on this server yet');
+
   if (request.method === 'HEAD') {
     const path = await clipPath(language, text);
     const stored = await env.AUDIO.head(path);
@@ -103,7 +106,7 @@ export async function prepareSpeech(request: Request, env: Env, ctx?: ExecutionC
   const language = body?.language;
   if (language !== 'de' && language !== 'en') return problem(400, 'Expected a language');
   if (!Array.isArray(body?.texts)) return problem(400, 'Expected texts');
-  if (!env.TTS_URL) return problem(503, 'Speech is not set up on this server yet');
+  if (!env.TTS_URL || !env.AUDIO) return problem(503, 'Speech is not set up on this server yet');
 
   const texts = [...new Set(
     body.texts
@@ -117,7 +120,7 @@ export async function prepareSpeech(request: Request, env: Env, ctx?: ExecutionC
   const work = (async () => {
     for (const text of texts) {
       const path = await clipPath(language, text);
-      if (await env.AUDIO.head(path)) continue;
+      if (await env.AUDIO?.head(path)) continue;
       await clip(env, language, text);
     }
   })();
