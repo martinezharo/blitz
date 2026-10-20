@@ -1,8 +1,8 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { Day } from '../domain/streak.ts';
-import type { ChangeKind } from '../domain/sync.ts';
-import type { Word } from '../domain/word.ts';
-import type { Correction } from '../domain/writing.ts';
+import type { Day } from '@blitz/core/streak.ts';
+import type { ChangeKind } from '@blitz/core/sync.ts';
+import type { Word } from '@blitz/core/word.ts';
+import type { Correction } from '@blitz/core/writing.ts';
 import { pageHidden } from './live.ts';
 
 /** A local write sync has not sent yet. `at` is the write's `updatedAt`. */

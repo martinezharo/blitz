@@ -1,6 +1,6 @@
-import { checkDefinition, DEFINITION_STYLE } from '../src/domain/definition-style.ts';
-import { type DictEntry, type DictSense, normalize, SENSE_TYPE_OF, shardKey } from '../src/domain/dictionary.ts';
-import type { WordType } from '../src/domain/word.ts';
+import { checkDefinition, DEFINITION_STYLE } from '@blitz/core/definition-style.ts';
+import { type DictEntry, type DictSense, normalize, SENSE_TYPE_OF, shardKey } from '@blitz/core/dictionary.ts';
+import type { WordType } from '@blitz/core/word.ts';
 import { takeSlot } from './allowance.ts';
 import { currentUser } from './auth.ts';
 import type { Env } from './env.ts';

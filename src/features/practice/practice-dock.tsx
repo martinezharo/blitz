@@ -1,5 +1,5 @@
 import { Play } from 'lucide-react';
-import { lessonLength } from '../../domain/practice.ts';
+import { lessonLength } from '@blitz/core/practice.ts';
 import { sounds } from '../../shared/sound.ts';
 import styles from './practice-dock.module.css';
 

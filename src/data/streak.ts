@@ -1,5 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { type Day, dayId, dayOf, streakOf } from '../domain/streak.ts';
+import { type Day, dayId, dayOf, streakOf } from '@blitz/core/streak.ts';
 import { db } from './db.ts';
 import { useLiveData } from './live.ts';
 import { requestSync } from './sync.ts';

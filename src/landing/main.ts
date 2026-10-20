@@ -1,8 +1,8 @@
 import '@fontsource-variable/nunito';
 import '../styles/global.css';
 import './landing.css';
-import type { ListSummary, ListTint } from '../domain/lists.ts';
-import { shuffle } from '../domain/practice.ts';
+import type { ListSummary, ListTint } from '@blitz/core/lists.ts';
+import { shuffle } from '@blitz/core/practice.ts';
 import { followUpdates } from '../shared/app-update.ts';
 import { startComposer } from './composer.ts';
 import { startLesson } from './lesson.ts';

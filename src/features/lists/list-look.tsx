@@ -1,6 +1,6 @@
 import { Icon, type IconNode } from 'lucide-react';
 import type { CSSProperties } from 'react';
-import type { ListSummary, ListTint } from '../../domain/lists.ts';
+import type { ListSummary, ListTint } from '@blitz/core/lists.ts';
 
 /** The colour of each tint a list may name, as one of the colours the app already has (global.css). */
 const COLOUR: Record<ListTint, string> = { orange: 'accent', red: 'die', blue: 'der', green: 'das' };

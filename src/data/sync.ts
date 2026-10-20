@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
-import { dayFromId } from '../domain/streak.ts';
-import { type Change, type ChangeKind, MAX_PUSH, type SyncResponse, type WireWord } from '../domain/sync.ts';
-import type { Word } from '../domain/word.ts';
+import { dayFromId } from '@blitz/core/streak.ts';
+import { type Change, type ChangeKind, MAX_PUSH, type SyncResponse, type WireWord } from '@blitz/core/sync.ts';
+import type { Word } from '@blitz/core/word.ts';
 import { db } from './db.ts';
 import { pageHidden } from './live.ts';
 
@@ -189,7 +189,9 @@ async function pendingChanges(): Promise<Change[] | null> {
 }
 
 async function uploadPhoto(word: Word): Promise<string | null> {
-  if (!word.photo) return null;
+  // The browser always holds a Blob; a device keeps a file and uploads it from
+  // its own storage layer, which hashes and sends the bytes itself.
+  if (!word.photo || typeof word.photo === 'string') return null;
   if (word.photoKey) return word.photoKey;
   const key = await hash(word.photo);
   await request(`/api/photos/${key}`, {

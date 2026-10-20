@@ -1,4 +1,4 @@
-import { type DictEntry, normalize, type DictSense, type SenseType } from '../../src/domain/dictionary.ts';
+import { type DictEntry, normalize, type DictSense, type SenseType } from '@blitz/core/dictionary.ts';
 
 /** The parts of a kaikki.org (Wiktextract) entry that are read here. */
 export interface RawEntry {

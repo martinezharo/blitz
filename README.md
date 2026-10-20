@@ -130,15 +130,51 @@ stays cached until the next one, for the pages still on it.
 The logo is `public/logo.svg`. The PNG icons in `public/icons/` come from it:
 run `CHROMIUM=/path/to/chromium node scripts/build-icons.ts` after changing it.
 
+## App
+
+`apps/mobile` is the same Blitz for Android, in React Native (Expo). It shares
+`packages/core` and the whole Worker, so there is one set of rules and one
+server; see its [README](apps/mobile/README.md) for what differs and for the
+publishing checklist.
+
+```sh
+pnpm check:mobile   # types, from the root
+cd apps/mobile && pnpm start
+```
+
+Signing in from the app does not use the cookie the web app uses. The app opens
+the normal Google sign-in in the system browser, which hands it back a
+single-use ticket on `blitz://auth`; the app trades that for a token it keeps in
+the keychain and sends as `Authorization: Bearer`. The Worker accepts that
+token anywhere it accepts the cookie, so sync, photos, definitions and checks
+are the same code paths.
+
+Words said aloud are the one thing that moved. The web app still makes its own
+voice in the browser; the app asks `GET /api/say?language=de&text=Hund`, which
+makes the clip once with Piper, keeps it in R2 under a hash of the voice and the
+text, and serves it for a year. `POST /api/say/prepare` makes a lesson's words
+ahead while its first question is read. The Piper service is in `tts/`.
+
+Deleting the account is `DELETE /api/account`: the words, the pictures, the
+sessions and the user, gone in one go. `apps/mobile` uses it from Preferences;
+`public/delete-account/` is the same thing for anyone without the app, which is
+what the stores ask for.
+
 ## Development
 
 ```sh
 pnpm install
 pnpm dev      # binds to the tailnet address on this VPS
 pnpm test     # domain rules and storage
-pnpm check    # types
+pnpm check    # types (the web app and the Worker)
 pnpm build    # app and Worker in dist/
 pnpm deploy   # build, migrate D1 and publish to Cloudflare Workers
+```
+
+The first deploy that includes speech needs its bucket:
+
+```sh
+pnpm wrangler r2 bucket create blitz-audio
 ```
 
 ### Dictionary
@@ -276,12 +312,17 @@ what is left and clears the device; the words stay in the account.
 ## Layout
 
 ```text
-src/domain/    Framework-free rules: languages, word types, the sync wire format
-src/data/      IndexedDB (Dexie), sync, account, photo resizing, preferences
-src/features/  Screens: word list and sheet, writing, navigation, language menu, account, practice entry
-src/landing/   The front page at /: its styles and the lesson in its hero
-src/shared/    Reusable UI: the sheet, the morph into it, object URLs, sound effects, speech
-worker/        Cloudflare Worker: Google sign-in, sessions, sync (D1), photos (R2), definitions (Workers AI), writing checks (OpenAI)
-migrations/    D1 schema
-mockups/       Static design sketches that led here
+packages/core/  Framework-free rules: languages, word types, practice, the sync
+                wire format, streaks, writing. Shared with the app.
+src/data/       IndexedDB (Dexie), sync, account, photo resizing, preferences
+src/features/   Screens: word list and sheet, writing, navigation, language menu, account, practice entry
+src/landing/    The front page at /: its styles and the lesson in its hero
+src/shared/     Reusable UI: the sheet, the morph into it, object URLs, sound effects, speech
+worker/         Cloudflare Worker: Google sign-in, sessions, sync (D1), photos
+                and speech clips (R2), definitions (Workers AI), writing checks
+                (OpenAI), the app's sign-in handoff
+apps/mobile/    The Android app: Expo, SQLite, the same backend
+tts/            Piper behind HTTP, for the words the app has not heard yet
+migrations/     D1 schema
+mockups/        Static design sketches that led here
 ```

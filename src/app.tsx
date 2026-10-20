@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAccount } from './data/account.ts';
 import { useLanguage, useSounds, useTheme, useWordSort } from './data/preferences.ts';
 import { fillCounterparts, useWords } from './data/words.ts';
-import type { Word } from './domain/word.ts';
+import type { Word } from '@blitz/core/word.ts';
 import styles from './app.module.css';
 import { storeDraft } from './data/writing.ts';
 import { AccountBadge, AppMenu } from './features/account/account-badge.tsx';

@@ -1,6 +1,6 @@
 import { Check, ChevronDown } from 'lucide-react';
 import { useRef } from 'react';
-import { LANGUAGE_ORDER, LANGUAGES, type Language } from '../../domain/word.ts';
+import { LANGUAGE_ORDER, LANGUAGES, type Language } from '@blitz/core/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import styles from './language-menu.module.css';
 

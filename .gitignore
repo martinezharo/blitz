@@ -10,3 +10,9 @@ dist
 # Made at build time from data/dictionary, data/lists and scripts/dictionary/curated
 public/dict
 public/lists
+
+# Expo
+apps/mobile/.expo
+apps/mobile/android
+apps/mobile/ios
+apps/mobile/dist

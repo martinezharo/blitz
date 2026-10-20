@@ -30,6 +30,12 @@ export const WORD_TYPES: { value: WordType; label: string }[] = [
 /** Highest practice level. Words start at 1. */
 export const MAX_LEVEL = 5;
 
+/**
+ * How a platform holds a picture's bytes: a Blob in the browser, a file URI on
+ * a device. Nothing outside the storage layer ever looks inside one.
+ */
+export type PhotoValue = Blob | string;
+
 export interface Word {
   id: string;
   language: Language;
@@ -48,7 +54,7 @@ export interface Word {
   translation: string | null;
   /** English explanation. */
   definition: string | null;
-  photo: Blob | null;
+  photo: PhotoValue | null;
   /**
    * SHA-256 of `photo` once sync has uploaded it, so it is hashed and sent
    * only once. Absent when there is no photo or it has not been synced.
@@ -72,7 +78,7 @@ export interface Draft {
   counterpart: string;
   translation: string;
   definition: string;
-  photo: Blob | null;
+  photo: PhotoValue | null;
 }
 
 export function emptyDraft(term = ''): Draft {

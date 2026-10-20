@@ -16,7 +16,7 @@
     "isolatedModules": true,
     "types": ["vite/client", "node"]
   },
-  "include": ["src", "scripts", "vite.config.ts", "vitest.config.ts"],
+  "include": ["src", "packages", "scripts", "vite.config.ts", "vitest.config.ts"],
   // Runs the Worker, whose types (workers-types) clash with the DOM ones here.
   "exclude": ["src/data/sync.test.ts"]
 }

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import type { Language } from '../../domain/word.ts';
+import type { Language } from '@blitz/core/word.ts';
 import { playVoice, soundsOn } from '../sound.ts';
 import { VOICE_CACHE, VOICES } from './voices.ts';
 

@@ -1,5 +1,5 @@
-import { DICT_KINDS, type DictEntry, type DictKind, MIN_QUERY, normalize, shardKey, type Suggestion, suggest, wordOfPlural } from '../domain/dictionary.ts';
-import type { Language } from '../domain/word.ts';
+import { DICT_KINDS, type DictEntry, type DictKind, MIN_QUERY, normalize, shardKey, type Suggestion, suggest, wordOfPlural } from '@blitz/core/dictionary.ts';
+import type { Language } from '@blitz/core/word.ts';
 
 const shards = new Map<string, Promise<DictEntry[]>>();
 

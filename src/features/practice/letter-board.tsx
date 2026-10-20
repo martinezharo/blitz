@@ -1,6 +1,6 @@
 import { type MouseEvent, type PointerEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { dropLetter, misplacedTiles, tileForTyped } from '../../domain/practice.ts';
-import type { Language } from '../../domain/word.ts';
+import { dropLetter, misplacedTiles, tileForTyped } from '@blitz/core/practice.ts';
+import type { Language } from '@blitz/core/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import styles from './practice-session.module.css';
 

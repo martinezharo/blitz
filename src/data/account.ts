@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Account } from '../domain/sync.ts';
+import type { Account } from '@blitz/core/sync.ts';
 import { clearLocalData, flush, startSync, stopSync } from './sync.ts';
 
 export type AccountState =

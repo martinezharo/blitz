@@ -21,8 +21,8 @@
  */
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { type DictEntry, SENSE_TYPES } from '../src/domain/dictionary.ts';
-import { definitionProblems } from '../src/domain/definition-style.ts';
+import { type DictEntry, SENSE_TYPES } from '@blitz/core/dictionary.ts';
+import { definitionProblems } from '@blitz/core/definition-style.ts';
 import { type CuratedLanguage, type CuratedSense, cleanWord, readCurated, writeCurated } from './dictionary/curated.ts';
 import { ANSWER_SCHEMA, PROMPTS, REVISION } from './dictionary/curate-prompt.ts';
 import { askModel } from './dictionary/codex.ts';

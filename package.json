@@ -10,14 +10,17 @@
     "build": "pnpm check && vite build",
     "preview": "vite preview",
     "check": "tsc --noEmit && tsc --noEmit -p worker",
+    "check:mobile": "tsc --noEmit -p apps/mobile",
     "test": "vitest run",
     "dictionary": "node scripts/build-dictionary.ts",
     "deploy": "pnpm build && wrangler d1 migrations apply blitz --remote && wrangler deploy",
     "curate": "node scripts/curate-dictionary.ts",
     "curated": "node scripts/apply-curated.ts",
-    "list:new": "node scripts/new-list.ts"
+    "list:new": "node scripts/new-list.ts",
+    "check:all": "pnpm check && pnpm check:mobile"
   },
   "dependencies": {
+    "@blitz/core": "workspace:*",
     "@fontsource-variable/nunito": "^5.3.0",
     "dexie": "^4.4.6",
     "dexie-react-hooks": "^4.4.0",

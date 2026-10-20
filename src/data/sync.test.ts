@@ -1,10 +1,10 @@
 import 'fake-indexeddb/auto';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { testServer } from '../../worker/test-server.ts';
-import type { Change, SyncResponse } from '../domain/sync.ts';
-import { type Draft, emptyDraft } from '../domain/word.ts';
+import type { Change, SyncResponse } from '@blitz/core/sync.ts';
+import { type Draft, emptyDraft } from '@blitz/core/word.ts';
 import { db } from './db.ts';
-import { dayId } from '../domain/streak.ts';
+import { dayId } from '@blitz/core/streak.ts';
 import { markPracticed } from './streak.ts';
 import { clearLocalData, startSync, stopSync, syncNow } from './sync.ts';
 import { addWord, deleteWord, updateWord } from './words.ts';

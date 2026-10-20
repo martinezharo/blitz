@@ -15,7 +15,7 @@ import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { LIST_TINTS, type ListTint } from '../src/domain/lists.ts';
+import { LIST_TINTS, type ListTint } from '@blitz/core/lists.ts';
 import { readCurated } from './dictionary/curated.ts';
 import { askModel } from './dictionary/codex.ts';
 import { generateLists, parseWord, readSources, resolveWord } from './dictionary/lists.ts';

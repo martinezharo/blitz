@@ -1,8 +1,21 @@
 export interface Env {
   DB: D1Database;
   PHOTOS: R2Bucket;
+  /**
+   * Made speech clips, one per voice and text: `say/<language>/<hash>.wav`.
+   * Optional: a preview built before the bucket existed has no binding, and
+   * `/api/say` says so rather than throwing.
+   */
+  AUDIO?: R2Bucket;
   ASSETS: Fetcher;
   AI: Ai;
+  /**
+   * The Piper service that makes a clip the first time it is asked for (see
+   * `tts/`). Optional: without it the app simply has no voice, and the web app
+   * keeps making its own.
+   */
+  TTS_URL?: string;
+  TTS_SECRET?: string;
   /** Server-side OpenAI credential for writing checks; definitions use Workers AI. */
   OPENAI_API_KEY?: string;
   GOOGLE_CLIENT_ID: string;

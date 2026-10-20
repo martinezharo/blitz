@@ -1,5 +1,5 @@
-import { type Mark, MAX_TEXT, markMistakes, type Verdict } from '../src/domain/writing.ts';
-import type { Language } from '../src/domain/word.ts';
+import { type Mark, MAX_TEXT, markMistakes, type Verdict } from '@blitz/core/writing.ts';
+import type { Language } from '@blitz/core/word.ts';
 import { takeSlot } from './allowance.ts';
 import type { User } from './auth.ts';
 import { CORRECTION_SCHEMA, messagesFor } from './correction-prompt.ts';

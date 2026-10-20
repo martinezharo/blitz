@@ -1,7 +1,7 @@
 import Dexie from 'dexie';
-import { normalize } from '../domain/dictionary.ts';
-import { progress } from '../domain/practice.ts';
-import { type Draft, hasCounterpart, type Language, sexOf, type Word, wordFields } from '../domain/word.ts';
+import { normalize } from '@blitz/core/dictionary.ts';
+import { progress } from '@blitz/core/practice.ts';
+import { type Draft, hasCounterpart, type Language, sexOf, type Word, wordFields } from '@blitz/core/word.ts';
 import { db } from './db.ts';
 import { pageHidden, useLiveData } from './live.ts';
 import { lookup } from './dictionary.ts';

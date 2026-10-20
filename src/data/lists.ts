@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { ListSummary, ListWords } from '../domain/lists.ts';
+import type { ListSummary, ListWords } from '@blitz/core/lists.ts';
 
 /**
  * The ready-made lists are static files made at build time (public/lists): an

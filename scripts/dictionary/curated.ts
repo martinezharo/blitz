@@ -1,8 +1,8 @@
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { checkDefinition } from '../../src/domain/definition-style.ts';
-import { type DictEntry, type DictSense, normalize, type ReverseEntry, SENSE_TYPE_OF } from '../../src/domain/dictionary.ts';
-import { LANGUAGES, WORD_TYPES, type WordType } from '../../src/domain/word.ts';
+import { checkDefinition } from '@blitz/core/definition-style.ts';
+import { type DictEntry, type DictSense, normalize, type ReverseEntry, SENSE_TYPE_OF } from '@blitz/core/dictionary.ts';
+import { LANGUAGES, WORD_TYPES, type WordType } from '@blitz/core/word.ts';
 import { reverseKeys } from './extract.ts';
 
 /**
