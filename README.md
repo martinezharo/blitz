@@ -80,6 +80,28 @@ metaphors and independent subjects and checks repeated errors separately.
 The Worker maps the model's `original/replacement` fields to the existing
 `wrong/right` response and history format. Calls have a 30-second timeout,
 a 4,000-token output cap, no automatic retries and `store: false`.
+
+### Reviewing the grammar history
+
+"Review these mistakes" in the history asks about ten of its sentences
+(`src/domain/review.ts`, `src/features/review/`), each built from tiles, tapped or dragged, of the
+learner's own words. A German sentence with a translation shows its English
+meaning and is built word by word, from the words it needs mixed with the ones
+that were written wrong; punctuation is not asked. Any other sentence, including every English one, is
+shown with a gap where each fix was, to fill with the right form among the one
+that was written and a couple borrowed from other sentences.
+
+There are no levels: a sentence stays in the review until the learner marks it
+learned (it moves to "Learned" in the history, and can come back) or removes it.
+Archiving and translations sync with the sentence.
+
+German sentences get their English meaning from `POST /api/translate`
+(`worker/translate.ts`): up to 20 sentences per request, one slot of its own
+daily allowance each, for accounts only. The browser asks for what is missing
+when the history opens and after each check, a few batches at a time
+(`translateMissing` in `src/data/writing.ts`), so sentences kept before this
+existed are translated too. It stops quietly when it cannot and tries again
+next time; a sentence without a translation is asked with gaps meanwhile.
 The daily limits remain 30 per account and 150 overall; writing checks are
 billed through OpenAI separately from the definitions' Workers AI allowance.
 Configure `OPENAI_API_KEY` in `.dev.vars` locally and with

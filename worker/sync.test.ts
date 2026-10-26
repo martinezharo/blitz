@@ -167,9 +167,28 @@ describe('corrections', () => {
     expect(pulled.changes).toEqual([{ id: sentenceId, updatedAt: 20, kind: 'correction', word: null, correction: null }]);
   });
 
+  it('keep their translation and whether they are learned', async () => {
+    const as = server.as(await server.signUp('ada'));
+    const sentence = correction(id(), 10);
+    const learned = { ...sentence, correction: { ...sentence.correction!, translation: 'I have a dog.', archived: true } };
+    expect((await post(as, { cursor: 0, changes: [learned], kinds: ['correction'] })).status).toBe(200);
+    const pulled = (await (await post(as, { cursor: 0, changes: [], kinds: ['correction'] })).json()) as SyncResponse;
+    expect(pulled.changes).toEqual([learned]);
+    // Without them the fields are simply absent, and a flag that is not set is not stored.
+    const plain = correction(id(), 11);
+    const unset = { ...plain, correction: { ...plain.correction!, archived: false } };
+    await post(as, { cursor: 0, changes: [unset], kinds: ['correction'] });
+    const again = (await (await post(as, { cursor: 0, changes: [], kinds: ['correction'] })).json()) as SyncResponse;
+    expect(again.changes.find((change) => change.id === plain.id)).toEqual(plain);
+  });
+
   it('rejects malformed ones', async () => {
     const as = server.as(await server.signUp('ada'));
     const sentence = correction(id(), 10);
+    const noTranslation = { ...sentence, correction: { ...sentence.correction!, translation: '' } };
+    expect((await post(as, { cursor: 0, changes: [noTranslation] })).status).toBe(400);
+    const notFlag = { ...sentence, correction: { ...sentence.correction!, archived: 'yes' } };
+    expect((await post(as, { cursor: 0, changes: [notFlag] })).status).toBe(400);
     const bad = { ...sentence, correction: { ...sentence.correction!, fixes: [{ wrong: 'x', right: 'y', why: '', from: [0, 99], to: [0, 1] }] } };
     expect((await post(as, { cursor: 0, changes: [bad] })).status).toBe(400);
     expect((await post(as, { cursor: 0, changes: [{ ...sentence, kind: 'note' }] })).status).toBe(400);

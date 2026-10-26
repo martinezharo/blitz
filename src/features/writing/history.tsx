@@ -1,9 +1,11 @@
-import { Trash2 } from 'lucide-react';
-import { type ReactNode, useState } from 'react';
-import { deleteCorrection, useCorrections } from '../../data/writing.ts';
+import { Archive, ArchiveRestore, Dumbbell, Trash2 } from 'lucide-react';
+import { type ReactNode, useEffect, useState } from 'react';
+import { deleteCorrection, setCorrectionArchived, translateMissing, useCorrections } from '../../data/writing.ts';
+import { reviewable } from '../../domain/review.ts';
 import type { Language } from '../../domain/word.ts';
 import type { Correction } from '../../domain/writing.ts';
 import { sounds } from '../../shared/sound.ts';
+import { ReviewSession } from '../review/review-session.tsx';
 import styles from './writing.module.css';
 
 /** Sentences shown before "Show all". */
@@ -15,22 +17,44 @@ const DAY = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short' 
 export function History({ language }: { language: Language }) {
   const corrections = useCorrections(language);
   const [all, setAll] = useState(false);
+  const [learned, setLearned] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
+
+  // German sentences get their English meaning, to be asked from it. Quietly, and only what is missing.
+  useEffect(() => void translateMissing(language), [language]);
+
   if (!corrections || corrections.length === 0) return null;
-  const shown = all ? corrections : corrections.slice(0, FIRST);
+  const active = corrections.filter((correction) => !correction.archived);
+  const archived = corrections.filter((correction) => correction.archived);
+  const shown = all ? active : active.slice(0, FIRST);
+  const toReview = reviewable(corrections).length;
 
   return (
     <section className={styles.history} aria-labelledby="grammar-history">
       <h2 id="grammar-history" className={styles.historyTitle}>
         Grammar history
-        <span className={styles.historyCount}>{corrections.length}</span>
+        <span className={styles.historyCount}>{active.length}</span>
       </h2>
       <p className={styles.lede}>Your sentences with a grammar mistake, and how they should be.</p>
+      {toReview > 0 && (
+        <button
+          type="button"
+          className={styles.review}
+          onClick={() => {
+            sounds.open();
+            setReviewing(true);
+          }}
+        >
+          <Dumbbell aria-hidden="true" />
+          Review these mistakes
+        </button>
+      )}
       <ol className={styles.entries}>
         {shown.map((correction) => (
           <Entry key={correction.id} correction={correction} language={language} />
         ))}
       </ol>
-      {corrections.length > FIRST && (
+      {active.length > FIRST && (
         <button
           type="button"
           className={`${styles.quiet} ${styles.more}`}
@@ -39,9 +63,32 @@ export function History({ language }: { language: Language }) {
             setAll(!all);
           }}
         >
-          {all ? 'Show fewer' : `Show all ${corrections.length}`}
+          {all ? 'Show fewer' : `Show all ${active.length}`}
         </button>
       )}
+      {archived.length > 0 && (
+        <>
+          <button
+            type="button"
+            className={`${styles.quiet} ${styles.more}`}
+            aria-expanded={learned}
+            onClick={() => {
+              sounds.tap();
+              setLearned(!learned);
+            }}
+          >
+            {learned ? 'Hide learned' : `Learned (${archived.length})`}
+          </button>
+          {learned && (
+            <ol className={styles.entries}>
+              {archived.map((correction) => (
+                <Entry key={correction.id} correction={correction} language={language} />
+              ))}
+            </ol>
+          )}
+        </>
+      )}
+      {reviewing && <ReviewSession language={language} corrections={corrections} onClose={() => setReviewing(false)} />}
     </section>
   );
 }
@@ -74,6 +121,11 @@ function Entry({ correction, language }: { correction: Correction; language: Lan
       <p className={styles.corrected} lang={language}>
         <Marked text={correction.corrected} spans={correction.fixes.map((fix) => fix.to)} className={styles.now} />
       </p>
+      {correction.translation && (
+        <p className={styles.meaning} lang="en">
+          {correction.translation}
+        </p>
+      )}
       <ul className={styles.whys}>
         {correction.fixes.map((fix, index) => (
           <li key={index}>
@@ -86,6 +138,19 @@ function Entry({ correction, language }: { correction: Correction; language: Lan
       </ul>
       <footer className={styles.entryFoot}>
         <time dateTime={new Date(correction.createdAt).toISOString()}>{DAY.format(correction.createdAt)}</time>
+        <button
+          type="button"
+          className={styles.keep}
+          onClick={() => {
+            sounds.saved();
+            void setCorrectionArchived(correction.id, !correction.archived);
+          }}
+          aria-label={correction.archived ? 'Bring it back into the review' : 'Mark it as learned'}
+          title={correction.archived ? 'Bring it back into the review' : 'Learned: take it out of the review'}
+        >
+          {correction.archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}
+          {correction.archived ? 'Restore' : 'Learned'}
+        </button>
         <button
           type="button"
           className={styles.forget}

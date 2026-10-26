@@ -5,6 +5,7 @@ import type { User } from './auth.ts';
 import { CORRECTION_SCHEMA, messagesFor } from './correction-prompt.ts';
 import type { Env } from './env.ts';
 import { json, problem } from './http.ts';
+import { answerJson, record } from './openai.ts';
 
 export { messagesFor } from './correction-prompt.ts';
 export const MODEL = 'gpt-6-luna';
@@ -23,26 +24,9 @@ export function correctionRequest(language: Language, text: string) {
   };
 }
 
-const record = (value: unknown): Record<string, unknown> | null =>
-  typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : null;
-
 /** Read only a completed final answer; reasoning, refusals and partial JSON are never corrections. */
 export function readAnswer(answer: unknown): unknown {
-  const response = record(answer);
-  if (response?.status !== 'completed' || !Array.isArray(response.output)) return null;
-  let content = '';
-  for (const item of response.output) {
-    const message = record(item);
-    if (message?.type !== 'message') continue;
-    if (message.status !== 'completed' || !Array.isArray(message.content)) return null;
-    for (const part of message.content) {
-      const block = record(part);
-      if (block?.type === 'refusal') return null;
-      if (block?.type === 'output_text' && typeof block.text === 'string') content += block.text;
-    }
-  }
-  let value: Record<string, unknown> | null;
-  try { value = record(JSON.parse(content)); } catch { return null; }
+  const value = answerJson(answer);
   if (!value || !['de', 'en', 'other', 'nonsense'].includes(value.language as string) || !Array.isArray(value.mistakes)) return null;
   const mistakes = [];
   for (const item of value.mistakes) {
