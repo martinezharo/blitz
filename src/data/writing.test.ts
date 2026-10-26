@@ -113,6 +113,25 @@ describe('translating the history', () => {
     expect(requests).toEqual([]);
   });
 
+  it('stays away from the database while the page is in the background', async () => {
+    await saveCorrections('de', [sentence(1)]);
+    vi.stubGlobal('document', { visibilityState: 'hidden' });
+    await translateMissing('de');
+    expect(requests).toEqual([]);
+
+    // Hidden while the request was out: the answer is dropped and tried again later.
+    vi.stubGlobal('document', { visibilityState: 'visible' });
+    reply = (sentences) => {
+      vi.stubGlobal('document', { visibilityState: 'hidden' });
+      return Response.json({ translations: sentences.map(() => 'I have a dog.') });
+    };
+    await db.pending.clear();
+    await translateMissing('de');
+    expect(requests).toHaveLength(1);
+    expect((await db.corrections.toArray())[0]!.translation).toBeUndefined();
+    expect(await db.pending.count()).toBe(0);
+  });
+
   it('does not overwrite a translation that arrived meanwhile', async () => {
     await saveCorrections('de', [sentence(1)]);
     const [saved] = await db.corrections.toArray();

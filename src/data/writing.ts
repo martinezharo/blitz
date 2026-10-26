@@ -2,7 +2,7 @@ import Dexie from 'dexie';
 import type { Language } from '../domain/word.ts';
 import { type Correction, type Mark, MAX_TEXT, MAX_TRANSLATED, type SentenceFix, TRANSLATE_BATCH, type Verdict } from '../domain/writing.ts';
 import { db } from './db.ts';
-import { useLiveData } from './live.ts';
+import { pageHidden, useLiveData } from './live.ts';
 import { requestSync } from './sync.ts';
 import { newId } from './words.ts';
 
@@ -127,12 +127,15 @@ async function translateSentences(language: Language, sentences: string[]): Prom
  * Gives the sentences of the history their English meaning, a batch at a time,
  * so they can be asked from it. Only German has one. It stops quietly when
  * there is no connection, no account or no allowance left, and when a round
- * brings nothing: what is missing is tried again the next time.
+ * brings nothing: what is missing is tried again the next time. A page in the
+ * background stays away from the database (see live.ts), before the request
+ * and again once its answer is back.
  */
 export function translateMissing(language: Language): Promise<void> {
   if (language !== 'de' || !navigator.onLine) return Promise.resolve();
   translating ??= (async () => {
     for (let round = 0; round < TRANSLATION_ROUNDS; round++) {
+      if (pageHidden()) return;
       const missing = (
         await db.corrections
           .where('[language+createdAt]')
@@ -144,7 +147,7 @@ export function translateMissing(language: Language): Promise<void> {
         .slice(0, TRANSLATE_BATCH);
       if (missing.length === 0) return;
       const translations = await translateSentences(language, missing.map((correction) => correction.corrected));
-      if (!translations) return;
+      if (!translations || pageHidden()) return;
       let stored = 0;
       await db.transaction('rw', db.corrections, db.pending, async () => {
         for (const [at, correction] of missing.entries()) {
