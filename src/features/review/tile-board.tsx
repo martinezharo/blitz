@@ -122,7 +122,8 @@ export function TileBoard({ language, tiles, slots, onChange, locked, reorder, c
       if (over) return Number(over.dataset.slot);
       const zone = board.current!.querySelector<HTMLElement>('[data-dropzone]')?.getBoundingClientRect();
       const inside = zone && x >= zone.left && x <= zone.right && y >= zone.top && y <= zone.bottom;
-      return inside ? slots.filter((tile) => tile !== null).length : null;
+      // Never past the last slot: a full line has none free, and a tile placed there moves to its end.
+      return inside ? Math.min(slots.filter((tile) => tile !== null).length, slots.length - 1) : null;
     }
     let nearest: number | null = null;
     let best = Infinity;
