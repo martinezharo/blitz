@@ -156,6 +156,8 @@ function parseCorrection(value: unknown): Correction | null {
     !isText(item.corrected, 2000) ||
     !Array.isArray(item.fixes) ||
     item.fixes.length > 40 ||
+    (item.translation !== undefined && !isText(item.translation, 1000)) ||
+    (item.archived !== undefined && typeof item.archived !== 'boolean') ||
     !isTime(item.createdAt) ||
     !isTime(item.updatedAt)
   ) {
@@ -177,6 +179,9 @@ function parseCorrection(value: unknown): Correction | null {
     written,
     corrected,
     fixes,
+    // Only what is there: older sentences have no translation, and only an archived one carries the flag.
+    ...(item.translation !== undefined && { translation: item.translation as string }),
+    ...(item.archived === true && { archived: true }),
     createdAt: item.createdAt as number,
     updatedAt: item.updatedAt as number,
   };

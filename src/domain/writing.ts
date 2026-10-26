@@ -10,6 +10,9 @@ import type { Language } from './word.ts';
 export const MAX_TEXT = 1500;
 /** The most mistakes kept from one check. */
 export const MAX_MISTAKES = 40;
+/** The longest sentence sent to be translated, and the most sent at once. */
+export const MAX_TRANSLATED = 600;
+export const TRANSLATE_BATCH = 20;
 
 export type MistakeKind = 'spelling' | 'grammar';
 
@@ -255,6 +258,10 @@ export function sentenceFixes(text: string, marks: readonly Mark[]): SentenceFix
 export interface Correction extends SentenceFix {
   id: string;
   language: Language;
+  /** The English meaning of `corrected`, for sentences in a language the app translates. Added some time after the sentence is kept. */
+  translation?: string;
+  /** Learned for good: out of the review, kept in the history. Absent means not archived. */
+  archived?: boolean;
   createdAt: number;
   updatedAt: number;
 }

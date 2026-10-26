@@ -1,0 +1,100 @@
+/* The sentence being built, or the one with gaps. Tiles and gaps are tapped; nothing is dragged. */
+
+.line {
+  display: flex;
+  min-height: 3.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 1.2rem;
+  padding: 0.5rem 0;
+  border-bottom: 3px solid var(--line);
+}
+
+/* Running text, so a full stop stays against the gap it follows. */
+.sentence {
+  margin: 0 0 1.2rem;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-strong);
+  line-height: 2.5;
+}
+
+.bank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip,
+.gap {
+  padding: 0.55rem 0.85rem;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-tail-md);
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+  font-size: var(--text-lg);
+  font-weight: 900;
+  cursor: pointer;
+  transition: background var(--motion-standard), border-color var(--motion-standard), color var(--motion-standard),
+    transform var(--motion-spring), opacity var(--motion-standard);
+}
+
+.chip:hover:not(:disabled),
+.gap:hover:not(:disabled) {
+  border-color: var(--faint);
+}
+
+.chip:active:not(:disabled),
+.gap:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.chip:disabled,
+.gap:disabled {
+  cursor: default;
+}
+
+/* A tile that is on the line or in a gap leaves its place in the bank empty, so nothing shifts. */
+.chip[data-used] {
+  border-style: dashed;
+  background: transparent;
+  color: transparent;
+  opacity: 0.55;
+}
+
+.gap {
+  min-width: 4.2rem;
+  margin-inline: 0.15rem;
+  border-style: dashed;
+  background: var(--icon-background);
+  line-height: 1.2;
+}
+
+.gap[data-filled] {
+  border-style: solid;
+}
+
+.gap[data-right] {
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 18%, transparent);
+}
+
+.gap[data-wrong] {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+}
+
+.nothing {
+  color: var(--muted);
+  font-style: italic;
+  font-weight: var(--weight-strong);
+}
+
+.chip[data-used] .nothing {
+  color: transparent;
+}
+
+.why {
+  display: block;
+}

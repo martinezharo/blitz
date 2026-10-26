@@ -2,7 +2,7 @@ import { Check, Dices, Lightbulb, LoaderCircle, LogIn, PenLine, Plus, RotateCcw,
 import { type RefObject, useEffect, useRef, useState } from 'react';
 import type { AccountState } from '../../data/account.ts';
 import { lookupForm } from '../../data/dictionary.ts';
-import { type CheckFailure, checkText, loadDraft, saveCorrections, storeDraft, type WritingDraft } from '../../data/writing.ts';
+import { type CheckFailure, checkText, loadDraft, saveCorrections, storeDraft, translateMissing, type WritingDraft } from '../../data/writing.ts';
 import { GUESS_NAMES, type Guess, guessLanguage } from '../../domain/detect-language.ts';
 import { normalize, type Suggestion } from '../../domain/dictionary.ts';
 import { LANGUAGES, type Language, type Word } from '../../domain/word.ts';
@@ -134,7 +134,9 @@ export function WritingPage({ language, words, account, onSignIn, onAddWord, onS
     setSelected(null);
     if (outcome.marks.length === 0) sounds.correct();
     else sounds.open();
-    void saveCorrections(language, sentenceFixes(text, outcome.marks)).catch(() => {});
+    void saveCorrections(language, sentenceFixes(text, outcome.marks))
+      .then(() => translateMissing(language))
+      .catch(() => {});
   }
 
   function mismatchOf(found: Guess | Verdict): Mismatch {

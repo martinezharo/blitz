@@ -623,7 +623,12 @@
   font-size: var(--text-sm);
 }
 
-.forget {
+.entryFoot time {
+  margin-right: auto;
+}
+
+.forget,
+.keep {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -641,6 +646,47 @@
   color: var(--danger);
 }
 
+.keep:hover {
+  color: var(--success);
+}
+
+/* Starts a review of the history's sentences. */
+.review {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.85rem 1.1rem;
+  border: 0;
+  border-radius: var(--radius-tail-lg);
+  background: var(--button-background);
+  color: var(--button-foreground);
+  font-size: 1rem;
+  font-weight: var(--weight-black);
+  cursor: pointer;
+  transition: transform var(--motion-spring);
+}
+
+.review:active {
+  transform: scale(0.97);
+}
+
+.review svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+/* The English meaning of a German sentence, under its corrected form. */
+.meaning {
+  margin: 0.25rem 0 0;
+  padding-left: 1.4rem;
+  color: var(--muted);
+  font-size: var(--text-md);
+  font-style: italic;
+}
+
 .forget[data-confirming] {
   padding-inline: 0.6rem;
   background: var(--danger);
@@ -648,7 +694,8 @@
   color: var(--background);
 }
 
-.forget svg {
+.forget svg,
+.keep svg {
   width: 1rem;
   height: 1rem;
 }

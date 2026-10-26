@@ -1,6 +1,6 @@
 import Dexie from 'dexie';
 import type { Language } from '../domain/word.ts';
-import { type Correction, type Mark, MAX_TEXT, type SentenceFix, type Verdict } from '../domain/writing.ts';
+import { type Correction, type Mark, MAX_TEXT, MAX_TRANSLATED, type SentenceFix, TRANSLATE_BATCH, type Verdict } from '../domain/writing.ts';
 import { db } from './db.ts';
 import { useLiveData } from './live.ts';
 import { requestSync } from './sync.ts';
@@ -85,6 +85,86 @@ export async function deleteCorrection(id: string): Promise<void> {
     await db.pending.put({ id, at: Date.now(), kind: 'correction' });
   });
   requestSync();
+}
+
+/** Puts a sentence away as learned, or brings it back into the review. */
+export async function setCorrectionArchived(id: string, archived: boolean): Promise<void> {
+  await db.transaction('rw', db.corrections, db.pending, async () => {
+    const correction = await db.corrections.get(id);
+    if (!correction) return;
+    const { archived: _, ...rest } = correction;
+    const now = Date.now();
+    await db.corrections.put({ ...rest, ...(archived && { archived: true }), updatedAt: now });
+    await db.pending.put({ id, at: now, kind: 'correction' });
+  });
+  requestSync();
+}
+
+/** Batches asked for in one go: a history of a hundred sentences is translated at once. */
+const TRANSLATION_ROUNDS = 5;
+let translating: Promise<void> | null = null;
+
+async function translateSentences(language: Language, sentences: string[]): Promise<(string | null)[] | null> {
+  try {
+    const response = await fetch('/api/translate', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language, sentences }),
+      signal: AbortSignal.timeout(GIVE_UP_AFTER),
+    });
+    if (!response.ok) return null;
+    const body = (await response.json()) as { translations?: unknown };
+    const list = body.translations;
+    if (!Array.isArray(list) || list.length !== sentences.length) return null;
+    return list.map((item) => (typeof item === 'string' && item.trim() ? item : null));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Gives the sentences of the history their English meaning, a batch at a time,
+ * so they can be asked from it. Only German has one. It stops quietly when
+ * there is no connection, no account or no allowance left, and when a round
+ * brings nothing: what is missing is tried again the next time.
+ */
+export function translateMissing(language: Language): Promise<void> {
+  if (language !== 'de' || !navigator.onLine) return Promise.resolve();
+  translating ??= (async () => {
+    for (let round = 0; round < TRANSLATION_ROUNDS; round++) {
+      const missing = (
+        await db.corrections
+          .where('[language+createdAt]')
+          .between([language, Dexie.minKey], [language, Dexie.maxKey])
+          .reverse()
+          .toArray()
+      )
+        .filter((correction) => correction.translation === undefined && !correction.archived && correction.corrected.length <= MAX_TRANSLATED)
+        .slice(0, TRANSLATE_BATCH);
+      if (missing.length === 0) return;
+      const translations = await translateSentences(language, missing.map((correction) => correction.corrected));
+      if (!translations) return;
+      let stored = 0;
+      await db.transaction('rw', db.corrections, db.pending, async () => {
+        for (const [at, correction] of missing.entries()) {
+          const translation = translations[at];
+          const current = await db.corrections.get(correction.id);
+          // Deleted meanwhile, or translated on another device.
+          if (!translation || !current || current.translation !== undefined) continue;
+          const now = Date.now();
+          await db.corrections.put({ ...current, translation, updatedAt: now });
+          await db.pending.put({ id: current.id, at: now, kind: 'correction' });
+          stored++;
+        }
+      });
+      if (stored > 0) requestSync();
+      else return;
+    }
+  })().finally(() => {
+    translating = null;
+  });
+  return translating;
 }
 
 /** What is on the page: the text, and its marks once checked. */
