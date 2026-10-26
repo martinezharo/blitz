@@ -9,6 +9,7 @@ import { sounds } from '../../shared/sound.ts';
 import { speak } from '../../shared/speech/speech.ts';
 import practice from '../practice/practice-session.module.css';
 import styles from './review.module.css';
+import { TileBoard } from './tile-board.tsx';
 
 interface ReviewSessionProps {
   language: Language;
@@ -89,14 +90,11 @@ interface QuestionProps {
   onNext: () => void;
 }
 
-/** A tile's text; a form with nothing in it (a word to take out) reads as such. */
-const Face = ({ text }: { text: string }) => (text === '' ? <span className={styles.nothing}>nothing</span> : <>{text}</>);
-
 function Question({ language, review, onAnswer, onNext }: QuestionProps) {
   const { correction } = review;
-  // Tiles in the order they were placed. For a sentence, only the ones placed;
-  // for gaps, one entry per gap, empty until filled.
-  const [placed, setPlaced] = useState<(number | null)[]>(() => (review.kind === 'gaps' ? review.answers.map(() => null) : []));
+  // The tile in each slot, empty until filled. Gaps have one slot each; a sentence has as many as there are
+  // tiles, so how many words it has is not given away.
+  const [placed, setPlaced] = useState<(number | null)[]>(() => (review.kind === 'gaps' ? review.answers : review.tiles).map(() => null));
   const [result, setResult] = useState<boolean | null>(null);
   const [archived, setArchived] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -104,32 +102,15 @@ function Question({ language, review, onAnswer, onNext }: QuestionProps) {
   const next = useRef<HTMLButtonElement>(null);
 
   const locked = result !== null;
-  const ready = review.kind === 'gaps' ? !placed.includes(null) : placed.length > 0;
-  const attempt = placed.map((tile) => (tile === null ? null : review.tiles[tile]!));
+  const ready = review.kind === 'gaps' ? !placed.includes(null) : placed[0] !== null;
+  // A sentence's tiles are packed to the left, so what follows the last one placed is not part of it.
+  const attempt = placed.map((tile) => (tile === null ? null : review.tiles[tile]!)).slice(0, review.kind === 'gaps' ? undefined : placed.filter((tile) => tile !== null).length);
+  const expected = review.kind === 'gaps' ? review.answers : review.answer;
 
   useEffect(() => form.current?.focus({ preventScroll: true }), []);
   useEffect(() => {
     if (locked) next.current?.focus();
   }, [locked]);
-
-  function pick(tile: number) {
-    if (locked || placed.includes(tile)) return;
-    if (review.kind === 'tiles') {
-      sounds.place(placed.length);
-      setPlaced([...placed, tile]);
-      return;
-    }
-    const free = placed.indexOf(null);
-    if (free < 0) return;
-    sounds.place(free);
-    setPlaced(placed.map((current, at) => (at === free ? tile : current)));
-  }
-
-  function lift(at: number) {
-    if (locked || placed[at] === null) return;
-    sounds.lift();
-    setPlaced(review.kind === 'tiles' ? placed.filter((_, index) => index !== at) : placed.map((current, index) => (index === at ? null : current)));
-  }
 
   function check(event: FormEvent) {
     event.preventDefault();
@@ -175,60 +156,38 @@ function Question({ language, review, onAnswer, onNext }: QuestionProps) {
       <div className={practice.body}>
         <p className={practice.prompt}>{review.kind === 'tiles' ? 'Build the sentence' : 'Fill in the gaps'}</p>
 
-        {review.kind === 'tiles' ? (
-          <>
-            <div className={practice.clue}>
-              <span className={practice.clueLabel}>In English</span>
-              <span className={practice.clueText} lang="en">
-                {review.meaning}
-              </span>
-            </div>
-            <div className={styles.line} lang={language} aria-label="Your sentence">
-              {placed.map((tile, at) => (
-                <button key={tile} type="button" className={styles.chip} disabled={locked} onClick={() => lift(at)}>
-                  {review.tiles[tile!]}
-                </button>
-              ))}
-            </div>
-          </>
-        ) : (
-          <p className={styles.sentence} lang={language}>
-            {review.parts.map((part, at) =>
-              typeof part === 'string' ? (
-                <Fragment key={at}>{part}</Fragment>
-              ) : (
-                <button
-                  key={at}
-                  type="button"
-                  className={styles.gap}
-                  data-filled={placed[part.gap] !== null || undefined}
-                  data-right={(locked && attempt[part.gap] === review.answers[part.gap]) || undefined}
-                  data-wrong={(locked && attempt[part.gap] !== review.answers[part.gap]) || undefined}
-                  disabled={locked}
-                  aria-label={`Gap ${part.gap + 1}`}
-                  onClick={() => lift(part.gap)}
-                >
-                  {attempt[part.gap] === null || attempt[part.gap] === undefined ? ' ' : <Face text={attempt[part.gap]!} />}
-                </button>
-              ),
-            )}
-          </p>
+        {review.kind === 'tiles' && (
+          <div className={practice.clue}>
+            <span className={practice.clueLabel}>In English</span>
+            <span className={practice.clueText} lang="en">
+              {review.meaning}
+            </span>
+          </div>
         )}
 
-        <div className={styles.bank} lang={language}>
-          {review.tiles.map((text, tile) => (
-            <button
-              key={tile}
-              type="button"
-              className={styles.chip}
-              data-used={placed.includes(tile) || undefined}
-              disabled={locked || placed.includes(tile)}
-              onClick={() => pick(tile)}
-            >
-              <Face text={text} />
-            </button>
-          ))}
-        </div>
+        <TileBoard
+          language={language}
+          tiles={review.tiles}
+          slots={placed}
+          onChange={setPlaced}
+          locked={locked}
+          reorder={review.kind === 'gaps' ? 'swap' : 'slide'}
+          checked={locked ? attempt.map((text, at) => text === expected[at]) : undefined}
+        >
+          {(slot, count) =>
+            review.kind === 'tiles' ? (
+              <div className={styles.line} aria-label="Your sentence" data-dropzone="">
+                {Array.from({ length: count }, (_, at) => slot(at))}
+              </div>
+            ) : (
+              <p className={styles.sentence}>
+                {review.parts.map((part, at) => (
+                  <Fragment key={at}>{typeof part === 'string' ? part : slot(part.gap)}</Fragment>
+                ))}
+              </p>
+            )
+          }
+        </TileBoard>
       </div>
 
       <footer className={practice.foot} data-result={result === null ? undefined : result ? 'right' : 'wrong'}>

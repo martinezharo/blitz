@@ -84,10 +84,10 @@ a 4,000-token output cap, no automatic retries and `store: false`.
 ### Reviewing the grammar history
 
 "Review these mistakes" in the history asks about ten of its sentences
-(`src/domain/review.ts`, `src/features/review/`), each built from tiles of the
+(`src/domain/review.ts`, `src/features/review/`), each built from tiles, tapped or dragged, of the
 learner's own words. A German sentence with a translation shows its English
 meaning and is built word by word, from the words it needs mixed with the ones
-that were written wrong. Any other sentence, including every English one, is
+that were written wrong; punctuation is not asked. Any other sentence, including every English one, is
 shown with a gap where each fix was, to fill with the right form among the one
 that was written and a couple borrowed from other sentences.
 

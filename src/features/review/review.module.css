@@ -1,4 +1,4 @@
-/* The sentence being built, or the one with gaps. Tiles and gaps are tapped; nothing is dragged. */
+/* The sentence being built, or the one with gaps; its tiles are tapped or dragged. */
 
 .line {
   display: flex;
@@ -13,10 +13,15 @@
 
 /* Running text, so a full stop stays against the gap it follows. */
 .sentence {
-  margin: 0 0 1.2rem;
+  margin: 0 0 1.6rem;
   font-size: var(--text-xl);
   font-weight: var(--weight-strong);
   line-height: 2.5;
+}
+
+/* Tiles sit on top of the slots and the bank, moved there with `translate`, as the letters of a word do. */
+.board {
+  position: relative;
 }
 
 .bank {
@@ -25,74 +30,115 @@
   gap: 0.5rem;
 }
 
-.chip,
-.gap {
+.slot,
+.home,
+.tile {
   padding: 0.55rem 0.85rem;
-  border: 2px solid var(--line);
+  border: 2px solid transparent;
   border-radius: var(--radius-tail-md);
-  background: var(--background);
-  color: var(--foreground);
   font: inherit;
   font-size: var(--text-lg);
   font-weight: 900;
-  cursor: pointer;
-  transition: background var(--motion-standard), border-color var(--motion-standard), color var(--motion-standard),
-    transform var(--motion-spring), opacity var(--motion-standard);
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
-.chip:hover:not(:disabled),
-.gap:hover:not(:disabled) {
-  border-color: var(--faint);
+/* An invisible copy of a tile's text, so the place that holds it is as wide as it. */
+.ghost {
+  visibility: hidden;
 }
 
-.chip:active:not(:disabled),
-.gap:active:not(:disabled) {
-  transform: scale(0.95);
-}
-
-.chip:disabled,
-.gap:disabled {
-  cursor: default;
-}
-
-/* A tile that is on the line or in a gap leaves its place in the bank empty, so nothing shifts. */
-.chip[data-used] {
+.slot {
+  display: inline-block;
+  min-width: 4.2rem;
+  min-height: 2.9rem;
+  margin-inline: 0.15rem;
+  vertical-align: middle;
+  border-color: var(--line);
   border-style: dashed;
+  background: var(--icon-background);
+  transition: border-color var(--motion-standard);
+}
+
+.slot[data-filled] {
+  /* As wide as the tile in it, however short. */
+  min-width: 0;
+  border-color: transparent;
   background: transparent;
-  color: transparent;
+}
+
+.slot[data-over] {
+  border-color: var(--accent);
+}
+
+/* Where each tile lives; shows as a dashed hole once it has left. */
+.home {
+  display: inline-block;
+}
+
+.home[data-empty] {
+  border: 2px dashed var(--line);
   opacity: 0.55;
 }
 
-.gap {
-  min-width: 4.2rem;
-  margin-inline: 0.15rem;
-  border-style: dashed;
-  background: var(--icon-background);
-  line-height: 1.2;
+.tile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-color: var(--line);
+  background: var(--background);
+  color: var(--foreground);
+  cursor: pointer;
+  /* Dragging a tile must not scroll the page or select text. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition: background var(--motion-standard), border-color var(--motion-standard), color var(--motion-standard),
+    transform var(--motion-spring);
 }
 
-.gap[data-filled] {
-  border-style: solid;
+.board[data-ready] .tile {
+  transition: translate 220ms cubic-bezier(0.2, 0.8, 0.2, 1), scale var(--motion-spring), background var(--motion-standard),
+    border-color var(--motion-standard), box-shadow var(--motion-standard), color var(--motion-standard);
 }
 
-.gap[data-right] {
+.tile:hover:not(:disabled) {
+  border-color: var(--faint);
+}
+
+.tile[data-placed] {
+  border-color: var(--foreground);
+}
+
+.tile[data-right] {
   border-color: var(--success);
-  background: color-mix(in srgb, var(--success) 18%, transparent);
+  background: color-mix(in srgb, var(--success) 18%, var(--background));
 }
 
-.gap[data-wrong] {
+.tile[data-wrong] {
   border-color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  background: color-mix(in srgb, var(--danger) 14%, var(--background));
+}
+
+.board .tile[data-dragging] {
+  z-index: 1;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-floating);
+  cursor: grabbing;
+  scale: 1.08;
+  /* It follows the finger exactly, with no glide. */
+  transition: scale var(--motion-spring), box-shadow var(--motion-standard);
+}
+
+.tile:disabled {
+  cursor: default;
 }
 
 .nothing {
   color: var(--muted);
   font-style: italic;
   font-weight: var(--weight-strong);
-}
-
-.chip[data-used] .nothing {
-  color: transparent;
 }
 
 .why {

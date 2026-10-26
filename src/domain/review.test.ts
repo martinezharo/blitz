@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildReview, isRight, pickReview, REVIEW_SIZE, reviewable, tokenize } from './review.ts';
+import { buildReview, isRight, pickReview, REVIEW_SIZE, packTiles, reviewable, swapTile, tokenize } from './review.ts';
 import type { Correction } from './writing.ts';
 
 const noShuffle = () => 0.999;
@@ -28,9 +28,9 @@ const were: Correction = {
 };
 
 describe('tokenize', () => {
-  it('splits words and marks apart', () => {
-    expect(tokenize('Ich habe einen Hund.')).toEqual(['Ich', 'habe', 'einen', 'Hund', '.']);
-    expect(tokenize("Don't stop, ever-ready «ja»!")).toEqual(["Don't", 'stop', ',', 'ever-ready', '«', 'ja', '»', '!']);
+  it('keeps the words and leaves the punctuation out', () => {
+    expect(tokenize('Ich habe einen Hund.')).toEqual(['Ich', 'habe', 'einen', 'Hund']);
+    expect(tokenize("Don't stop, ever-ready «ja»!")).toEqual(["Don't", 'stop', 'ever-ready', 'ja']);
     expect(tokenize('   ')).toEqual([]);
   });
 });
@@ -42,8 +42,8 @@ describe('a German sentence with a translation', () => {
     expect(review.kind).toBe('tiles');
     if (review.kind !== 'tiles') return;
     expect(review.meaning).toBe('I have a dog.');
-    expect(review.answer).toEqual(['Ich', 'habe', 'einen', 'Hund', '.']);
-    expect([...review.tiles].sort()).toEqual(['.', 'Hund', 'Ich', 'einen', 'ein', 'habe'].sort());
+    expect(review.answer).toEqual(['Ich', 'habe', 'einen', 'Hund']);
+    expect([...review.tiles].sort()).toEqual(['Hund', 'Ich', 'einen', 'ein', 'habe'].sort());
   });
 
   it('does not offer a word twice that the sentence needs once', () => {
@@ -59,10 +59,10 @@ describe('a German sentence with a translation', () => {
 
   it('is right only with the words in order', () => {
     if (review.kind !== 'tiles') throw new Error('tiles');
-    expect(isRight(review, ['Ich', 'habe', 'einen', 'Hund', '.'])).toBe(true);
-    expect(isRight(review, ['Ich', 'habe', 'ein', 'Hund', '.'])).toBe(false);
-    expect(isRight(review, ['Ich', 'habe', 'einen', 'Hund'])).toBe(false);
-    expect(isRight(review, ['Ich', 'einen', 'habe', 'Hund', '.'])).toBe(false);
+    expect(isRight(review, ['Ich', 'habe', 'einen', 'Hund'])).toBe(true);
+    expect(isRight(review, ['Ich', 'habe', 'ein', 'Hund'])).toBe(false);
+    expect(isRight(review, ['Ich', 'habe', 'einen'])).toBe(false);
+    expect(isRight(review, ['Ich', 'einen', 'habe', 'Hund'])).toBe(false);
   });
 });
 
@@ -133,5 +133,32 @@ describe('picking a review', () => {
     expect(picked).toHaveLength(REVIEW_SIZE);
     expect(new Set(picked.map((sentence) => sentence.id)).size).toBe(REVIEW_SIZE);
     expect(pickReview(sentences.slice(0, 3))).toHaveLength(2);
+  });
+});
+
+describe('swapTile', () => {
+  it('puts a tile from the bank in an empty slot', () => {
+    expect(swapTile([null, null], 2, null, 1)).toEqual([null, 2]);
+  });
+
+  it('trades places with the tile it is dropped on, when it comes from a slot', () => {
+    expect(swapTile([0, 1], 0, 0, 1)).toEqual([1, 0]);
+  });
+
+  it('sends the tile it is dropped on back to the bank, when it comes from the bank', () => {
+    expect(swapTile([0, null], 2, null, 0)).toEqual([2, null]);
+  });
+
+  it('takes a placed tile out when dropped off the slots, and moves it to an empty slot', () => {
+    expect(swapTile([0, 1], 1, 1, null)).toEqual([0, null]);
+    expect(swapTile([0, null], 0, 0, 1)).toEqual([null, 0]);
+  });
+});
+
+describe('packTiles', () => {
+  it('moves the placed tiles to the left, in order, keeping the number of slots', () => {
+    expect(packTiles([null, 3, null, 1, null])).toEqual([3, 1, null, null, null]);
+    expect(packTiles([2, 0])).toEqual([2, 0]);
+    expect(packTiles([null, null])).toEqual([null, null]);
   });
 });

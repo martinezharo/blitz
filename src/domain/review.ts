@@ -6,6 +6,7 @@ import type { Correction, Fix } from './writing.ts';
  *
  * - `tiles`: the English meaning is shown and the German sentence is built
  *   from tiles, the words it needs mixed with the ones that were written wrong.
+ *   Punctuation is not asked: only the words are placed.
  * - `gaps`: the corrected sentence with a gap where each fix was, to fill with
  *   the right form among the one that was written and a few others. It needs
  *   no translation, so it works in every language.
@@ -28,9 +29,9 @@ export type Review = { correction: Correction } & (
   | { kind: 'gaps'; parts: Part[]; tiles: string[]; answers: string[] }
 );
 
-/** Words and marks apart, so a full stop is a tile of its own. */
+/** The words of a text, without its punctuation: a full stop or a comma is never a tile to place. */
 export function tokenize(text: string): string[] {
-  return text.match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*|[^\s\p{L}\p{N}]/gu) ?? [];
+  return text.match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu) ?? [];
 }
 
 export function shuffle<T>(items: readonly T[], random: Random = Math.random): T[] {
@@ -120,6 +121,28 @@ export function buildReview(correction: Correction, others: readonly Correction[
   const meaning = correction.translation?.trim();
   if (correction.language === 'de' && meaning) return tilesFor(correction, meaning, random);
   return gapsFor(correction, others.filter((other) => other.id !== correction.id), random);
+}
+
+/** The placed tiles of a sentence, in order and with no empty slot between them. As long as the slots, so it says nothing of the answer. */
+export function packTiles(slots: readonly (number | null)[]): (number | null)[] {
+  const placed = slots.filter((tile) => tile !== null);
+  return [...placed, ...slots.slice(placed.length).map(() => null)];
+}
+
+/**
+ * Where every tile ends up when `tile` is dropped on slot `to`, coming from
+ * slot `from` (null: from the bank). A tile already there trades places with
+ * it, or goes back to the bank when the new one came from there. Dropped on no
+ * slot (`to` null), a placed tile is taken out.
+ */
+export function swapTile(slots: readonly (number | null)[], tile: number, from: number | null, to: number | null): (number | null)[] {
+  const next = [...slots];
+  if (from !== null) next[from] = null;
+  if (to === null) return next;
+  const taken = next[to] ?? null;
+  next[to] = tile;
+  if (taken !== null && from !== null) next[from] = taken;
+  return next;
 }
 
 /** What the learner put together: for tiles, the words in order; for gaps, the form in each gap (null while empty). */
