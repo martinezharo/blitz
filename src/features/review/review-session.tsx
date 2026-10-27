@@ -6,7 +6,7 @@ import { buildReview, isRight, pickReview, type Review } from '../../domain/revi
 import { LANGUAGES, type Language } from '../../domain/word.ts';
 import type { Correction } from '../../domain/writing.ts';
 import { sounds } from '../../shared/sound.ts';
-import { speak } from '../../shared/speech/speech.ts';
+import { preloadSpeech, prepareVoice, speak, stopSpeech, useVoice } from '../../shared/speech/speech.ts';
 import practice from '../practice/practice-session.module.css';
 import styles from './review.module.css';
 import { TileBoard } from './tile-board.tsx';
@@ -24,6 +24,8 @@ export function ReviewSession({ language, corrections, onClose }: ReviewSessionP
   const [reviews] = useState(() => pickReview(corrections).map((correction) => buildReview(correction, corrections)));
   const [step, setStep] = useState(0);
   const [right, setRight] = useState(0);
+
+  useEffect(() => void prepareVoice(language), [language]);
 
   // A layout effect, so the dialog is open before the first question takes the focus.
   useLayoutEffect(() => {
@@ -106,6 +108,12 @@ function Question({ language, review, onAnswer, onNext }: QuestionProps) {
   // A sentence's tiles are packed to the left, so what follows the last one placed is not part of it.
   const attempt = placed.map((tile) => (tile === null ? null : review.tiles[tile]!)).slice(0, review.kind === 'gaps' ? undefined : placed.filter((tile) => tile !== null).length);
   const expected = review.kind === 'gaps' ? review.answers : review.answer;
+
+  // Make the sentence while it is being solved, including when the voice wakes up later.
+  const voice = useVoice(language).status;
+  useEffect(() => preloadSpeech(language, [correction.corrected]), [language, correction.corrected, voice]);
+  // Invalidate pending synthesis and cut off playback as soon as this question leaves.
+  useLayoutEffect(() => stopSpeech, []);
 
   useEffect(() => form.current?.focus({ preventScroll: true }), []);
   useEffect(() => {

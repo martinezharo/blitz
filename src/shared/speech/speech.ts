@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import type { Language } from '../../domain/word.ts';
-import { playVoice, soundsOn } from '../sound.ts';
+import { playVoice, soundsOn, stopVoice } from '../sound.ts';
 import { VOICE_CACHE, VOICES } from './voices.ts';
 
 /**
@@ -155,6 +155,12 @@ export function preloadSpeech(language: Language, texts: string[]) {
 let latest = 0;
 /** How long a word may take to be made and still be said, in milliseconds. */
 const LATE = 2500;
+
+/** Cancels pending speech and stops playback when its question is left behind. */
+export function stopSpeech() {
+  latest++;
+  stopVoice();
+}
 
 /** Says the text, cutting off whatever was being said. If it is still being made, it jumps the queue. */
 export async function speak(language: Language, text: string) {

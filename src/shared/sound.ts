@@ -79,6 +79,19 @@ export function soundsOn(): boolean {
   return enabled;
 }
 
+/** Stops speech, including a source waiting for the audio context to resume. */
+export function stopVoice() {
+  const source = voice;
+  voice = null;
+  if (!source) return;
+  try {
+    source.stop();
+  } catch {
+    // The source may already have ended.
+  }
+  source.disconnect();
+}
+
 /**
  * Plays a spoken word (see speech/), cutting off the one before. Straight to
  * the speakers rather than through the effects' limiter, which would squash
@@ -91,10 +104,14 @@ export function playVoice(samples: Float32Array<ArrayBuffer>, sampleRate: number
   try {
     const buffer = ctx.createBuffer(1, samples.length, sampleRate);
     buffer.copyToChannel(samples, 0);
-    voice?.stop();
+    stopVoice();
     const source = ctx.createBufferSource();
     source.buffer = buffer;
     source.connect(ctx.destination);
+    source.onended = () => {
+      source.disconnect();
+      if (voice === source) voice = null;
+    };
     source.start();
     voice = source;
   } catch {
