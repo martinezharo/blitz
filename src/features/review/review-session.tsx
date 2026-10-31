@@ -1,4 +1,4 @@
-import { Archive, Check, X } from 'lucide-react';
+import { Archive, ArrowRight, Check, X } from 'lucide-react';
 import { type FormEvent, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { markPracticed } from '../../data/streak.ts';
 import { setCorrectionArchived } from '../../data/writing.ts';
@@ -204,22 +204,7 @@ function Question({ language, review, onAnswer, onNext }: QuestionProps) {
             <span className={practice.mark} aria-hidden="true">
               {result ? <Check /> : <X />}
             </span>
-            <span>
-              <strong>{result ? 'Right!' : 'Not quite'}</strong>
-              {!result && (
-                <span lang={language}>
-                  It's <b>{correction.corrected}</b>
-                </span>
-              )}
-              {correction.fixes.map((fix, at) => (
-                <span key={at} className={styles.why}>
-                  <b lang={language}>
-                    {fix.wrong} → {fix.right || 'nothing'}
-                  </b>
-                  {fix.why && `: ${fix.why}`}
-                </span>
-              ))}
-            </span>
+            <strong>{result ? 'Right!' : 'Not quite'}</strong>
             {result && (
               <button
                 type="button"
@@ -231,6 +216,30 @@ function Question({ language, review, onAnswer, onNext }: QuestionProps) {
                 <Archive aria-hidden="true" />
                 {archived ? 'Archived' : 'I know it'}
               </button>
+            )}
+          </div>
+        )}
+        {result !== null && (!result || correction.fixes.length > 0) && (
+          <div className={styles.details} role="status">
+            {!result && (
+              <p className={styles.answer}>
+                <span className={styles.label}>Correct sentence</span>
+                <span lang={language}>{correction.corrected}</span>
+              </p>
+            )}
+            {correction.fixes.length > 0 && (
+              <ul className={styles.fixes}>
+                {correction.fixes.map((fix, at) => (
+                  <li key={at} className={styles.fix}>
+                    <span className={styles.change} lang={language}>
+                      <del className={styles.was}>{fix.wrong || 'nothing'}</del>
+                      <ArrowRight aria-hidden="true" />
+                      <ins className={styles.now}>{fix.right || 'nothing'}</ins>
+                    </span>
+                    {fix.why && <span className={styles.why}>{fix.why}</span>}
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         )}
