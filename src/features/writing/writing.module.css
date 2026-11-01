@@ -17,6 +17,28 @@
   line-height: 1.45;
 }
 
+/* Holds the idea, and folds it away once the text is checked. */
+.ideaFold {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 280ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity var(--motion-standard),
+    visibility 0s;
+}
+
+.ideaFold > div {
+  min-height: 0;
+  /* Clips the idea, and keeps its margin inside, while it folds. */
+  overflow: hidden;
+}
+
+.ideaFold[data-shut] {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition: grid-template-rows 280ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity var(--motion-standard),
+    visibility 0s 280ms;
+}
+
 /* The page written on: one card for the text and what to do with it. */
 /* An idea to write about, only if one is wanted: a quiet aside, not a task. */
 .prompt {
@@ -83,10 +105,13 @@
   transition: background var(--motion-standard), color var(--motion-standard), transform var(--motion-spring);
 }
 
-.another:hover {
-  background: var(--accent);
-  color: var(--accent-ink);
-  transform: rotate(-20deg);
+/* Only with a mouse: a touch screen keeps :hover on what was tapped, and the dice would stay turned. */
+@media (hover: hover) {
+  .another:hover {
+    background: var(--accent);
+    color: var(--accent-ink);
+    transform: rotate(-20deg);
+  }
 }
 
 .another:active {
@@ -194,6 +219,9 @@
 
 .tools {
   display: flex;
+  /* As tall with Edit and New text as with Check (its icon and padding), so
+     the paper keeps its height when the text is checked. */
+  min-height: calc(2.4rem + 2 * 0.35rem + 2 * 0.5rem);
   align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
@@ -228,13 +256,16 @@
   transition: transform var(--motion-spring), box-shadow var(--motion-standard), background var(--motion-standard), color var(--motion-standard);
 }
 
-.check:hover:not([aria-disabled='true']) {
-  box-shadow: 0 0.75rem 1.5rem rgb(15 16 13 / 18%);
-  transform: translateY(-2px) rotate(-0.4deg);
-}
+/* Only with a mouse: on a touch screen the tapped button would stay lifted while it checks. */
+@media (hover: hover) {
+  .check:hover:not([aria-disabled='true']) {
+    box-shadow: 0 0.75rem 1.5rem rgb(15 16 13 / 18%);
+    transform: translateY(-2px) rotate(-0.4deg);
+  }
 
-.check:hover:not([aria-disabled='true']) .checkIcon {
-  transform: rotate(-12deg);
+  .check:hover:not([aria-disabled='true']) .checkIcon {
+    transform: rotate(-12deg);
+  }
 }
 
 .check:active:not([aria-disabled='true']) {
@@ -453,6 +484,11 @@
 
 .save {
   margin-top: 0.65rem;
+}
+
+/* Holds the place of what the dictionary is still looking up. */
+.save [data-pending] {
+  visibility: hidden;
 }
 
 .add,

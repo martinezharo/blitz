@@ -33,6 +33,17 @@
     <link rel="icon" href="/logo.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- The font is only found once the stylesheet is read, and the page laid
+         out in the fallback first jumps when it swaps in: fetched from the start,
+         it is there for the first paint. Only the Latin part, which is all the
+         page's own text uses. -->
+    <link
+      rel="preload"
+      href="/node_modules/@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <title>Blitz: learn the German and English words you pick</title>
     <script type="application/ld+json">
       {

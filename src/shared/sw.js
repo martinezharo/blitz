@@ -46,9 +46,10 @@ self.addEventListener('activate', (event) => {
 
       await self.clients.claim();
       // Pages still on an older build move to this one. Those that answer
-      // reload by themselves once nothing would be lost; the rest, from builds
-      // before pages could answer, are reloaded now. Not awaited: their
-      // reloads are fetches, which wait for this activation to end.
+      // reload by themselves once nothing would be lost, and not at all if
+      // they already run this build's files; the rest, from builds before
+      // pages could answer, are reloaded now. Not awaited: their reloads are
+      // fetches, which wait for this activation to end.
       if (updating) {
         const windows = await self.clients.matchAll({ type: 'window' });
         await Promise.all(
@@ -82,7 +83,7 @@ function answers(client) {
       clearTimeout(timer);
       resolve(true);
     };
-    client.postMessage({ type: 'blitz:updated' }, [channel.port2]);
+    client.postMessage({ type: 'blitz:updated', files: KNOWN }, [channel.port2]);
   });
 }
 

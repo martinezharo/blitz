@@ -1,5 +1,6 @@
 import { Check, Dices, Lightbulb, LoaderCircle, LogIn, PenLine, Plus, RotateCcw, SpellCheck2 } from 'lucide-react';
-import { type RefObject, useEffect, useRef, useState } from 'react';
+import { type RefObject, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import type { AccountState } from '../../data/account.ts';
 import { lookupForm } from '../../data/dictionary.ts';
 import { type CheckFailure, checkText, loadDraft, saveCorrections, storeDraft, translateMissing, type WritingDraft } from '../../data/writing.ts';
@@ -74,7 +75,11 @@ export function WritingPage({ language, words, account, onSignIn, onAddWord, onS
   const [mismatch, setMismatch] = useState<Mismatch | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [prompt, setPrompt] = useState(() => Math.floor(Math.random() * PROMPTS[language].length));
+  // An idea is offered for a new text only. Once it is checked, going back to
+  // edit it brings no idea back, which would push the text down as it opens.
+  const [offerIdea, setOfferIdea] = useState(draft.marks === null);
   const field = useRef<HTMLTextAreaElement>(null);
+  const tools = useRef<HTMLDivElement>(null);
   const cards = useRef<(HTMLLIElement | null)[]>([]);
 
   useEffect(() => storeDraft(language, draft), [language, draft]);
@@ -131,6 +136,7 @@ export function WritingPage({ language, words, account, onSignIn, onAddWord, onS
     }
     setDraft({ text, marks: outcome.marks });
     setEditing(false);
+    setOfferIdea(false);
     setSelected(null);
     if (outcome.marks.length === 0) sounds.correct();
     else sounds.open();
@@ -156,8 +162,43 @@ export function WritingPage({ language, words, account, onSignIn, onAddWord, onS
   function select(index: number) {
     sounds.tap();
     setSelected(index);
-    cards.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    cards.current[index]?.scrollIntoView({ behavior: still ? 'instant' : 'smooth', block: 'nearest' });
   }
+
+  /**
+   * Back to the plain text, with the caret at `caret`. The field is rendered
+   * and focused within the tap itself: iOS only raises the keyboard for a
+   * focus that comes straight from a tap, not one a frame later.
+   */
+  function edit(caret: number, change?: () => void) {
+    flushSync(() => {
+      change?.();
+      setEditing(true);
+    });
+    field.current?.focus();
+    field.current?.setSelectionRange(caret, caret);
+  }
+
+  // Typing at the end of the text with the on-screen keyboard up, Check stays
+  // in sight just above the keyboard rather than behind it. The browser only
+  // keeps the caret in sight, and the tools sit below it.
+  useLayoutEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport || showMarks) return;
+    const reveal = () => {
+      const area = field.current;
+      const row = tools.current;
+      if (!area || !row || document.activeElement !== area || area.selectionEnd !== area.value.length) return;
+      // As in use-keyboard-fit.ts: less than this is a browser bar, and a pinch zoom is no keyboard.
+      if (document.documentElement.clientHeight - viewport.height < 80 || Math.abs(viewport.scale - 1) > 0.01) return;
+      const hidden = row.getBoundingClientRect().bottom - (viewport.offsetTop + viewport.height);
+      if (hidden > 0) window.scrollBy({ top: hidden, behavior: 'instant' });
+    };
+    reveal();
+    viewport.addEventListener('resize', reveal);
+    return () => viewport.removeEventListener('resize', reveal);
+  }, [draft.text, showMarks]);
 
   return (
     <div className={styles.page}>
@@ -166,27 +207,30 @@ export function WritingPage({ language, words, account, onSignIn, onAddWord, onS
         Write anything in {spec.name}. Check it, and Blitz marks what to fix.
       </p>
 
-      {!showMarks && (
-        <aside className={styles.prompt} aria-label="An idea to write about">
-          <Lightbulb className={styles.bulb} aria-hidden="true" />
-          <p>
-            <span className={styles.idea}>Need an idea? Write about anything you like, or try this:</span>
-            <strong lang={language}>{PROMPTS[language][prompt]!.ask}</strong>
-            {PROMPTS[language][prompt]!.means && <small lang="en">{PROMPTS[language][prompt]!.means}</small>}
-          </p>
-          <button
-            type="button"
-            className={styles.another}
-            aria-label="Another idea"
-            onClick={() => {
-              sounds.tap();
-              setPrompt((current) => (current + 1 + Math.floor(Math.random() * (PROMPTS[language].length - 1))) % PROMPTS[language].length);
-            }}
-          >
-            <Dices aria-hidden="true" />
-          </button>
-        </aside>
-      )}
+      {/* Folds away rather than vanishing, so the text below glides up instead of jumping. */}
+      <div className={styles.ideaFold} data-shut={showMarks || !offerIdea || undefined} inert={showMarks || !offerIdea}>
+        <div>
+          <aside className={styles.prompt} aria-label="An idea to write about">
+            <Lightbulb className={styles.bulb} aria-hidden="true" />
+            <p>
+              <span className={styles.idea}>Need an idea? Write about anything you like, or try this:</span>
+              <strong lang={language}>{PROMPTS[language][prompt]!.ask}</strong>
+              {PROMPTS[language][prompt]!.means && <small lang="en">{PROMPTS[language][prompt]!.means}</small>}
+            </p>
+            <button
+              type="button"
+              className={styles.another}
+              aria-label="Another idea"
+              onClick={() => {
+                sounds.tap();
+                setPrompt((current) => (current + 1 + Math.floor(Math.random() * (PROMPTS[language].length - 1))) % PROMPTS[language].length);
+              }}
+            >
+              <Dices aria-hidden="true" />
+            </button>
+          </aside>
+        </div>
+      </div>
 
       <div className={styles.paper} data-checking={checking || undefined}>
         {showMarks ? (
@@ -232,29 +276,34 @@ export function WritingPage({ language, words, account, onSignIn, onAddWord, onS
           />
         )}
 
-        <div className={styles.tools}>
+        <div ref={tools} className={styles.tools}>
           {showMarks ? (
             <>
               <button
+                // Keyed, so React does not reuse Check's button for it and leave the focus on it.
+                key="edit"
                 type="button"
                 className={styles.quiet}
                 onClick={() => {
                   sounds.tap();
-                  setEditing(true);
-                  requestAnimationFrame(() => field.current?.focus());
+                  // Right after the mistake being looked at, or at the end.
+                  const looked = selected === null ? undefined : marks?.[selected];
+                  edit(looked ? looked.end : draft.text.length);
                 }}
               >
                 <PenLine aria-hidden="true" />
                 Edit
               </button>
               <button
+                key="new"
                 type="button"
                 className={styles.quiet}
                 onClick={() => {
                   sounds.lift();
-                  write('');
-                  setEditing(true);
-                  requestAnimationFrame(() => field.current?.focus());
+                  edit(0, () => {
+                    write('');
+                    setOfferIdea(true);
+                  });
                 }}
               >
                 <RotateCcw aria-hidden="true" />
@@ -263,11 +312,19 @@ export function WritingPage({ language, words, account, onSignIn, onAddWord, onS
             </>
           ) : (
             <>
-              <span className={styles.count} data-near={draft.text.length > MAX_TEXT * 0.85 || undefined}>
+              <span key="count" className={styles.count} data-near={draft.text.length > MAX_TEXT * 0.85 || undefined}>
                 {draft.text.length > MAX_TEXT * 0.6 ? `${draft.text.length} / ${MAX_TEXT}` : ''}
               </span>
-              <button type="button" className={styles.check} onClick={() => void check()} aria-disabled={!draft.text.trim() || undefined}>
-                {checking ? 'Checking…' : 'Check'}
+              <button
+                key="check"
+                type="button"
+                className={styles.check}
+                onClick={() => void check()}
+                aria-disabled={!draft.text.trim() || undefined}
+                // The label stays put, so the button keeps its width; the spinning icon shows it is at work.
+                aria-label={checking ? 'Checking…' : undefined}
+              >
+                Check
                 <span className={styles.checkIcon} aria-hidden="true">
                   {checking ? <LoaderCircle className={styles.spin} /> : <SpellCheck2 />}
                 </span>
@@ -395,6 +452,7 @@ function Results({
       <ol className={styles.cards}>
         {marks.map((mark, index) => {
           // Shown once the dictionary has answered, so the word does not change under the finger.
+          // Its place is kept meanwhile, so the cards below do not move down when it comes.
           const word = mark.word && found.has(mark.word) ? lookup(mark.word) : null;
           return (
             <li
@@ -414,9 +472,16 @@ function Results({
                 <ins>{mark.right}</ins>
               </p>
               {mark.why && <p className={styles.why}>{mark.why}</p>}
-              {mark.word && word && (
+              {mark.word && (
                 <div className={styles.save}>
-                  {word.saved ? (
+                  {!word ? (
+                    <span className={styles.saved} data-pending="" aria-hidden="true">
+                      <Plus />
+                      <span>
+                        Add <strong>{mark.word}</strong> to your words
+                      </span>
+                    </span>
+                  ) : word.saved ? (
                     <span className={styles.saved}>
                       <Check aria-hidden="true" />
                       <span>

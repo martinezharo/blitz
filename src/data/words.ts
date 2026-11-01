@@ -5,6 +5,7 @@ import { type Draft, hasCounterpart, type Language, sexOf, type Word, wordFields
 import { db } from './db.ts';
 import { pageHidden, useLiveData } from './live.ts';
 import { lookup } from './dictionary.ts';
+import { forgetShownPhoto } from './shown-photo.ts';
 import { requestSync } from './sync.ts';
 
 /** Newest first. `undefined` while the first read is in flight. */
@@ -56,6 +57,7 @@ export async function updateWord(word: Word, draft: Draft): Promise<void> {
   await db.transaction('rw', db.words, db.pending, async () => {
     // A new picture has to be uploaded again.
     const photoKey = fields.photo === word.photo ? word.photoKey : null;
+    if (fields.photo !== word.photo) forgetShownPhoto(word.id);
     await db.words.update(word.id, { ...fields, photoKey, updatedAt: now });
     await db.pending.put({ id: word.id, at: now });
   });

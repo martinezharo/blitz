@@ -122,8 +122,11 @@
     transform var(--motion-spring);
 }
 
-.pick:hover {
-  border-color: var(--faint);
+/* Touch screens keep :hover on whatever was tapped last, so these are for pointers only. */
+@media (hover: hover) {
+  .pick:hover {
+    border-color: var(--faint);
+  }
 }
 
 .pick:active {
@@ -195,8 +198,10 @@
   transition: border-color var(--motion-standard);
 }
 
-.photoEmpty:hover {
-  border-color: var(--faint);
+@media (hover: hover) {
+  .photoEmpty:hover {
+    border-color: var(--faint);
+  }
 }
 
 .photoEmpty strong {

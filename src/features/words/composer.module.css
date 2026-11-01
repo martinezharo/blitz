@@ -73,13 +73,16 @@
   from { transform: scale(0.82); }
 }
 
-.add[data-ready]:hover {
-  transform: translateY(-2px) scale(1.06);
-  box-shadow: 0 0.6rem 1.3rem var(--accent-shadow);
-}
+/* Touch screens keep :hover on whatever was tapped last, so these are for pointers only. */
+@media (hover: hover) {
+  .add[data-ready]:hover {
+    transform: translateY(-2px) scale(1.06);
+    box-shadow: 0 0.6rem 1.3rem var(--accent-shadow);
+  }
 
-.add:not([data-ready]):hover {
-  color: var(--muted);
+  .add:not([data-ready]):hover {
+    color: var(--muted);
+  }
 }
 
 .add:active {

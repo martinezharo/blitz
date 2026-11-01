@@ -22,6 +22,7 @@ import {
 } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import { Sheet } from '../../shared/ui/sheet.tsx';
+import { shownPhoto } from '../../data/shown-photo.ts';
 import { useObjectUrl } from '../../shared/ui/use-object-url.ts';
 import styles from './word-sheet.module.css';
 
@@ -51,7 +52,8 @@ export function WordSheet({ language, word, term, suggestion, onClose }: WordShe
   const [photoError, setPhotoError] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
-  const photoUrl = useObjectUrl(draft.photo);
+  // The word's own picture under the URL its row already shows, so it is there on the sheet's first frame.
+  const photoUrl = useObjectUrl(word && draft.photo === word.photo ? shownPhoto(word) : draft.photo);
   const ids = useId();
 
   const problems = draftProblems(language, draft);

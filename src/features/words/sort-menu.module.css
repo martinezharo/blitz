@@ -16,9 +16,12 @@
   transition: color var(--motion-standard), background var(--motion-standard), transform var(--motion-spring);
 }
 
-.trigger:hover {
-  background: var(--icon-background);
-  color: var(--foreground);
+/* Touch screens keep :hover on whatever was tapped last, so these are for pointers only. */
+@media (hover: hover) {
+  .trigger:hover {
+    background: var(--icon-background);
+    color: var(--foreground);
+  }
 }
 
 .trigger:active {
@@ -93,8 +96,10 @@
   cursor: pointer;
 }
 
-.option:hover {
-  background: var(--icon-background);
+@media (hover: hover) {
+  .option:hover {
+    background: var(--icon-background);
+  }
 }
 
 .option svg {

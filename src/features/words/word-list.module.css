@@ -62,8 +62,11 @@
   transition: background var(--motion-standard), transform var(--motion-spring);
 }
 
-.word:hover {
-  background: var(--icon-background);
+/* Touch screens keep :hover on whatever was tapped last, so these are for pointers only. */
+@media (hover: hover) {
+  .word:hover {
+    background: var(--icon-background);
+  }
 }
 
 .word:active {
@@ -128,8 +131,10 @@
   vertical-align: 0.15rem;
 }
 
-.word:hover .type {
-  background: var(--background);
+@media (hover: hover) {
+  .word:hover .type {
+    background: var(--background);
+  }
 }
 
 .summary {
@@ -216,8 +221,10 @@
   transition: color var(--motion-standard);
 }
 
-.archiveToggle:hover {
-  color: var(--foreground);
+@media (hover: hover) {
+  .archiveToggle:hover {
+    color: var(--foreground);
+  }
 }
 
 .archiveToggle svg {

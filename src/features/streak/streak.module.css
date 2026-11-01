@@ -8,7 +8,10 @@
   transform: rotate(-1.5deg);
 }
 
-.badge[data-state]:hover { transform: translateY(-1px) rotate(-3deg); }
+/* Hover only where there is a pointer: a tap on a phone would leave it tilted. */
+@media (hover: hover) {
+  .badge[data-state]:hover { transform: translateY(-1px) rotate(-3deg); }
+}
 .badge[data-state]:active { transform: scale(0.95) rotate(-1.5deg); }
 .badge strong { min-width: 0.6em; font-variant-numeric: tabular-nums; text-align: center; }
 
