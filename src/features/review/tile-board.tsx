@@ -85,9 +85,20 @@ export function TileBoard({ language, tiles, slots, onChange, locked, reorder, c
 
   useLayoutEffect(() => {
     const root = board.current!;
-    // Tiles only start gliding once they have a place to glide from.
-    const frame = requestAnimationFrame(() => root.setAttribute('data-ready', ''));
-    const observer = new ResizeObserver(() => layout.current());
+    // Tiles only start gliding once they have a place to glide from. A board
+    // whose dialog is not open yet (the review's first question) has no
+    // layout, so every tile is put in the corner: it waits until it shows, or
+    // the tiles would fly from there into the bank as the review opens.
+    let frame = 0;
+    const arm = () => {
+      if (frame || root.getClientRects().length === 0) return;
+      frame = requestAnimationFrame(() => root.setAttribute('data-ready', ''));
+    };
+    arm();
+    const observer = new ResizeObserver(() => {
+      layout.current();
+      arm();
+    });
     observer.observe(root);
     return () => {
       cancelAnimationFrame(frame);

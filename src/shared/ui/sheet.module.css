@@ -18,6 +18,29 @@
   display: none;
 }
 
+/* The page under an open sheet stays put: a swipe that misses the sheet's own
+   scroller would otherwise scroll it, and the sheet would close into a row that
+   is no longer where it was. */
+:global(html):has(.sheet[open]) {
+  overflow: hidden;
+}
+
+/* Phones only shrink the visual viewport for the on-screen keyboard, which
+   would cover the bottom of the sheet, footer and all. While it is up, the
+   sheet stands on its top edge instead (see use-keyboard-fit.ts), and its body
+   scrolls in what room is left. */
+.sheet[data-keyboard] {
+  top: calc(var(--keyboard-top) + var(--keyboard-height));
+  bottom: auto;
+  max-height: calc(var(--keyboard-height) - 0.5rem);
+  translate: 0 -100%;
+}
+
+/* No home indicator to clear above the keyboard. */
+.sheet[data-keyboard] .foot {
+  padding-bottom: 0.75rem;
+}
+
 .sheet::backdrop {
   background: rgb(18 19 17 / 38%);
   backdrop-filter: blur(3px);
@@ -111,8 +134,11 @@
   transition: background var(--motion-standard);
 }
 
-.close:hover {
-  background: var(--icon-hover);
+/* Touch screens keep :hover on whatever was tapped last, so these are for pointers only. */
+@media (hover: hover) {
+  .close:hover {
+    background: var(--icon-hover);
+  }
 }
 
 .close svg {

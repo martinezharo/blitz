@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAccount } from './data/account.ts';
 import { useLanguage, useSounds, useTheme, useWordSort } from './data/preferences.ts';
+import { usePracticeDays } from './data/streak.ts';
 import { fillCounterparts, useWords } from './data/words.ts';
 import type { Word } from './domain/word.ts';
 import styles from './app.module.css';
@@ -45,12 +46,47 @@ function takeSignInOutcome(): { open: boolean; error: string | null } {
   return { open: true, error: SIGN_IN_ERRORS[outcome] ?? SIGN_IN_ERRORS.failed! };
 }
 
+const VIEW_KEY = 'blitz.view';
+
+/**
+ * The page open in this window, so a reload (the app updating itself while
+ * in the background) comes back to it. Per window: a fresh start opens Words.
+ */
+function storedView(): View {
+  try {
+    return sessionStorage.getItem(VIEW_KEY) === 'write' ? 'write' : 'words';
+  } catch {
+    return 'words';
+  }
+}
+
+// How long the first paint waits for the words before showing what it has.
+const DATA_PATIENCE_MS = 1000;
+
+/**
+ * Whether the page can be painted: once what it shows from IndexedDB has been
+ * read, so it arrives whole instead of in pieces, the list and the streak
+ * popping in a moment after the rest. Only the first time; a database that
+ * takes too long (another tab holding it) gets the page without them.
+ */
+function useFirstPaint(loaded: boolean): boolean {
+  const [ready, setReady] = useState(loaded);
+  useEffect(() => {
+    if (ready) return;
+    if (loaded) return setReady(true);
+    const timer = setTimeout(() => setReady(true), DATA_PATIENCE_MS);
+    return () => clearTimeout(timer);
+  }, [loaded, ready]);
+  return ready || loaded;
+}
+
 export function App() {
   const [language, setLanguage] = useLanguage();
   const [sort, setSort] = useWordSort();
   const words = useWords(language);
   // Archived words are out of practice and tucked away at the end of the list.
   const active = useMemo(() => words?.filter((word) => !word.archived), [words]);
+  const practised = usePracticeDays();
   const [editing, setEditing] = useState<Editing>(null);
   const { state: account, signIn, signOut } = useAccount();
   const [auth, setAuth] = useState(takeSignInOutcome);
@@ -59,7 +95,14 @@ export function App() {
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [practicing, setPracticing] = useState(false);
   const [browsingLists, setBrowsingLists] = useState(false);
-  const [view, setView] = useState<View>('words');
+  const [view, setView] = useState<View>(storedView);
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(VIEW_KEY, view);
+    } catch {
+      // Not kept, so a reload opens Words.
+    }
+  }, [view]);
   // A text just moved here from the other language's page, to be checked on arrival.
   const [autoCheck, setAutoCheck] = useState(false);
   useEffect(() => {
@@ -109,13 +152,17 @@ export function App() {
     setBrowsingLists(true);
   }
 
+  const painted = useFirstPaint(words !== undefined && practised !== undefined);
+  // Nothing yet: the background, as before the app loaded.
+  if (!painted) return null;
+
   return (
     <>
       <div className={styles.corner}>
         <LanguageMenu language={language} onChange={setLanguage} />
       </div>
       <div className={styles.cornerEnd}>
-        <StreakBadge hold={practicing} />
+        <StreakBadge practised={practised} hold={practicing} />
         <div className={styles.wideOnly}>
           <InstallButton />
           <AccountBadge state={account} onSignIn={openSignIn} onSignOut={signOut} onOpenPreferences={openPreferences} />

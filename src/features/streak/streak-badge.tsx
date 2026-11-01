@@ -1,7 +1,7 @@
 import { Flame } from 'lucide-react';
 import { type CSSProperties, type RefObject, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { type Growth, useGrowth, usePracticeDays, useToday } from '../../data/streak.ts';
+import { type Growth, useGrowth, useToday } from '../../data/streak.ts';
 import { type Day, streakOf, weekOf } from '../../domain/streak.ts';
 import { sounds } from '../../shared/sound.ts';
 import account from '../account/account.module.css';
@@ -23,11 +23,11 @@ const days = (count: number) => `${count} ${count === 1 ? 'day' : 'days'}`;
  *
  * The first answer of the day grows it. Once the lesson is closed (`hold`
  * goes false) the new count is celebrated in the middle of the screen and
- * flies into the corner.
+ * flies into the corner. The days practised come from the app, which reads
+ * them before its first paint so the badge is there from the start.
  */
-export function StreakBadge({ hold }: { hold: boolean }) {
+export function StreakBadge({ practised, hold }: { practised: Day[] | undefined; hold: boolean }) {
   const today = useToday();
-  const practised = usePracticeDays();
   const [growth, settle] = useGrowth();
   const [celebrating, setCelebrating] = useState<Growth | null>(null);
   const [landed, setLanded] = useState(0);

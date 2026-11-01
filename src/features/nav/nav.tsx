@@ -1,5 +1,7 @@
 import { BookOpen, Ellipsis, PenLine, Play } from 'lucide-react';
+import { useRef } from 'react';
 import { sounds } from '../../shared/sound.ts';
+import { useKeyboardFit } from '../../shared/ui/use-keyboard-fit.ts';
 import { APP_MENU } from '../account/account-badge.tsx';
 import styles from './nav.module.css';
 
@@ -52,8 +54,14 @@ export function ViewSwitch(props: NavProps) {
 /**
  * Phones: a bar along the bottom, in thumb's reach. The two pages, the way
  * into practice, and the menu the top-right corner holds on wide screens.
+ *
+ * It steps aside while the on-screen keyboard is up: there is nothing to tap
+ * in it while typing, and Safari can leave a fixed bar floating over the page
+ * above the keyboard. `useKeyboardFit` marks it with `data-keyboard` then.
  */
 export function TabBar({ view, onView, practice, onPractice }: NavProps & { practice: boolean; onPractice: () => void }) {
+  const bar = useRef<HTMLElement>(null);
+  useKeyboardFit(bar);
   const [words, write] = VIEWS as [(typeof VIEWS)[number], (typeof VIEWS)[number]];
   const page = ({ value, label, Icon }: (typeof VIEWS)[number]) => (
     <button
@@ -75,7 +83,7 @@ export function TabBar({ view, onView, practice, onPractice }: NavProps & { prac
   );
 
   return (
-    <nav className={styles.bar} aria-label="Pages">
+    <nav ref={bar} className={styles.bar} aria-label="Pages">
       {page(words)}
       <button
         type="button"

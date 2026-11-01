@@ -93,6 +93,11 @@
   transform: translateX(-50%);
 }
 
+/* Out of the way while the on-screen keyboard is up; see TabBar. */
+.bar[data-keyboard] {
+  visibility: hidden;
+}
+
 .tab {
   display: flex;
   min-width: 0;
@@ -105,6 +110,8 @@
   color: var(--muted);
   font-size: var(--text-xs);
   font-weight: var(--weight-strong);
+  /* Nunito's own, set, so the bar keeps its height in any font, even before Nunito arrives. */
+  line-height: 1.35;
   cursor: pointer;
   transition: color var(--motion-standard);
 }

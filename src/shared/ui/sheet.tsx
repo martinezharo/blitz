@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 import { type PointerEvent, type ReactNode, type RefObject, useLayoutEffect, useRef } from 'react';
 import { type MorphEnds, morphEndsIn } from './morph.ts';
 import styles from './sheet.module.css';
+import { useKeyboardFit } from './use-keyboard-fit.ts';
 
 interface SheetProps {
   eyebrow: ReactNode;
@@ -86,6 +87,8 @@ function useDragToDismiss(ref: RefObject<HTMLDialogElement | null>, onClose: () 
 export function Sheet({ eyebrow, title, onClose, footer, children }: SheetProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const dragHandle = useDragToDismiss(ref, onClose);
+  // Sits on the on-screen keyboard instead of behind it, so Save stays in reach while typing.
+  useKeyboardFit(ref);
 
   // A layout effect, so the dialog is already open when a morph looks for it.
   useLayoutEffect(() => {

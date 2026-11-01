@@ -2,7 +2,9 @@
 
 .line {
   display: flex;
-  min-height: 3.6rem;
+  /* As tall empty as with a row of slots in it, so the first tile placed
+     does not push the bank down. */
+  min-height: calc(var(--slot-height) + 2 * 0.5rem + 3px);
   flex-wrap: wrap;
   align-items: center;
   gap: 0.45rem;
@@ -21,6 +23,8 @@
 
 /* Tiles sit on top of the slots and the bank, moved there with `translate`, as the letters of a word do. */
 .board {
+  --slot-height: 2.9rem;
+
   position: relative;
 }
 
@@ -51,7 +55,7 @@
 .slot {
   display: inline-block;
   min-width: 4.2rem;
-  min-height: 2.9rem;
+  min-height: var(--slot-height);
   margin-inline: 0.15rem;
   vertical-align: middle;
   border-color: var(--line);
@@ -153,6 +157,20 @@
   border-radius: var(--radius-tail-md);
   background: var(--background);
   color: var(--foreground);
+}
+
+/* It rises into the footer with the verdict above it. */
+@media (prefers-reduced-motion: no-preference) {
+  .details {
+    animation: details-in 280ms cubic-bezier(0.2, 0.9, 0.25, 1);
+  }
+}
+
+@keyframes details-in {
+  from {
+    opacity: 0;
+    translate: 0 0.8rem;
+  }
 }
 
 .answer {

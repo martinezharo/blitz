@@ -14,9 +14,12 @@
   transition: background var(--motion-standard), color var(--motion-standard), transform var(--motion-spring);
 }
 
-.pill:hover {
-  background: var(--icon-hover);
-  color: var(--foreground);
+/* Touch screens keep :hover on whatever was tapped last, so these are for pointers only. */
+@media (hover: hover) {
+  .pill:hover {
+    background: var(--icon-hover);
+    color: var(--foreground);
+  }
 }
 
 .pill:active {
@@ -32,9 +35,11 @@
   transition: transform var(--motion-spring);
 }
 
-.pill:hover .arrow,
-.invite:hover .arrow {
-  transform: translateX(0.18rem);
+@media (hover: hover) {
+  .pill:hover .arrow,
+  .invite:hover .arrow {
+    transform: translateX(0.18rem);
+  }
 }
 
 .invite {
@@ -52,8 +57,10 @@
   transition: border-color var(--motion-standard), transform var(--motion-spring);
 }
 
-.invite:hover {
-  border-color: var(--faint);
+@media (hover: hover) {
+  .invite:hover {
+    border-color: var(--faint);
+  }
 }
 
 .invite:active {
@@ -77,6 +84,10 @@
   border-radius: var(--radius-tail-sm);
   background: color-mix(in srgb, var(--tint) 16%, var(--background));
   color: var(--tint);
+}
+
+.chip:empty {
+  background: var(--icon-background);
 }
 
 .chip svg {

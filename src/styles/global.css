@@ -113,6 +113,8 @@ html {
   scrollbar-gutter: stable;
   -webkit-text-size-adjust: 100%;
   overscroll-behavior: none;
+  /* No grey flash on whatever is tapped; pressed states show the tap instead. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -132,8 +134,21 @@ dialog {
   color: inherit;
 }
 
+/* Controls, not text: a long press does not select their labels or open a callout. */
 button {
-  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* A quick second tap is another tap, not a zoom, while pinching still zooms. */
+button,
+a,
+input,
+textarea,
+label,
+summary {
+  touch-action: manipulation;
 }
 
 svg {

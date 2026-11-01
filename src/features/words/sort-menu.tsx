@@ -33,10 +33,11 @@ export function SortMenu({ sort, onChange }: { sort: WordSort; onChange: (sort: 
         id={id}
         popover="auto"
         className={styles.menu}
-        onToggle={(event) => {
+        onBeforeToggle={(event) => {
           // Top-layer popovers ignore their parent's position, so pin the menu under the trigger by hand.
+          // Before it opens, not after: placed once open, its first frame showed at the top of the screen.
           const box = trigger.current?.getBoundingClientRect();
-          if (event.nativeEvent instanceof ToggleEvent && event.nativeEvent.newState === 'open' && box) {
+          if (event.newState === 'open' && box) {
             menu.current?.style.setProperty('--top', `${box.bottom + 6}px`);
             menu.current?.style.setProperty('--right', `${document.documentElement.clientWidth - box.right}px`);
           }

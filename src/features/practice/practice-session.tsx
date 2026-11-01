@@ -2,11 +2,12 @@ import { Archive, Check, Download, Mars, Venus, Volume2, X } from 'lucide-react'
 import { type FormEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { markPracticed } from '../../data/streak.ts';
 import { recordAnswer, setArchived } from '../../data/words.ts';
-import { type Answer, buildExercise, type Exercise, fillLetters, isCorrect, offersArchive, pickLesson, STREAK_TO_ARCHIVE } from '../../domain/practice.ts';
+import { type Answer, buildExercise, type Exercise, fillLetters, isCorrect, offersArchive, pickLesson, sameText, STREAK_TO_ARCHIVE } from '../../domain/practice.ts';
 import { LANGUAGES, type Language, type Word } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import { canHear, downloadVoice, preloadSpeech, prepareVoice, speak, useVoice } from '../../shared/speech/speech.ts';
-import { useObjectUrl } from '../../shared/ui/use-object-url.ts';
+import { useKeyboardFit } from '../../shared/ui/use-keyboard-fit.ts';
+import { shownPhoto, useObjectUrl, usePreloadedImage } from '../../shared/ui/use-object-url.ts';
 import { emptySlots, LetterBoard, type Slots } from './letter-board.tsx';
 import styles from './practice-session.module.css';
 
@@ -47,6 +48,18 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
   // The voice wakes up, or downloads the first time, while the first question is read.
   useEffect(() => void prepareVoice(language), []);
 
+  // The Check button and its verdict stay above the on-screen keyboard.
+  useKeyboardFit(ref);
+
+  // The next word's photo is decoded while this question is answered, so it
+  // shows on the next question's first frame rather than a moment after.
+  const upcoming = words.find((word) => word.id === lesson[step + 1]);
+  usePreloadedImage(upcoming ? shownPhoto(latest(upcoming)) : null);
+
+  // Holds the focus, and with it the on-screen keyboard, while one written
+  // answer makes way for the next; see `next`.
+  const keeper = useRef<HTMLInputElement>(null);
+
   // Back from the confirmation, the focus returns to the question rather than to
   // whatever opened it, which is often the close button.
   const wasConfirming = useRef(false);
@@ -71,6 +84,14 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
   }
 
   function next() {
+    // Typing one answer and on to the next: the field about to go away hands
+    // the focus to the keeper first, so the keyboard does not drop and pop
+    // back up when the next question's field takes it. A question with
+    // nothing to type then takes the focus off it, and the keyboard goes.
+    const active = document.activeElement;
+    if (active instanceof HTMLInputElement && active !== keeper.current && ref.current!.contains(active)) {
+      keeper.current!.focus({ preventScroll: true });
+    }
     // A word archived mid-lesson is not asked again.
     const fresh = words.map(latest).filter((word) => !word.archived);
     // A word deleted on another device mid-lesson is skipped.
@@ -138,7 +159,10 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
         >
           <i style={{ width: `${(step / Math.max(1, lesson.length)) * 100}%` }} />
         </div>
-        <VoiceStatus language={language} />
+        {/* Always there, so the bar keeps its width as the voice comes and goes. */}
+        <span className={styles.voiceSlot}>
+          <VoiceStatus language={language} />
+        </span>
       </header>
 
       {done ? (
@@ -148,6 +172,7 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
       )}
 
       {confirming && <ConfirmQuit onStay={() => setConfirming(false)} onQuit={quit} />}
+      <input ref={keeper} className={styles.keeper} tabIndex={-1} aria-hidden="true" autoComplete="off" />
     </dialog>
   );
 }
@@ -274,7 +299,7 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
   const [result, setResult] = useState<Result | null>(null);
   const [failed, setFailed] = useState(false);
   const [archived, setArchivedNow] = useState(false);
-  const photo = useObjectUrl(clue.kind === 'photo' ? clue.photo : null);
+  const photo = useObjectUrl(clue.kind === 'photo' ? shownPhoto(exercise.word) : null);
   const nextButton = useRef<HTMLButtonElement>(null);
   const form = useRef<HTMLFormElement>(null);
   const termField = useRef<HTMLInputElement>(null);
@@ -287,11 +312,17 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
     (gender === null || gender === 'shown' || article.trim() !== '') &&
     (answer.kind === 'letters' ? !slots.includes(null) : term.trim() !== '');
 
+  // The verdict hands the focus to Continue, unless an answer is being typed:
+  // then it stays in the field, which keeps the keyboard up, and Enter goes on.
   useEffect(() => {
-    if (result) nextButton.current?.focus();
+    if (!result) return;
+    const active = document.activeElement;
+    if (!(active instanceof HTMLInputElement && form.current!.contains(active))) nextButton.current?.focus();
   }, [result]);
 
   const solution = `${exercise.article ? `${exercise.article} ` : ''}${exercise.term}`;
+  // The option that answers a choice question, labelled as the options are.
+  const expectedOption = gender === 'shown' ? solution : exercise.term;
 
   // Every word this question can say, made while it is being read, or as soon as the voice is there.
   const voice = useVoice(language).status;
@@ -338,6 +369,8 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
   }
 
   const locked = result !== null;
+  /** Once checked, the right option shows as right, and a wrong pick as wrong. */
+  const marked = (picked: boolean, right: boolean) => (!result ? undefined : right ? 'right' : picked ? 'wrong' : undefined);
 
   async function toggleArchived() {
     try {
@@ -424,7 +457,7 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
             </span>
           )}
           {clue.kind === 'photo' ? (
-            photo && <img src={photo} alt="" />
+            photo && <img src={photo} alt="" decoding="sync" />
           ) : clue.kind === 'audio' ? (
             <button type="button" className={styles.listen} onClick={listen}>
               <Volume2 aria-hidden="true" />
@@ -450,6 +483,7 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
                   className={styles.article}
                   data-article={option}
                   aria-pressed={article === option}
+                  data-result={marked(article === option, option === exercise.article)}
                   disabled={locked}
                   onClick={() => pickArticle(option)}
                 >
@@ -468,6 +502,7 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
                   type="button"
                   className={styles.option}
                   aria-pressed={term === option}
+                  data-result={marked(term === option, option === expectedOption)}
                   disabled={locked}
                   lang={language}
                   onClick={() => pickTerm(option)}
@@ -498,7 +533,9 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
                 <input
                   className={`${styles.field} ${styles.articleField}`}
                   value={article}
-                  onChange={(event) => setArticle(event.target.value)}
+                  onChange={(event) => {
+                    if (!locked) setArticle(event.target.value);
+                  }}
                   onKeyDown={(event) => {
                     // On to the word, rather than checking an answer that has none yet.
                     if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
@@ -507,27 +544,34 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
                   }}
                   placeholder="article"
                   aria-label="Article"
+                  enterKeyHint="next"
                   autoComplete="off"
                   autoCapitalize="off"
+                  autoCorrect="off"
                   spellCheck={false}
                   lang={language}
-                  readOnly={locked}
+                  // Not read-only once checked: that would drop the keyboard. Typing just does nothing.
+                  aria-readonly={locked}
+                  data-result={marked(true, sameText(article, exercise.article ?? ''))}
                 />
               )}
-              <label className={styles.field}>
+              <label className={styles.field} data-result={marked(true, sameText(answer.hint + term, exercise.term))}>
                 <span className={styles.hint} lang={language}>
                   {answer.hint}
                 </span>
                 <input
                   ref={termField}
                   value={term}
-                  onChange={(event) => setTerm(event.target.value)}
+                  onChange={(event) => {
+                    if (!locked) setTerm(event.target.value);
+                  }}
                   aria-label={`The word, starting with ${answer.hint}`}
+                  aria-readonly={locked}
                   autoComplete="off"
                   autoCapitalize="off"
+                  autoCorrect="off"
                   spellCheck={false}
                   lang={language}
-                  readOnly={locked}
                 />
               </label>
             </div>
@@ -574,7 +618,16 @@ function Question({ language, exercise, onAnswer, onArchive, onNext }: QuestionP
             This browser would not save it. Try again.
           </p>
         )}
-        <button ref={nextButton} type="submit" className={styles.main} disabled={!result && !ready}>
+        <button
+          ref={nextButton}
+          type="submit"
+          className={styles.main}
+          disabled={!result && !ready}
+          // Pressing it while typing leaves the focus, and the keyboard, in the field.
+          onMouseDown={(event) => {
+            if (document.activeElement instanceof HTMLInputElement) event.preventDefault();
+          }}
+        >
           {result ? 'Continue' : 'Check'}
         </button>
       </footer>

@@ -143,8 +143,10 @@ service worker (`src/shared/sw.js`, emitted as `/sw.js` by the build) keeps the
 app shell, the front page, fonts and speech runtime on the device, so Blitz opens offline; it
 is only registered in production builds. A new build takes over as soon as
 it is downloaded: an open app looks for one whenever it comes back to the
-screen and every hour, and reloads into it once nothing would be lost: no
-lesson, sheet or menu open, and nothing being typed unless it is hidden
+screen and every hour, and reloads into it only out of sight: once it is
+hidden, with no lesson, sheet or menu open, so a reload never blanks the
+screen under someone using it. A page already running the new build's files,
+as one just opened online is, does not reload at all
 (`src/shared/app-update.ts`). Pages from builds before that, which cannot
 reload themselves, the new service worker reloads at once. The build before
 stays cached until the next one, for the pages still on it.

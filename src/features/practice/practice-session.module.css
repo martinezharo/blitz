@@ -1,10 +1,12 @@
 .session {
   position: fixed;
   inset: 0;
+  /* Over the on-screen keyboard's top edge while it is up (see use-keyboard-fit.ts). */
+  top: var(--keyboard-top, 0);
   display: flex;
   width: 100%;
   max-width: none;
-  height: 100dvh;
+  height: var(--keyboard-height, 100dvh);
   max-height: none;
   flex-direction: column;
   margin: 0;
@@ -15,6 +17,31 @@
 
 .session:not([open]) {
   display: none;
+}
+
+/* Keeps the keyboard up between two typed answers; never seen. */
+.keeper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  /* Any smaller, and iOS zooms in on it. */
+  font-size: 16px;
+  caret-color: transparent;
+  pointer-events: none;
+}
+
+/* With the keyboard up there is no home indicator to clear, and less room. */
+.session[data-keyboard] .foot {
+  padding-bottom: 0.75rem;
+}
+
+.session[data-keyboard] .body {
+  padding-block: 1rem;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -75,6 +102,14 @@
   border-radius: inherit;
   background: var(--accent);
   transition: width 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* The voice's place, kept while it is empty so the progress bar never changes width. */
+.voiceSlot {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  flex: none;
 }
 
 .voice {
@@ -371,6 +406,26 @@ button.voice:hover {
   color: var(--button-foreground);
 }
 
+/* Once checked: the right option in green, a wrong pick in red, the rest faded. */
+.option[data-result],
+.article[data-result] {
+  --mark: var(--success);
+
+  border-color: var(--mark);
+  background: color-mix(in srgb, var(--mark) 14%, var(--background));
+  color: var(--mark);
+}
+
+.option[data-result='wrong'],
+.article[data-result='wrong'] {
+  --mark: var(--danger);
+}
+
+.options:has([data-result]) .option:not([data-result]),
+.articles:has([data-result]) .article:not([data-result]) {
+  opacity: 0.45;
+}
+
 /* The key that picks an option or an article; there is nothing to press on a touch screen. */
 .keyHint {
   flex: none;
@@ -535,6 +590,22 @@ button.voice:hover {
   border-color: var(--foreground);
 }
 
+.field[data-result='right'] {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.field[data-result='wrong'] {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* A checked answer stays focused, so the keyboard stays up, but takes no more typing. */
+.field[aria-readonly='true'],
+.field [aria-readonly='true'] {
+  caret-color: transparent;
+}
+
 .field input {
   width: 100%;
   min-width: 0;
@@ -553,6 +624,8 @@ input.articleField {
 
 .articleField::placeholder {
   color: var(--faint);
+  /* Small enough to fit whole in the narrow field. */
+  font-size: var(--text-lg);
 }
 
 .hint {
@@ -589,6 +662,20 @@ input.articleField {
   align-items: center;
   gap: 0.75rem;
   color: var(--result);
+}
+
+/* The verdict rises into the footer as it takes its colour. */
+@media (prefers-reduced-motion: no-preference) {
+  .feedback {
+    animation: verdict-in 240ms cubic-bezier(0.2, 0.9, 0.25, 1);
+  }
+}
+
+@keyframes verdict-in {
+  from {
+    opacity: 0;
+    translate: 0 0.6rem;
+  }
 }
 
 .feedback strong {
