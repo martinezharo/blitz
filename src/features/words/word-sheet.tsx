@@ -22,7 +22,8 @@ import {
 } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import { Sheet } from '../../shared/ui/sheet.tsx';
-import { shownPhoto, useObjectUrl } from '../../shared/ui/use-object-url.ts';
+import { shownPhoto } from '../../data/shown-photo.ts';
+import { useObjectUrl } from '../../shared/ui/use-object-url.ts';
 import styles from './word-sheet.module.css';
 
 const PROBLEM_TEXT: Record<DraftProblem, string> = {

@@ -7,7 +7,8 @@ import { LANGUAGES, type Language, type Word } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
 import { canHear, downloadVoice, preloadSpeech, prepareVoice, speak, useVoice } from '../../shared/speech/speech.ts';
 import { useKeyboardFit } from '../../shared/ui/use-keyboard-fit.ts';
-import { shownPhoto, useObjectUrl, usePreloadedImage } from '../../shared/ui/use-object-url.ts';
+import { shownPhoto } from '../../data/shown-photo.ts';
+import { useObjectUrl, usePreloadedImage } from '../../shared/ui/use-object-url.ts';
 import { emptySlots, LetterBoard, type Slots } from './letter-board.tsx';
 import styles from './practice-session.module.css';
 

@@ -5,7 +5,8 @@ import { LANGUAGES, type Language, MAX_LEVEL, sortWords, type Word, type WordSor
 import { sounds } from '../../shared/sound.ts';
 import { morph, morphEndsIn } from '../../shared/ui/morph.ts';
 import { openSheetEnds } from '../../shared/ui/sheet.tsx';
-import { shownPhoto, useObjectUrl } from '../../shared/ui/use-object-url.ts';
+import { shownPhoto } from '../../data/shown-photo.ts';
+import { useObjectUrl } from '../../shared/ui/use-object-url.ts';
 import { ListsInvite } from '../lists/lists-entry.tsx';
 import { SortMenu } from './sort-menu.tsx';
 import styles from './word-list.module.css';
