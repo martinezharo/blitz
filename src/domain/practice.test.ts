@@ -51,9 +51,15 @@ describe('mastery', () => {
 });
 
 describe('progress', () => {
-  it('moves up after three right answers in a row', () => {
-    expect(progress({ level: 2, streak: 1 }, true)).toEqual({ level: 2, streak: 2 });
-    expect(progress({ level: 2, streak: 2 }, true)).toEqual({ level: 3, streak: 0 });
+  it('moves up after two right answers in a row from the multiple-choice levels', () => {
+    expect(progress({ level: 1, streak: 0 }, true)).toEqual({ level: 1, streak: 1 });
+    expect(progress({ level: 1, streak: 1 }, true)).toEqual({ level: 2, streak: 0 });
+    expect(progress({ level: 2, streak: 1 }, true)).toEqual({ level: 3, streak: 0 });
+  });
+
+  it('moves up after one right answer from the levels that are built or written', () => {
+    expect(progress({ level: 3, streak: 0 }, true)).toEqual({ level: 4, streak: 0 });
+    expect(progress({ level: 4, streak: 0 }, true)).toEqual({ level: 5, streak: 0 });
   });
 
   it('moves down one level on a miss, never below one', () => {
@@ -72,7 +78,7 @@ describe('progress', () => {
   });
 
   it('starts counting from nothing on reaching the top', () => {
-    expect(progress({ level: 4, streak: 2 }, true)).toEqual({ level: 5, streak: 0 });
+    expect(progress({ level: 4, streak: 0 }, true)).toEqual({ level: 5, streak: 0 });
   });
 
   it('treats words from before practice as level one', () => {

@@ -3,8 +3,9 @@ import { counterpartArticle, MAX_LEVEL, type Sex, sexOf, type Word } from './wor
 
 /**
  * How practice works. Each word climbs five levels, each one a harder kind of
- * question. Three right answers in a row move a word up; one wrong answer
- * moves it down. Past the top level a word keeps coming back, and a single
+ * question. Two right answers in a row move a word up from the multiple-choice
+ * levels, where a guess can land, and one right answer from the levels where
+ * the word has to be built or written. One wrong answer moves it down. Past the top level a word keeps coming back, and a single
  * miss drops it to level four again. Right answers in a row at the top level
  * are counted too: once there are more than five, the word is offered for the
  * archive, where it stops coming back.
@@ -15,8 +16,12 @@ import { counterpartArticle, MAX_LEVEL, type Sex, sexOf, type Word } from './wor
  */
 
 const LESSON_SIZE = 10;
-/** Right answers in a row that move a word up a level. */
-const STREAK_TO_LEVEL_UP = 3;
+/** Right answers in a row that move a word up from a level: more where a guess can be right. */
+function streakToLevelUp(level: number): number {
+  return level <= 2 ? 2 : 1;
+}
+/** Questions a lesson asks per word, while there are few words. */
+const QUESTIONS_PER_WORD = 3;
 /** Right answers in a row at the top level that make a word worth archiving: more than five. */
 export const STREAK_TO_ARCHIVE = 6;
 
@@ -37,7 +42,7 @@ export function progress(word: Pick<Word, 'level' | 'streak'>, correct: boolean)
   const level = levelOf(word);
   if (!correct) return { level: Math.max(1, level - 1), streak: 0 };
   const streak = (word.streak ?? 0) + 1;
-  if (streak >= STREAK_TO_LEVEL_UP && level < MAX_LEVEL) return { level: level + 1, streak: 0 };
+  if (streak >= streakToLevelUp(level) && level < MAX_LEVEL) return { level: level + 1, streak: 0 };
   // At the top the streak keeps counting, but stops once it has passed the archive offer.
   return { level, streak: level < MAX_LEVEL ? streak : Math.min(streak, STREAK_TO_ARCHIVE + 1) };
 }
@@ -49,7 +54,7 @@ export function offersArchive(word: Pick<Word, 'level' | 'streak'>): boolean {
 
 /** About ten questions, fewer while there are only a couple of words. */
 export function lessonLength(words: number): number {
-  return Math.min(LESSON_SIZE, words * STREAK_TO_LEVEL_UP);
+  return Math.min(LESSON_SIZE, words * QUESTIONS_PER_WORD);
 }
 
 /**

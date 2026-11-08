@@ -45,7 +45,7 @@ describe('words', () => {
 
   it('records practice answers', async () => {
     let word = await addWord('de', bank);
-    for (let i = 0; i < 3; i++) word = await recordAnswer(word, true);
+    for (let i = 0; i < 2; i++) word = await recordAnswer(word, true);
     expect(await db.words.get(word.id)).toMatchObject({ level: 2, streak: 0 });
     await recordAnswer(word, false);
     expect(await db.words.get(word.id)).toMatchObject({ level: 1, streak: 0 });
