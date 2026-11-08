@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parsePromoEvent } from '../domain/promo.ts';
-import { PROMO_ATTRIBUTION_TTL_MS, type PromoAttribution, parsePromoArrival, parseStoredAttribution, stripPromoParams, trackPromoStep } from './promo.ts';
+import { PROMO_ATTRIBUTION_TTL_MS, type PromoAttribution, parsePromoArrival, parseStoredAttribution, startPromoTracking, stripPromoParams, trackPromoStep } from './promo.ts';
 
 const NOW = 1_800_000_000_000;
 
@@ -184,5 +184,33 @@ describe('trackPromoStep', () => {
     });
     attribute();
     expect(() => trackPromoStep('open-app')).not.toThrow();
+  });
+});
+
+describe('startPromoTracking', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it('counts one arrival when the same link loads twice within seconds (installed-app redirect)', () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn(() => Promise.resolve(new Response(null, { status: 204 })));
+    const href = 'https://blitz.4oli.com/?utm_source=rankmaker&utm_medium=promo&utm_content=home&promo_lang=es';
+    vi.stubGlobal('localStorage', memoryStorage());
+    vi.stubGlobal('sessionStorage', memoryStorage());
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('navigator', { webdriver: false });
+    vi.stubGlobal('location', { href });
+    vi.stubGlobal('history', { state: null, replaceState: vi.fn() });
+    vi.stubGlobal('document', { documentElement: { lang: 'en' }, visibilityState: 'hidden', addEventListener: vi.fn() });
+    vi.stubGlobal('addEventListener', vi.fn());
+
+    startPromoTracking();
+    vi.advanceTimersByTime(2_000);
+    startPromoTracking();
+
+    const arrivals = fetchMock.mock.calls.filter((call) => JSON.parse((call as unknown as [string, RequestInit])[1].body as string).event === 'arrive');
+    expect(arrivals).toHaveLength(1);
   });
 });

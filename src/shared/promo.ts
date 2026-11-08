@@ -202,12 +202,29 @@ function recordArrival(): void {
   const url = new URL(location.href);
   const attribution = parsePromoArrival(url, document.documentElement.lang, Date.now());
   if (!attribution) return;
+  history.replaceState(history.state, '', stripPromoParams(url));
+  // The installed app sends a promo link from / on to /learn with its tags, and
+  // the landing may count it first: the same link seconds later is that one arrival.
+  if (isSameArrival(loadAttribution(), attribution)) return;
   storageSet(local, ATTRIBUTION_KEY, JSON.stringify(attribution));
   trackPromoStep('arrive');
-  history.replaceState(history.state, '', stripPromoParams(url));
   storageSet(session, VISIT_KEY, '1');
   // A new arrival starts its own clock, even in a tab that came before.
   storageSet(session, VISIBLE_KEY, '0');
+}
+
+const SAME_ARRIVAL_MS = 30_000;
+
+function isSameArrival(stored: PromoAttribution | null, fresh: PromoAttribution): boolean {
+  return (
+    stored !== null &&
+    fresh.at - stored.at >= 0 &&
+    fresh.at - stored.at < SAME_ARRIVAL_MS &&
+    stored.source === fresh.source &&
+    stored.placement === fresh.placement &&
+    stored.locale === fresh.locale &&
+    stored.variant === fresh.variant
+  );
 }
 
 /**
