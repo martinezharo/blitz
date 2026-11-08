@@ -3,7 +3,11 @@
   "name": "blitz",
   "main": "worker/index.ts",
   "compatibility_date": "2026-10-01",
-  "previews": {},
+  // Previews count their promo events apart, so tests there never reach the
+  // production numbers.
+  "previews": {
+    "analytics_engine_datasets": [{ "binding": "PROMO_ANALYTICS", "dataset": "promo_events_preview" }]
+  },
   // The app runs in the browser; the Worker answers /api: Google sign-in,
   // sync, definitions and voice downloads. Google credentials are secrets
   // (`wrangler secret put`, or .dev.vars locally).
@@ -27,6 +31,9 @@
   // Writes the definitions the dictionary lacks (worker/definition.ts). AI
   // bindings always run on Cloudflare, also in local development.
   "ai": { "binding": "AI", "remote": true },
+  // The promo funnel (worker/promo.ts): visits from promos on the author's
+  // other sites, in the dataset they write too.
+  "analytics_engine_datasets": [{ "binding": "PROMO_ANALYTICS", "dataset": "promo_events" }],
   "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "blitz-photos" }],
   "observability": { "enabled": true }
 }

@@ -154,6 +154,19 @@ stays cached until the next one, for the pages still on it.
 The logo is `public/logo.svg`. The PNG icons in `public/icons/` come from it:
 run `CHROMIUM=/path/to/chromium node scripts/build-icons.ts` after changing it.
 
+## Promo funnel
+
+RANKMAKER and Backrooms link here with `utm_source`, `utm_medium=promo`,
+`utm_content` (the placement), `utm_term` (the wording) and `promo_lang`. Both
+pages turn those into a seven-day attribution in localStorage and take them out
+of the address (`src/shared/promo.ts`), then report each step once: `arrive`,
+visible time in the arrival tab (`stay-10s`, `stay-1m`, `stay-3m`), `open-app`
+(the app at `/learn` loads), `add-word` (any word added, on the front page, in
+the app or from a ready-made list) and `start-game` (a practice lesson opens).
+`POST /api/promo-event` (`worker/promo.ts`) checks each one strictly and counts
+it in the `promo_events` Analytics Engine dataset the other sites write too;
+previews write to `promo_events_preview`. Nothing about the visitor is kept.
+
 ## Development
 
 ```sh

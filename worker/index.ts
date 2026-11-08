@@ -4,6 +4,7 @@ import { definition } from './definition.ts';
 import { beginLocalSignIn, beginProductionSignIn, exchangeTicket, finishLocalSignIn, proxyAccountRequest, upstreamUser } from './dev-auth.ts';
 import type { Env } from './env.ts';
 import { problem, sameOrigin } from './http.ts';
+import { promoEvent } from './promo.ts';
 import { translate } from './translate.ts';
 import { getPhoto, putPhoto, sync } from './sync.ts';
 import { voiceModel } from './voices.ts';
@@ -22,6 +23,9 @@ export default {
       return exchangeTicket(request, env);
     }
     if (method !== 'GET' && method !== 'HEAD' && !sameOrigin(request)) return problem(403, 'Cross-origin request');
+
+    // No account needed, and counted locally in development too.
+    if (method === 'POST' && pathname === '/api/promo-event') return promoEvent(request, env);
 
     if (env.DEVELOPMENT_UPSTREAM) {
       if (method === 'GET' && pathname === '/api/auth/google') return beginLocalSignIn(request, env);
