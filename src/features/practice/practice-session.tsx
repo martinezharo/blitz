@@ -2,6 +2,7 @@ import { Archive, Check, Download, Mars, Venus, Volume2, X } from 'lucide-react'
 import { type FormEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { markPracticed } from '../../data/streak.ts';
 import { recordAnswer, setArchived } from '../../data/words.ts';
+import { trackPromoStep } from '../../shared/promo.ts';
 import { type Answer, buildExercise, type Exercise, fillLetters, isCorrect, offersArchive, pickLesson, sameText, STREAK_TO_ARCHIVE } from '../../domain/practice.ts';
 import { LANGUAGES, type Language, type Word } from '../../domain/word.ts';
 import { sounds } from '../../shared/sound.ts';
@@ -48,6 +49,9 @@ export function PracticeSession({ language, words, onClose }: PracticeSessionPro
 
   // The voice wakes up, or downloads the first time, while the first question is read.
   useEffect(() => void prepareVoice(language), []);
+
+  // A lesson started, for a visitor who came from a promo.
+  useEffect(() => trackPromoStep('start-game'), []);
 
   // The Check button and its verdict stay above the on-screen keyboard.
   useKeyboardFit(ref);

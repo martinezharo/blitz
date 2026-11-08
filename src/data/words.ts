@@ -1,6 +1,7 @@
 import Dexie from 'dexie';
 import { normalize } from '../domain/dictionary.ts';
 import { progress } from '../domain/practice.ts';
+import { trackPromoStep } from '../shared/promo.ts';
 import { type Draft, hasCounterpart, type Language, sexOf, type Word, wordFields } from '../domain/word.ts';
 import { db } from './db.ts';
 import { pageHidden, useLiveData } from './live.ts';
@@ -32,6 +33,8 @@ export async function addWord(language: Language, draft: Draft): Promise<Word> {
     await db.pending.put({ id: word.id, at: word.createdAt });
   });
   requestSync();
+  // In the app or on the front page: a visitor from a promo adding their own word.
+  trackPromoStep('add-word');
   return word;
 }
 
@@ -48,6 +51,8 @@ export async function addWords(language: Language, drafts: Draft[]): Promise<Wor
     await db.pending.bulkPut(words.map((word) => ({ id: word.id, at: word.createdAt })));
   });
   requestSync();
+  // Words from a ready-made list count as adding words too.
+  if (words.length > 0) trackPromoStep('add-word');
   return words;
 }
 

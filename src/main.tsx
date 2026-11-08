@@ -3,7 +3,13 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app.tsx';
 import { keepUpdated } from './shared/app-update.ts';
+import { startPromoTracking, trackPromoStep } from './shared/promo.ts';
 import './styles/global.css';
+
+// Before the app reads or rewrites the address: a visit from a promo on another
+// site, and, for one, that it got as far as the app.
+startPromoTracking();
+trackPromoStep('open-app');
 
 // Keeps the app shell on the device so Blitz opens offline, and on the latest
 // build. Built only, since the dev server has no /sw.js and a worker would

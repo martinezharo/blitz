@@ -74,8 +74,9 @@
       }
     </script>
     <script>
-      // The installed app opened from an older home-screen icon lands here: send it on to the app.
-      if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) location.replace('/learn');
+      // The installed app opened from an older home-screen icon lands here: send it on to the app,
+      // with the query, so a promo link it opened is still counted there (src/shared/promo.ts).
+      if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) location.replace('/learn' + location.search + location.hash);
       // Same theme as the app: an explicit choice pins it, otherwise the page follows the system.
       try {
         var theme = localStorage.getItem('blitz.theme');
