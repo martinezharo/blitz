@@ -20,7 +20,7 @@ const subscribe = (listener: () => void) => {
 export const pageHidden = () => typeof document !== 'undefined' && document.visibilityState === 'hidden';
 
 /** Whether the page is on screen. */
-export function usePageVisible(): boolean {
+function usePageVisible(): boolean {
   return useSyncExternalStore(
     subscribe,
     () => !pageHidden(),

@@ -57,7 +57,7 @@ const STAY_STEPS: ReadonlyArray<readonly [number, PromoEventName]> = [
 /** How often visible time is saved while the tab is in view. */
 const TICK_MS = 5_000;
 /** The most one tick may add, so a laptop asleep with the tab open adds nothing. */
-export const MAX_TICK_MS = 10_000;
+const MAX_TICK_MS = 10_000;
 
 /** The two-letter base language of a BCP 47 tag, if it has one. */
 function baseLanguage(tag: string): string | undefined {

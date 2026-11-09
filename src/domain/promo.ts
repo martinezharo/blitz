@@ -13,7 +13,7 @@ export const PROMO_NAME = 'blitz';
 
 /** The sites whose promos link here. */
 export const PROMO_SOURCES = ['rankmaker', 'backrooms'] as const;
-export type PromoSource = (typeof PROMO_SOURCES)[number];
+type PromoSource = (typeof PROMO_SOURCES)[number];
 
 /** Every step of the funnel, in the order a visitor normally reaches them. */
 export const PROMO_EVENTS = ['arrive', 'stay-10s', 'stay-1m', 'stay-3m', 'open-app', 'add-word', 'start-game'] as const;

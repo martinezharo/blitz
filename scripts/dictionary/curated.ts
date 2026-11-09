@@ -32,7 +32,7 @@ export interface CuratedWord {
 
 export type CuratedLanguage = 'de' | 'en';
 
-export const MAX_CURATED_SENSES = 4;
+const MAX_CURATED_SENSES = 4;
 /** How many German words one English word names in the reverse dictionary. */
 export const REVERSE_PER_KEY = 6;
 const MAX_TRANSLATIONS = 3;
@@ -147,7 +147,7 @@ export function reverseEntriesOf(entry: DictEntry, isWord: (key: string) => bool
 const CURATED_DIR = pathToFileURL(`${resolve('scripts/dictionary/curated')}/`);
 
 /** Meanings by word, with the empty fields left out to keep the files small. */
-export type CuratedFile = Record<string, Partial<CuratedSense>[]>;
+type CuratedFile = Record<string, Partial<CuratedSense>[]>;
 
 export function packSense(sense: CuratedSense): Partial<CuratedSense> {
   const out: Partial<CuratedSense> = { type: sense.type };

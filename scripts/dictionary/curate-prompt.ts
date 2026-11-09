@@ -7,8 +7,6 @@ import { DEFINITION_LENGTH, DEFINITION_STYLE } from '../../src/domain/definition
  * short; change them only with a similar check.
  */
 
-export const PROMPT_VERSION = 3;
-
 /**
  * Added when definitions written earlier are sent back to be repaired
  * (`--fix`): the model keeps the meanings and rewrites what was wrong.

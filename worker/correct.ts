@@ -5,11 +5,10 @@ import type { User } from './auth.ts';
 import { CORRECTION_SCHEMA, messagesFor } from './correction-prompt.ts';
 import type { Env } from './env.ts';
 import { json, problem } from './http.ts';
-import { answerJson, record } from './openai.ts';
+import { answerJson, MAX_OUTPUT_TOKENS, record } from './openai.ts';
 
 export { messagesFor } from './correction-prompt.ts';
 export const MODEL = 'gpt-6-luna';
-export const MAX_OUTPUT_TOKENS = 4000;
 /** Separate from definitions, capped even when the provider fails. No automatic retries. */
 export const DAILY_LIMIT = { everyone: 150, perAccount: 30 };
 

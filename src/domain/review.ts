@@ -1,3 +1,4 @@
+import { shuffle } from './practice.ts';
 import type { Correction, Fix } from './writing.ts';
 
 /**
@@ -22,7 +23,7 @@ export const REVIEW_SIZE = 10;
 const EXTRA_TILES = 2;
 
 /** A piece of the corrected sentence: plain text, or the gap of a fix (an index into `answers`). */
-export type Part = string | { gap: number };
+type Part = string | { gap: number };
 
 export type Review = { correction: Correction } & (
   | { kind: 'tiles'; meaning: string; tiles: string[]; answer: string[] }
@@ -32,15 +33,6 @@ export type Review = { correction: Correction } & (
 /** The words of a text, without its punctuation: a full stop or a comma is never a tile to place. */
 export function tokenize(text: string): string[] {
   return text.match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu) ?? [];
-}
-
-export function shuffle<T>(items: readonly T[], random: Random = Math.random): T[] {
-  const out = [...items];
-  for (let at = out.length - 1; at > 0; at--) {
-    const other = Math.floor(random() * (at + 1));
-    [out[at], out[other]] = [out[other]!, out[at]!];
-  }
-  return out;
 }
 
 /** The fixes whose place in the corrected sentence is usable: in order and apart. */

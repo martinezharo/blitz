@@ -1,3 +1,6 @@
+/** The most a model may write in one call, reasoning included. */
+export const MAX_OUTPUT_TOKENS = 4000;
+
 export const record = (value: unknown): Record<string, unknown> | null =>
   typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : null;
 

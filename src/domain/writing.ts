@@ -9,15 +9,15 @@ import type { Language } from './word.ts';
 /** The most a text sent to be checked may hold. */
 export const MAX_TEXT = 1500;
 /** The most mistakes kept from one check. */
-export const MAX_MISTAKES = 40;
+const MAX_MISTAKES = 40;
 /** The longest sentence sent to be translated, and the most sent at once. */
 export const MAX_TRANSLATED = 600;
 export const TRANSLATE_BATCH = 20;
 
-export type MistakeKind = 'spelling' | 'grammar';
+type MistakeKind = 'spelling' | 'grammar';
 
 /** One mistake, as the model reports it: a piece of the text and what it should be. */
-export interface Mistake {
+interface Mistake {
   kind: MistakeKind;
   /** Exactly as it is in the text. */
   wrong: string;
@@ -30,12 +30,6 @@ export interface Mistake {
 
 /** What the model made of the text. */
 export type Verdict = 'de' | 'en' | 'other' | 'nonsense';
-
-export interface CheckResult {
-  /** The language the text is in, or why it could not be checked. */
-  language: Verdict;
-  mistakes: Mistake[];
-}
 
 /** A mistake found in the text: `wrong` is `text.slice(start, end)`. */
 export interface Mark extends Mistake {

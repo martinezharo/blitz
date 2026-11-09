@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { dayFromId } from '../domain/streak.ts';
-import { type Change, type ChangeKind, MAX_PUSH, type SyncResponse, type WireWord } from '../domain/sync.ts';
+import { type Change, type ChangeKind, MAX_PUSH, type SyncRequest, type SyncResponse, type WireWord } from '../domain/sync.ts';
 import type { Word } from '../domain/word.ts';
 import { db } from './db.ts';
 import { pageHidden } from './live.ts';
@@ -130,10 +130,11 @@ async function round(): Promise<void> {
       const sent = await pendingChanges();
       if (!sent || pageHidden()) return setState(before);
       const cursor = Number((await db.meta.get('cursor'))?.value ?? 0);
+      const body: SyncRequest = { cursor, changes: sent, kinds: KINDS };
       const response = await request('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cursor, changes: sent, kinds: KINDS }),
+        body: JSON.stringify(body),
       });
       const result = (await response.json()) as SyncResponse;
       if (!(await applyRemote(sent, result))) return setState(before);

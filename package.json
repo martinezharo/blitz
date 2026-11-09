@@ -2,6 +2,8 @@
   "name": "blitz",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-or-later",
+  "repository": "github:martinezharo/blitz",
   "description": "Learn the German and English words you pick.",
   "type": "module",
   "packageManager": "pnpm@12.10.0",

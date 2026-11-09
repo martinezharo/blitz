@@ -28,7 +28,7 @@ export const STREAK_TO_ARCHIVE = 6;
 type Random = () => number;
 
 /** Words from before practice existed were stored at level 0. */
-export function levelOf(word: Pick<Word, 'level'>): number {
+function levelOf(word: Pick<Word, 'level'>): number {
   return Math.min(MAX_LEVEL, Math.max(1, word.level));
 }
 
@@ -80,9 +80,9 @@ export function pickLesson(words: Pick<Word, 'id' | 'level'>[], random: Random =
 }
 
 /** The audio clue has no payload: the word to say is the exercise's own term. */
-export type Clue = { kind: 'photo'; photo: Blob } | { kind: 'translation' | 'definition'; text: string } | { kind: 'audio' };
+type Clue = { kind: 'photo'; photo: Blob } | { kind: 'translation' | 'definition'; text: string } | { kind: 'audio' };
 
-export type Gender = 'shown' | 'pick' | 'write' | null;
+type Gender = 'shown' | 'pick' | 'write' | null;
 
 export type Answer =
   | { kind: 'choice'; options: string[] }
@@ -226,7 +226,7 @@ export function misplacedTiles(term: string, given: boolean[], tiles: string[], 
   return slots.flatMap((tile, slot) => (tile !== null && !sameText(tiles[tile]!, wanted[slot] ?? '') ? [tile] : []));
 }
 
-export function shuffle<T>(items: T[], random: Random = Math.random): T[] {
+export function shuffle<T>(items: readonly T[], random: Random = Math.random): T[] {
   const result = [...items];
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));

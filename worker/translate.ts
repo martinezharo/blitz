@@ -3,10 +3,9 @@ import { takeSlot } from './allowance.ts';
 import type { User } from './auth.ts';
 import type { Env } from './env.ts';
 import { json, problem } from './http.ts';
-import { answerJson } from './openai.ts';
+import { answerJson, MAX_OUTPUT_TOKENS } from './openai.ts';
 
 export const MODEL = 'gpt-6-luna';
-export const MAX_OUTPUT_TOKENS = 4000;
 /** A batch of sentences takes one slot. Separate from checks and definitions, capped even when the provider fails. */
 export const DAILY_LIMIT = { everyone: 300, perAccount: 60 };
 /** The longest translation kept. */
@@ -49,7 +48,7 @@ export function readTranslations(answer: unknown, count: number): (string | null
   });
 }
 
-export interface TranslateResponse {
+interface TranslateResponse {
   translations: (string | null)[];
 }
 

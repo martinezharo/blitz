@@ -97,7 +97,7 @@ export function shardKey(normalized: string): string {
 export const MIN_QUERY = 2;
 
 /** How many suggestions to offer. */
-export const MAX_SUGGESTIONS = 6;
+const MAX_SUGGESTIONS = 6;
 
 /** How many meanings of one word to offer when it is exactly what was typed. */
 const EXACT_SENSES = 4;

@@ -19,9 +19,9 @@ import { json, problem, sha256 } from './http.ts';
  * to put words in the shared cache.
  */
 
-export const MODEL = '@cf/google/gemma-4-26b-a4b-it';
+const MODEL = '@cf/google/gemma-4-26b-a4b-it';
 /** Bumped when the instructions change enough to want the definitions written again. */
-export const PROMPT_VERSION = 2;
+const PROMPT_VERSION = 2;
 /**
  * What the model may be asked for per day. About 7 neurons each, so the whole
  * allowance stays inside the 10,000 neurons Workers AI gives for free.

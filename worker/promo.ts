@@ -3,7 +3,7 @@ import type { Env } from './env.ts';
 import { problem } from './http.ts';
 
 /** A promo event is six short fields; anything bigger is not one. */
-export const MAX_PROMO_BYTES = 256;
+const MAX_PROMO_BYTES = 256;
 
 /** The body, or null once it is longer than `limit` bytes, read no further. */
 async function readBounded(request: Request, limit: number): Promise<string | null> {
