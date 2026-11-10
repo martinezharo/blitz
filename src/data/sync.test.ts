@@ -7,7 +7,7 @@ import { db } from './db.ts';
 import { dayId } from '../domain/streak.ts';
 import { markPracticed } from './streak.ts';
 import { clearLocalData, startSync, stopSync, syncNow } from './sync.ts';
-import { addWord, deleteWord, updateWord } from './words.ts';
+import { addWord, deleteWord, recordAnswer, updateWord } from './words.ts';
 import { deleteCorrection, saveCorrections } from './writing.ts';
 
 const bank: Draft = { ...emptyDraft('Bank'), type: 'noun', article: 'die', translation: 'bench' };
@@ -123,6 +123,21 @@ describe('sync', () => {
     const pulled = await db.words.get(word.id);
     expect(pulled?.photoKey).toBe(key);
     expect(await pulled?.photo?.text()).toBe('jpeg bytes');
+  });
+
+  it('keeps a picture that is still downloading when the word changes meanwhile', async () => {
+    const photo = new Blob(['jpeg bytes'], { type: 'image/jpeg' });
+    const word = await addWord('de', { ...bank, photo });
+    await signIn();
+    const key = (await db.words.get(word.id))?.photoKey;
+
+    // As if the words had been pulled and the picture not yet.
+    await db.words.update(word.id, { photo: null });
+    await recordAnswer((await db.words.get(word.id))!, true);
+    await syncNow();
+    const sent = (await remote()).changes.find((change) => change.id === word.id);
+    expect(sent?.word?.photo).toBe(key);
+    expect(await (await db.words.get(word.id))?.photo?.text()).toBe('jpeg bytes');
   });
 
   it('sends the grammar history, and its deletions', async () => {

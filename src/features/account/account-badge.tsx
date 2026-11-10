@@ -6,7 +6,7 @@ import type { Account } from '../../domain/sync.ts';
 import styles from './account.module.css';
 import { InstallOption } from './install.tsx';
 
-const STATUS: Record<SyncStatus, string> = {
+export const SYNC_STATUS: Record<SyncStatus, string> = {
   off: 'Sync is off on this connection',
   syncing: 'Syncing…',
   synced: 'All words synced',
@@ -68,7 +68,7 @@ function AccountMenu({
         type="button"
         className={`${styles.badge} ${styles.guestBadge}`}
         popoverTarget="account-menu"
-        aria-label={`Account: ${account.email}. ${STATUS[status]}`}
+        aria-label={`Account: ${account.email}. ${SYNC_STATUS[status]}`}
       >
         <Avatar account={account} />
         <strong>{name}</strong>
@@ -112,7 +112,7 @@ function SignedInItems({
       </div>
       <p className={styles.menuStatus} data-status={status}>
         <SyncIcon aria-hidden="true" />
-        {STATUS[status]}
+        {SYNC_STATUS[status]}
       </p>
       {(status === 'error' || status === 'offline') && (
         <button type="button" className={styles.menuOption} onClick={() => void syncNow()}>

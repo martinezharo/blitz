@@ -12,6 +12,9 @@ import { pageHidden } from './live.ts';
  * pulls whatever changed elsewhere since this device's cursor. Words resolve
  * one by one, last write wins, so two devices editing different words never
  * clash. Rounds run after a write, on focus, on reconnect and every minute.
+ *
+ * Pulled words are stored at once, without their pictures; those come after,
+ * a few at a time, so a fresh device shows its words without waiting on them.
  */
 
 export type SyncStatus = 'off' | 'syncing' | 'synced' | 'offline' | 'error';
@@ -20,6 +23,8 @@ interface SyncState {
   status: SyncStatus;
   /** When the last round finished cleanly. */
   syncedAt: number | null;
+  /** This device has not pulled the account yet, so its lists may be empty for now. */
+  restoring: boolean;
 }
 
 const ROUND_LIMIT = 50;
@@ -27,8 +32,10 @@ const ROUND_LIMIT = 50;
 const KINDS: ChangeKind[] = ['correction', 'day'];
 const DEBOUNCE_MS = 800;
 const INTERVAL_MS = 60_000;
+/** Pictures fetched at once while filling them in. */
+const PHOTO_DOWNLOADS = 6;
 
-let state: SyncState = { status: 'off', syncedAt: null };
+let state: SyncState = { status: 'off', syncedAt: null, restoring: false };
 const listeners = new Set<() => void>();
 let enabled = false;
 let running: Promise<void> | null = null;
@@ -89,7 +96,7 @@ export function stopSync(): void {
   clearTimeout(timer);
   detach?.();
   detach = null;
-  setState({ status: 'off', syncedAt: null });
+  setState({ status: 'off', syncedAt: null, restoring: false });
 }
 
 /** Schedules a round soon. Writes call this; bursts collapse into one round. */
@@ -121,7 +128,7 @@ async function round(): Promise<void> {
   // A hidden page stays off the database (live.ts); being shown asks for a round.
   if (pageHidden()) return;
   const before = state;
-  setState({ status: 'syncing' });
+  setState({ status: 'syncing', restoring: !(await db.meta.get('cursor')) });
   try {
     for (let i = 0; i < ROUND_LIMIT; i++) {
       // Hidden meanwhile: the same changes come back in the next round, and
@@ -140,6 +147,8 @@ async function round(): Promise<void> {
       if (!(await applyRemote(sent, result))) return setState(before);
       if (!result.more && (pageHidden() || (await db.pending.count()) === 0)) break;
     }
+    setState({ restoring: false });
+    await fillPhotos();
     setState({ status: 'synced', syncedAt: Date.now() });
   } catch (error) {
     if (error instanceof Unauthorized) {
@@ -148,6 +157,7 @@ async function round(): Promise<void> {
       return;
     }
     console.warn('Sync failed', error);
+    // Still restoring if the first pull failed: the lists stay empty until a round gets through.
     setState({ status: navigator.onLine ? 'error' : 'offline' });
   }
 }
@@ -190,7 +200,8 @@ async function pendingChanges(): Promise<Change[] | null> {
 }
 
 async function uploadPhoto(word: Word): Promise<string | null> {
-  if (!word.photo) return null;
+  // A picture pulled but not downloaded yet is still the word's.
+  if (!word.photo) return word.photoKey ?? null;
   if (word.photoKey) return word.photoKey;
   const key = await hash(word.photo);
   await request(`/api/photos/${key}`, {
@@ -217,19 +228,6 @@ function toWire(word: Word, photo: string | null): WireWord {
 
 /** Stores what a round brought back. False, with nothing stored, when the page was hidden first. */
 async function applyRemote(sent: Change[], result: SyncResponse): Promise<boolean> {
-  // Pictures are fetched before the transaction: IndexedDB transactions close
-  // as soon as they wait on anything but IndexedDB.
-  const photos = new Map<string, Blob | null>();
-  for (const change of result.changes) {
-    if (change.kind) continue;
-    const key = change.word?.photo;
-    if (!key || photos.has(key)) continue;
-    if (pageHidden()) return false;
-    const local = await db.words.get(change.id);
-    if (local?.photoKey === key) continue;
-    photos.set(key, await downloadPhoto(key));
-  }
-
   if (pageHidden()) return false;
   await db.transaction('rw', [db.words, db.corrections, db.days, db.pending, db.meta], async () => {
     // Sent writes are done, unless the word was written again meanwhile.
@@ -260,9 +258,10 @@ async function applyRemote(sent: Change[], result: SyncResponse): Promise<boolea
         await db.words.delete(change.id);
         continue;
       }
+      // A new picture is left to `fillPhotos`, which finds it by its key.
       const key = change.word.photo;
-      const photo = key && local?.photoKey === key ? local.photo : key ? (photos.get(key) ?? null) : null;
-      await db.words.put({ ...change.word, photo, photoKey: photo ? key : null });
+      const photo = key && local?.photoKey === key ? local.photo : null;
+      await db.words.put({ ...change.word, photo, photoKey: key });
     }
 
     await db.meta.put({ key: 'cursor', value: result.cursor });
@@ -278,6 +277,30 @@ async function applyCorrection(change: Change): Promise<void> {
   if (pending) await db.pending.delete(change.id);
   if (change.correction) await db.corrections.put(change.correction);
   else await db.corrections.delete(change.id);
+}
+
+/**
+ * Downloads the pictures of pulled words, a few at a time, each stored as it
+ * arrives. Fetched outside any transaction: IndexedDB transactions close as
+ * soon as they wait on anything but IndexedDB. A page hidden meanwhile stops,
+ * and the next round goes on with what is left.
+ */
+async function fillPhotos(): Promise<void> {
+  const missing = await db.words.filter((word) => !word.photo && !!word.photoKey).toArray();
+  let next = 0;
+  const download = async () => {
+    while (next < missing.length && enabled && !pageHidden()) {
+      const { id, photoKey: key } = missing[next++]!;
+      const photo = await downloadPhoto(key!);
+      if (pageHidden()) return;
+      // Kept only if the word still wants this picture; `updatedAt` stays, as the word did not change.
+      await db.transaction('rw', db.words, async () => {
+        const current = await db.words.get(id);
+        if (current && !current.photo && current.photoKey === key) await db.words.update(id, { photo, photoKey: photo ? key : null });
+      });
+    }
+  };
+  await Promise.all(Array.from({ length: PHOTO_DOWNLOADS }, download));
 }
 
 async function downloadPhoto(key: string): Promise<Blob | null> {

@@ -1,4 +1,4 @@
-import { Archive, ChevronDown } from 'lucide-react';
+import { Archive, ChevronDown, CloudOff, LoaderCircle } from 'lucide-react';
 import { type CSSProperties, useMemo, useState } from 'react';
 import { mastery } from '../../domain/practice.ts';
 import { LANGUAGES, type Language, MAX_LEVEL, sortWords, type Word, type WordSort, wordSummary } from '../../domain/word.ts';
@@ -6,6 +6,7 @@ import { sounds } from '../../shared/sound.ts';
 import { morph, morphEndsIn } from '../../shared/ui/morph.ts';
 import { openSheetEnds } from '../../shared/ui/sheet.tsx';
 import { shownPhoto } from '../../data/shown-photo.ts';
+import { useSyncState } from '../../data/sync.ts';
 import { useObjectUrl } from '../../shared/ui/use-object-url.ts';
 import { ListsInvite } from '../lists/lists-entry.tsx';
 import { SortMenu } from './sort-menu.tsx';
@@ -24,6 +25,19 @@ interface WordListProps {
 export function WordList({ language, words, sort, onSortChange, onOpen, onBrowseLists }: WordListProps) {
   const [showArchived, setShowArchived] = useState(false);
   const sorted = useMemo(() => sortWords(words, sort, language), [words, sort, language]);
+  const { status, restoring } = useSyncState();
+
+  if (words.length === 0 && restoring) {
+    const failed = status === 'error' || status === 'offline';
+    const Icon = failed ? CloudOff : LoaderCircle;
+    return (
+      <div className={styles.empty} role="status">
+        <Icon className={styles.emptyIcon} data-status={status} aria-hidden="true" />
+        <strong>{failed ? 'Your words have not arrived' : 'Bringing your words'}</strong>
+        <p>{failed ? 'They are safe in your account. Trying again soon.' : 'They are on their way from your account.'}</p>
+      </div>
+    );
+  }
 
   if (words.length === 0) {
     return (

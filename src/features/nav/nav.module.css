@@ -135,6 +135,40 @@
   transform: scale(0.92);
 }
 
+/* Sync news on the menu tab. A quick round never shows: the dot waits before it pulses. */
+.icon {
+  position: relative;
+}
+
+.syncDot {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.7rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 2px solid var(--background);
+  border-radius: 50%;
+  box-sizing: content-box;
+  background: var(--accent);
+}
+
+.syncDot[data-status='syncing'] {
+  background: var(--muted);
+  animation:
+    sync-wait 700ms step-end both,
+    sync-pulse 1.2s ease-in-out 700ms infinite;
+}
+
+@keyframes sync-wait {
+  from { visibility: hidden; }
+  to { visibility: visible; }
+}
+
+@keyframes sync-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.75); }
+}
+
 /* The open page: the theme picker's pill, on the picker's grey. */
 .tab[aria-current='page'] {
   color: var(--foreground);

@@ -179,6 +179,23 @@
   line-height: 1;
 }
 
+.emptyIcon {
+  width: 2.2rem;
+  height: 2.2rem;
+  color: var(--muted);
+}
+
+.emptyIcon[data-status='syncing'] {
+  animation: spin 900ms linear infinite;
+}
+
+.emptyIcon[data-status='error'],
+.emptyIcon[data-status='offline'] {
+  color: var(--accent);
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .empty strong {
   margin-top: 0.8rem;
   color: var(--foreground);

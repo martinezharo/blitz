@@ -1,8 +1,9 @@
 import { BookOpen, Ellipsis, PenLine, Play } from 'lucide-react';
 import { useRef } from 'react';
+import { useSyncState } from '../../data/sync.ts';
 import { sounds } from '../../shared/sound.ts';
 import { useKeyboardFit } from '../../shared/ui/use-keyboard-fit.ts';
-import { APP_MENU } from '../account/account-badge.tsx';
+import { APP_MENU, SYNC_STATUS } from '../account/account-badge.tsx';
 import styles from './nav.module.css';
 
 /** The two pages of a language: its words, and free writing. Practice opens over either. */
@@ -62,6 +63,9 @@ export function ViewSwitch(props: NavProps) {
 export function TabBar({ view, onView, practice, onPractice }: NavProps & { practice: boolean; onPractice: () => void }) {
   const bar = useRef<HTMLElement>(null);
   useKeyboardFit(bar);
+  const { status: sync } = useSyncState();
+  // The menu holds the sync status; its tab shows a dot while there is news there.
+  const syncNews = sync === 'syncing' || sync === 'offline' || sync === 'error';
   const [words, write] = VIEWS as [(typeof VIEWS)[number], (typeof VIEWS)[number]];
   const page = ({ value, label, Icon }: (typeof VIEWS)[number]) => (
     <button
@@ -102,9 +106,16 @@ export function TabBar({ view, onView, practice, onPractice }: NavProps & { prac
         Practice
       </button>
       {page(write)}
-      <button type="button" className={styles.tab} popoverTarget={APP_MENU} onClick={() => sounds.open()}>
+      <button
+        type="button"
+        className={styles.tab}
+        popoverTarget={APP_MENU}
+        aria-label={syncNews ? `Menu. ${SYNC_STATUS[sync]}` : undefined}
+        onClick={() => sounds.open()}
+      >
         <span className={styles.icon}>
           <Ellipsis aria-hidden="true" />
+          {syncNews && <span className={styles.syncDot} data-status={sync} aria-hidden="true" />}
         </span>
         Menu
       </button>

@@ -51,7 +51,8 @@ export interface Word {
   photo: Blob | null;
   /**
    * SHA-256 of `photo` once sync has uploaded it, so it is hashed and sent
-   * only once. Absent when there is no photo or it has not been synced.
+   * only once. Absent when there is no photo or it has not been synced. Set
+   * with no `photo` while a pulled picture is still downloading.
    */
   photoKey?: string | null;
   level: number;
