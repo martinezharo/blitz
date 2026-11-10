@@ -22,6 +22,7 @@ import { WordList, wordRow } from './features/words/word-list.tsx';
 import { WordSheet } from './features/words/word-sheet.tsx';
 import { WritingPage } from './features/writing/writing-page.tsx';
 import { sounds } from './shared/sound.ts';
+import { trackPromoStep } from './shared/promo.ts';
 import { morph, morphEndsIn, waitFor } from './shared/ui/morph.ts';
 import { openSheetEnds } from './shared/ui/sheet.tsx';
 
@@ -34,7 +35,7 @@ const SIGN_IN_ERRORS: Record<string, string | null> = {
 };
 
 /**
- * Google sends people back with `?signin=<outcome>` when something went
+ * Google sends people back with `?signin=<outcome>`: `ok`, or what went
  * wrong. Read once, then dropped from the address bar.
  */
 function takeSignInOutcome(): { open: boolean; error: string | null } {
@@ -43,6 +44,10 @@ function takeSignInOutcome(): { open: boolean; error: string | null } {
   if (outcome === null) return { open: false, error: null };
   url.searchParams.delete('signin');
   window.history.replaceState(window.history.state, '', url);
+  if (outcome === 'ok') {
+    trackPromoStep('sign-in');
+    return { open: false, error: null };
+  }
   return { open: true, error: SIGN_IN_ERRORS[outcome] ?? SIGN_IN_ERRORS.failed! };
 }
 

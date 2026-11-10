@@ -16,7 +16,7 @@ export const PROMO_SOURCES = ['rankmaker', 'backrooms'] as const;
 type PromoSource = (typeof PROMO_SOURCES)[number];
 
 /** Every step of the funnel, in the order a visitor normally reaches them. */
-export const PROMO_EVENTS = ['arrive', 'stay-10s', 'stay-1m', 'stay-3m', 'open-app', 'add-word', 'start-game'] as const;
+export const PROMO_EVENTS = ['arrive', 'stay-10s', 'stay-1m', 'stay-3m', 'open-app', 'sign-in', 'add-word', 'start-game'] as const;
 export type PromoEventName = (typeof PROMO_EVENTS)[number];
 
 /** A placement or wording id: short, lowercase, URL-safe. */

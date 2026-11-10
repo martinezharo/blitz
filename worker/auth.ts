@@ -71,7 +71,8 @@ export async function finishGoogleSignIn(request: Request, env: Env): Promise<Re
     .bind(await sha256(token), user.id, Date.now() + SESSION_DAYS * DAY * 1000)
     .run();
 
-  const headers = new Headers({ Location: home() });
+  // `ok` lets the page tell a sign-in that just happened from a later visit.
+  const headers = new Headers({ Location: home('ok') });
   headers.append('Set-Cookie', clearState);
   headers.append('Set-Cookie', cookie(SESSION, token, SESSION_DAYS * DAY));
   return new Response(null, { status: 303, headers });

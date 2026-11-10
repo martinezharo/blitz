@@ -64,6 +64,25 @@ describe('development sign-in', () => {
     expect(destination.searchParams.get('signin')).toBe('failed');
   });
 
+  it('tells the app that a sign-in went through, so it can count it', async () => {
+    const response = await server.as(null)('/api/auth/google');
+    const state = new URL(response.headers.get('Location')!).searchParams.get('state')!;
+    const cookie = response.headers.get('Set-Cookie')!.split(';')[0]!;
+    const originalFetch = globalThis.fetch;
+    const claims = { iss: 'https://accounts.google.com', aud: 'client', sub: randomToken(), email: 'grace@example.com', email_verified: true };
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ id_token: `x.${btoa(JSON.stringify(claims))}.x` })));
+    let callback: Response;
+    try {
+      callback = await server.as(null)(`/api/auth/callback?state=${state}&code=google-code`, { headers: { Cookie: cookie } });
+    } finally {
+      vi.stubGlobal('fetch', originalFetch);
+    }
+    expect(callback.status).toBe(303);
+    const destination = new URL(callback.headers.get('Location')!);
+    expect(destination.pathname).toBe('/learn');
+    expect(destination.searchParams.get('signin')).toBe('ok');
+  });
+
   it('rejects browser calls to the ticket exchange', async () => {
     const response = await server.as(null)('/api/auth/dev/exchange', { method: 'POST', body: '{}' });
     expect(response.status).toBe(403);

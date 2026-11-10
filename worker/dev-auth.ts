@@ -104,7 +104,7 @@ export async function finishLocalSignIn(request: Request, env: Env): Promise<Res
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ticket, verifier }),
   });
-  if (!response.ok) home.searchParams.set('signin', 'failed');
+  home.searchParams.set('signin', response.ok ? 'ok' : 'failed');
   const token = response.ok ? (await response.json() as { token: string }).token : null;
   const headers = new Headers({ Location: home.toString(), 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
   headers.append('Set-Cookie', cookie(VERIFIER, '', 0, '/api/auth/dev'));
