@@ -1,0 +1,40 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application
+        android:label="Blitz"
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:manageSpaceActivity="com.google.androidbrowserhelper.trusted.ManageDataLauncherActivity"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Blitz">
+        <meta-data android:name="asset_statements" android:resource="@string/asset_statements" />
+        <activity
+            android:name="com.google.androidbrowserhelper.trusted.ManageDataLauncherActivity"
+            android:exported="false"
+            android:excludeFromRecents="true">
+            <meta-data android:name="android.support.customtabs.trusted.MANAGE_SPACE_URL" android:value="https://blitz.4oli.com/learn" />
+            <intent-filter>
+                <action android:name="android.intent.action.APPLICATION_PREFERENCES" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
+            android:exported="true">
+            <meta-data android:name="android.support.customtabs.trusted.DEFAULT_URL" android:value="https://blitz.4oli.com/learn" />
+            <meta-data android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR" android:resource="@color/background" />
+            <meta-data android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR" android:resource="@color/background" />
+            <meta-data android:name="android.support.customtabs.trusted.DISPLAY_MODE" android:value="default" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="blitz.4oli.com" android:pathPrefix="/learn" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

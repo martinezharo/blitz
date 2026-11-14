@@ -1,0 +1,10 @@
+<resources>
+    <string name="asset_statements" translatable="false">[{\"relation\":[\"delegate_permission/common.handle_all_urls\"],\"target\":{\"namespace\":\"web\",\"site\":\"https://blitz.4oli.com\"}}]</string>
+    <color name="background">#fefefd</color>
+    <style name="Theme.Blitz" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">@color/background</item>
+        <item name="android:navigationBarColor">@color/background</item>
+        <item name="android:windowBackground">@color/background</item>
+    </style>
+</resources>

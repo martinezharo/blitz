@@ -7,6 +7,7 @@ import { followUpdates } from '../shared/app-update.ts';
 import { startPromoTracking } from '../shared/promo.ts';
 import { startComposer } from './composer.ts';
 import { startLesson } from './lesson.ts';
+import { offerAndroidApp } from './download.ts';
 
 /**
  * The front page. Its words are static HTML; this brings in what moves: the
@@ -16,6 +17,7 @@ import { startLesson } from './lesson.ts';
 
 // First, before anything else could fail: a visit from a promo on another site.
 startPromoTracking();
+offerAndroidApp();
 startLesson(document.getElementById('lesson')!);
 // The front page does not install the service worker, but follows a new build
 // when one installed by the app has taken over.

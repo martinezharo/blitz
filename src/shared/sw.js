@@ -91,7 +91,7 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   // Voices manage their own storage; the rest of /api is live data.
-  if (request.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/')) return;
+  if (request.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/') || url.pathname.startsWith('/download/')) return;
 
   if (request.mode === 'navigate') event.respondWith(openPage(request));
   else if (url.pathname.startsWith('/dict/') || url.pathname.startsWith('/lists/')) event.respondWith(staleWhileRevalidate(request));

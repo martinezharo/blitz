@@ -3,6 +3,7 @@ import { type ReactNode, useEffect, useRef } from 'react';
 import { install, useInstallMode } from '../../data/install.ts';
 import { THEMES, type Theme } from '../../data/preferences.ts';
 import { sounds } from '../../shared/sound.ts';
+import { ANDROID_DOWNLOAD } from '../../shared/android.ts';
 import styles from './preferences.module.css';
 
 const THEME_OPTIONS: Record<Theme, { label: string; icon: ReactNode }> = {
@@ -138,9 +139,14 @@ function InstallSetting() {
     <section className={`${styles.setting} ${styles.inline} ${styles.install}`} data-mode={mode} aria-labelledby="install-label">
       <div className={styles.settingCopy}>
         <strong id="install-label">Install app</strong>
-        <small>{mode === 'native' ? 'Open Blitz from your home screen, even offline.' : 'Tap Share, then Add to Home Screen.'}</small>
+        <small>{mode === 'manual' ? 'Tap Share, then Add to Home Screen.' : 'Open Blitz from your home screen, even offline.'}</small>
       </div>
-      {mode === 'native' ? (
+      {mode === 'download' ? (
+        <a className={styles.installButton} href={ANDROID_DOWNLOAD}>
+          <Download aria-hidden="true" />
+          Download
+        </a>
+      ) : mode === 'native' ? (
         <button
           className={styles.installButton}
           type="button"
