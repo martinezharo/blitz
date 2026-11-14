@@ -205,6 +205,7 @@
   font-size: var(--text-md);
   font-weight: var(--weight-black);
   cursor: pointer;
+  text-decoration: none;
   transition: transform var(--motion-spring);
 }
 

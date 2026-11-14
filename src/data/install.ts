@@ -4,7 +4,7 @@ import { isAndroid } from '../shared/android.ts';
 /**
  * How this browser can put Blitz on the device:
  * - `download`: Android gets the signed APK rather than a second home-screen install.
- * - `native`: it handed us an install prompt to show on demand (Chrome, Edge, Android).
+ * - `native`: it handed us an install prompt to show on demand (desktop Chrome or Edge).
  * - `manual`: iPhones and iPads have no prompt, only Share → Add to Home Screen.
  * - `null`: already installed, or a browser with no way to install.
  */
