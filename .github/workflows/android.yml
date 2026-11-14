@@ -84,7 +84,9 @@ jobs:
           arch: x86_64
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
-          script: ./android/gradlew -p android connectedDebugAndroidTest --console plain
+          script: |
+            ./android/gradlew -p android connectedDebugAndroidTest --console plain || { adb logcat -d > android-logcat.txt; adb exec-out screencap -p > android-launch.png; exit 1; }
+            adb exec-out screencap -p > android-launch.png
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -92,6 +94,8 @@ jobs:
           path: |
             android/app/build/reports/
             android/app/build/outputs/androidTest-results/
+            android-launch.png
+            android-logcat.txt
       - name: Remove signing material
         if: always()
         run: rm -f "$RUNNER_TEMP/blitz-release.p12"
