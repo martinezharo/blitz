@@ -1,10 +1,4 @@
-export interface Env {
-  DB: D1Database;
-  PHOTOS: R2Bucket;
-  ASSETS: Fetcher;
-  AI: Ai;
-  /** The promo funnel's `promo_events` dataset, shared with the author's other sites (worker/promo.ts). */
-  PROMO_ANALYTICS: AnalyticsEngineDataset;
+export interface Env extends CloudflareBindings {
   /** Server-side OpenAI credential for writing checks; definitions use Workers AI. */
   OPENAI_API_KEY?: string;
   GOOGLE_CLIENT_ID: string;

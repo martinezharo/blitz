@@ -7,6 +7,9 @@ checks your writing and keeps a history of your grammar mistakes to review.
 
 **Try it: [blitz.4oli.com](https://blitz.4oli.com)**
 
+[Download for Android](https://blitz.4oli.com/download/android.apk), or use the
+[web app](https://blitz.4oli.com/learn). Both run the same app.
+
 - Offline-first: words live in your browser, and the app is an installable PWA.
 - Optional Google sign-in syncs words, photos and history across devices.
 - Ready-made word lists, spoken answers (in-browser [Piper](https://github.com/rhasspy/piper) voices) and a daily streak.
@@ -25,6 +28,7 @@ pnpm build
 
 Sign-in, writing checks and definitions need Cloudflare and API credentials.
 See [docs/development.md](docs/development.md).
+Android builds and signing are documented in [docs/android.md](docs/android.md).
 
 ## How it's built
 

@@ -2,6 +2,8 @@
 
 Things that are not obvious from the code. The rest is in code comments.
 
+Android packaging, signing and releases are in [android.md](android.md).
+
 ## Local setup
 
 `pnpm dev` applies pending migrations to a local D1 database, then runs Vite and

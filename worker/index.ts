@@ -8,12 +8,14 @@ import { promoEvent } from './promo.ts';
 import { translate } from './translate.ts';
 import { getPhoto, putPhoto, sync } from './sync.ts';
 import { voiceModel } from './voices.ts';
+import { download } from './download.ts';
 
-/** Only /api reaches this script; everything else is served from the static assets. */
+/** API and Android downloads; everything else is served from the static assets. */
 export default {
   async fetch(request, env, ctx?: ExecutionContext) {
     const { pathname } = new URL(request.url);
     const method = request.method;
+    if (pathname.startsWith('/download/')) return download(request, env);
 
     // Public and served locally even when account requests use production.
     if (pathname.startsWith('/api/voices/')) return voiceModel(request, ctx);

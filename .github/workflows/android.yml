@@ -1,0 +1,148 @@
+name: Android
+
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+    paths:
+      - android/**
+      - .github/workflows/android.yml
+      - scripts/android-release.ts
+      - src/domain/release.ts
+      - public/.well-known/assetlinks.json
+      - package.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v5
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test --maxWorkers=2 && pnpm build
+      - name: Validate the release tag
+        if: github.ref_type == 'tag'
+        run: node scripts/android-release.ts version "$GITHUB_REF_NAME"
+      - name: Load the project signing key
+        if: github.ref_type == 'tag'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$KEYSTORE_BASE64"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/blitz-release.p12"
+          chmod 600 "$RUNNER_TEMP/blitz-release.p12"
+          echo "BLITZ_KEYSTORE=$RUNNER_TEMP/blitz-release.p12" >> "$GITHUB_ENV"
+      - name: Build and lint
+        env:
+          BLITZ_KEYSTORE_PASSWORD: ${{ github.ref_type == 'tag' && secrets.ANDROID_KEYSTORE_PASSWORD || '' }}
+        run: ./android/gradlew -p android assembleRelease assembleDebug lintRelease --console plain
+      - name: Verify the signed APK and prepare the release
+        if: github.ref_type == 'tag'
+        run: |
+          mkdir release-assets
+          version=$(node scripts/android-release.ts version "$GITHUB_REF_NAME")
+          cp android/app/build/outputs/apk/release/app-release.apk "release-assets/Blitz-$version-android.apk"
+          node scripts/android-release.ts manifest "release-assets/Blitz-$version-android.apk" release-assets/manifest.json
+      - uses: actions/upload-artifact@v7
+        if: github.ref_type == 'tag'
+        with:
+          name: android-release
+          path: release-assets/
+          if-no-files-found: error
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Verify app launch on Android
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: ./android/gradlew -p android connectedDebugAndroidTest --console plain
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: android-test-results
+          path: |
+            android/app/build/reports/
+            android/app/build/outputs/androidTest-results/
+      - name: Remove signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/blitz-release.p12"
+
+  publish:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    concurrency:
+      group: android-publish
+      cancel-in-progress: false
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      AWS_ENDPOINT_URL: https://a0fa518f5393767beb33f26606989c9d.r2.cloudflarestorage.com
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          name: android-release
+          path: release-assets
+      - name: Refuse to overwrite a published version
+        run: |
+          if aws s3api get-object --bucket blitz-releases --key latest.json current.json 2>read-error.txt; then
+            node scripts/android-release.ts check-latest current.json
+          elif grep -q '(NoSuchKey)' read-error.txt; then
+            echo "First release"
+          else
+            cat read-error.txt
+            exit 1
+          fi
+      - name: Upload the immutable release, then update the download
+        run: |
+          version=$(node scripts/android-release.ts version "$GITHUB_REF_NAME")
+          aws s3api put-object --bucket blitz-releases --key "v$version/Blitz-$version-android.apk" \
+            --body "release-assets/Blitz-$version-android.apk" --content-type application/vnd.android.package-archive
+          aws s3api put-object --bucket blitz-releases --key "v$version/manifest.json" \
+            --body release-assets/manifest.json --content-type application/json
+          aws s3api put-object --bucket blitz-releases --key latest.json \
+            --body release-assets/manifest.json --content-type application/json
+      - name: Create the GitHub release
+        run: |
+          gh release create "$GITHUB_REF_NAME" release-assets/* --verify-tag \
+            --title "Blitz $GITHUB_REF_NAME" --notes 'Download the signed Android app at https://blitz.4oli.com/download/android.apk. The Android app runs the same app as the web version and receives web updates automatically.'

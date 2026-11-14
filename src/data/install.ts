@@ -1,12 +1,14 @@
 import { useSyncExternalStore } from 'react';
+import { isAndroid } from '../shared/android.ts';
 
 /**
  * How this browser can put Blitz on the device:
+ * - `download`: Android gets the signed APK rather than a second home-screen install.
  * - `native`: it handed us an install prompt to show on demand (Chrome, Edge, Android).
  * - `manual`: iPhones and iPads have no prompt, only Share → Add to Home Screen.
  * - `null`: already installed, or a browser with no way to install.
  */
-export type InstallMode = 'native' | 'manual' | null;
+export type InstallMode = 'download' | 'native' | 'manual' | null;
 
 /** The one event type browsers only half-document; Safari and Firefox never fire it. */
 interface InstallPromptEvent extends Event {
@@ -34,6 +36,7 @@ function set(next: InstallMode) {
 
 function settle() {
   if (installed()) set(null);
+  else if (isAndroid(navigator.userAgent)) set('download');
   else if (prompt) set('native');
   else set(iosDevice() ? 'manual' : null);
 }

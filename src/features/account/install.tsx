@@ -1,6 +1,7 @@
 import { Download, Share } from 'lucide-react';
 import { install, useInstallMode } from '../../data/install.ts';
 import { sounds } from '../../shared/sound.ts';
+import { ANDROID_DOWNLOAD } from '../../shared/android.ts';
 import styles from './account.module.css';
 
 function promptInstall() {
@@ -14,6 +15,14 @@ function promptInstall() {
  */
 export function InstallButton() {
   const mode = useInstallMode();
+  if (mode === 'download') {
+    return (
+      <a className={`${styles.badge} ${styles.guestBadge} ${styles.iconBadge} ${styles.installBadge} ${styles.desktopOnly}`}
+        href={ANDROID_DOWNLOAD} aria-label="Download Android app">
+        <Download aria-hidden="true" />
+      </a>
+    );
+  }
   // Phones and tablets that cannot prompt get instructions in the menu, not a button that does nothing.
   if (mode !== 'native') return null;
   return (
@@ -31,6 +40,14 @@ export function InstallButton() {
 /** Install inside the account menu, on narrow screens; wide ones have the corner button. */
 export function InstallOption({ onChosen }: { onChosen: () => void }) {
   const mode = useInstallMode();
+  if (mode === 'download') {
+    return (
+      <a className={`${styles.menuOption} ${styles.mobileOnly}`} href={ANDROID_DOWNLOAD} onClick={onChosen}>
+        <Download aria-hidden="true" />
+        Download Android app
+      </a>
+    );
+  }
   if (mode === 'manual') {
     return (
       <p className={styles.menuStatus}>

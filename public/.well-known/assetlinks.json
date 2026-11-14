@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.fouroli.blitz",
+      "sha256_cert_fingerprints": ["44:D8:30:49:73:77:B0:30:30:1C:99:73:44:1C:11:58:9B:46:94:F0:32:52:EC:62:45:67:DE:75:2A:BC:D9:67"]
+    }
+  }
+]

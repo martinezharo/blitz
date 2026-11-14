@@ -1,0 +1,7 @@
+<!-- The same bolt as public/logo.svg, inside Android's adaptive icon safe area. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="768" android:viewportHeight="768">
+    <group android:translateX="128" android:translateY="128">
+        <path android:fillColor="#fefefd" android:pathData="M290,88L170,286H252L218,424L352,226H266Z" />
+    </group>
+</vector>

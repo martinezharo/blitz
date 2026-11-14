@@ -18,7 +18,7 @@
     // Only / and /learn are pages, so an unknown path is a real 404
     // (public/404.html), not the app shell at an address that does not exist.
     "not_found_handling": "404-page",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/api/*", "/download/*"]
   },
   "d1_databases": [
     {
@@ -34,6 +34,9 @@
   // The promo funnel (worker/promo.ts): visits from promos on the author's
   // other sites, in the dataset they write too.
   "analytics_engine_datasets": [{ "binding": "PROMO_ANALYTICS", "dataset": "promo_events" }],
-  "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "blitz-photos" }],
+  "r2_buckets": [
+    { "binding": "PHOTOS", "bucket_name": "blitz-photos" },
+    { "binding": "RELEASES", "bucket_name": "blitz-releases" }
+  ],
   "observability": { "enabled": true }
 }

@@ -12,6 +12,8 @@
     "build": "pnpm check && vite build",
     "preview": "vite preview",
     "check": "tsc --noEmit && tsc --noEmit -p worker",
+    "types": "wrangler types worker/bindings.d.ts --env-interface CloudflareBindings --include-runtime=false",
+    "android:build": "./android/gradlew -p android assembleRelease lintRelease",
     "test": "vitest run",
     "dictionary": "node scripts/build-dictionary.ts",
     "deploy": "pnpm build && wrangler d1 migrations apply blitz --remote && wrangler deploy",

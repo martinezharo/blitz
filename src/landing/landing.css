@@ -1609,6 +1609,11 @@ main > section.closing {
   opacity: 0.8;
 }
 
+.closing .actions {
+  justify-content: center;
+  margin-top: 0;
+}
+
 .footer {
   display: flex;
   flex-wrap: wrap;
