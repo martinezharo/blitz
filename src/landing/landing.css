@@ -101,12 +101,34 @@ main > section,
   transition: background var(--motion-standard), transform var(--motion-spring);
 }
 
+/* `display` above would otherwise win over the hidden attribute. */
+.button[hidden] {
+  display: none;
+}
+
 .button:hover {
   background: var(--icon-hover);
 }
 
 .button:active {
   transform: scale(0.97);
+}
+
+/* The second choice next to a filled button: plain strong text, underlined in the accent. */
+.button-quiet {
+  justify-content: center;
+  padding-block: 0.6rem;
+  background: transparent;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 0.35em;
+  transition: text-decoration-thickness var(--motion-standard);
+}
+
+.button-quiet:hover {
+  background: transparent;
+  text-decoration-thickness: 5px;
 }
 
 .button-small {
@@ -262,6 +284,28 @@ h1 {
   align-items: center;
   gap: 0.8rem;
   margin-top: 2.2rem;
+}
+
+/* Phones: the buttons stack and take the full width. */
+@media (max-width: 30rem) {
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions .button {
+    justify-content: center;
+  }
+
+  .actions .go {
+    justify-content: space-between;
+  }
+
+  /* Starts where the filled button's label starts. */
+  .actions .button-quiet {
+    justify-content: flex-start;
+    padding-inline: 1.4rem;
+  }
 }
 
 .note {
@@ -1524,10 +1568,6 @@ mark {
   margin: 1.4rem auto 0;
 }
 
-.more-lists[hidden] {
-  display: none;
-}
-
 /* Four facts, each in one of the app's colours. */
 
 .facts {
@@ -1612,6 +1652,19 @@ main > section.closing {
 .closing .actions {
   justify-content: center;
   margin-top: 0;
+}
+
+/* On the accent, the quiet button is white with black text in the light theme, and the reverse in the dark one. */
+.closing .button-quiet {
+  justify-content: center;
+  padding: 0.85rem 1.3rem;
+  background: light-dark(#fff, #000);
+  color: light-dark(#000, #fff);
+  text-decoration: none;
+}
+
+.closing .button-quiet:hover {
+  background: light-dark(#f0f0f0, #1a1a1a);
 }
 
 .footer {
