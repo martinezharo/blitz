@@ -170,8 +170,8 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       '@martinezharo/promo-funnel':
-        specifier: https://github.com/martinezharo/promo-funnel/archive/refs/tags/v1.0.1.tar.gz
-        version: https://github.com/martinezharo/promo-funnel/archive/refs/tags/v1.0.1.tar.gz
+        specifier: 1.0.2
+        version: 1.0.2
       dexie:
         specifier: ^4.4.6
         version: 4.4.6
@@ -657,9 +657,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@martinezharo/promo-funnel@https://github.com/martinezharo/promo-funnel/archive/refs/tags/v1.0.1.tar.gz':
-    resolution: {integrity: sha512-AUaTX0ARaw3V4d3zL7Kfno8Ma+UxySBOGZk2c7ulV0wNxZY8E6CDjIS13Ie9RSUUXoHbvYkaCslMAMwKhK7rKw==, tarball: https://github.com/martinezharo/promo-funnel/archive/refs/tags/v1.0.1.tar.gz}
-    version: 1.0.1
+  '@martinezharo/promo-funnel@1.0.2':
+    resolution: {integrity: sha512-7CDVrLSN+5mC1cQNjqrhjp99kgT37eM30wQKKbTAVw3OOZw8fagW5Bsmzm0qdB1Z3Qvw9ynDudGtz0ooqbkrvQ==, tarball: https://npm.pkg.github.com/download/@martinezharo/promo-funnel/1.0.2/f721cfc3f5fbccf473fc1ca0b40862618fed1f24}
 
   '@oxc-project/types@0.155.0':
     resolution: {integrity: sha512-SeE8JPwW1xs1tHeNycjUtUBdhorRa8o4jlvjwk49R7/Z291i+4DQa7JJIgOm/TaYQZx+QrPQbVJ/9c8dMIZN8Q==}
@@ -1661,7 +1660,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@martinezharo/promo-funnel@https://github.com/martinezharo/promo-funnel/archive/refs/tags/v1.0.1.tar.gz': {}
+  '@martinezharo/promo-funnel@1.0.2': {}
 
   '@oxc-project/types@0.155.0': {}
 

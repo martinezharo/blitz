@@ -40,6 +40,10 @@ jobs:
           packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
           log-accepted-android-sdk-licenses: false
       - uses: gradle/actions/setup-gradle@v5
+      - run: npm config set "//npm.pkg.github.com/:_authToken=$PROMO_FUNNEL_TOKEN"
+        shell: bash
+        env:
+          PROMO_FUNNEL_TOKEN: ${{ secrets.PROMO_FUNNEL_TOKEN }}
       - run: pnpm install --frozen-lockfile
       - run: pnpm test --maxWorkers=2 && pnpm build
       - name: Validate the release tag
@@ -125,6 +129,10 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
+      - run: npm config set "//npm.pkg.github.com/:_authToken=$PROMO_FUNNEL_TOKEN"
+        shell: bash
+        env:
+          PROMO_FUNNEL_TOKEN: ${{ secrets.PROMO_FUNNEL_TOKEN }}
       - run: pnpm install --frozen-lockfile
       - uses: actions/download-artifact@v8
         with:
